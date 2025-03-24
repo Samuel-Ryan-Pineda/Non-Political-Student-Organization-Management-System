@@ -135,6 +135,37 @@
         }
     }
 
+    @keyframes fadeIn {
+        from {
+        opacity: 0;
+        transform: translateY(20px);
+        }
+        to {
+        opacity: 1;
+        transform: translateY(0);
+        }
+    }
+
+    .rectangle {
+        animation: fadeIn 0.8s ease-out forwards;
+        opacity: 0; /* Start with opacity 0 */
+    }
+
+    .fade-out {
+        animation: fadeOut 0.5s ease-in forwards;
+    }
+
+    @keyframes fadeOut {
+        from {
+        opacity: 1;
+        transform: translateY(0);
+        }
+        to {
+        opacity: 0;
+        transform: translateY(-20px);
+        }
+    }
+
 </style>
 {% endblock %}
 
@@ -192,6 +223,39 @@
         });
     });
 </script>    
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Handle links for page transitions
+      const allLinks = document.querySelectorAll('a:not([target="_blank"])');
+      
+      allLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          // Only handle links to other pages, not anchor links
+          if (this.getAttribute('href') !== '#' && !this.getAttribute('href').startsWith('#')) {
+            e.preventDefault();
+            const rectangle = document.querySelector('.rectangle');
+            rectangle.classList.add('fade-out');
+            
+            // Navigate to the new page after animation completes
+            setTimeout(() => {
+              window.location = this.getAttribute('href');
+            }, 500); // Match this with your fadeOut animation duration
+          }
+        });
+      });
+      
+      // Handle form submissions
+      const forms = document.querySelectorAll('form');
+      forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+          const rectangle = document.querySelector('.rectangle');
+          rectangle.classList.add('fade-out');
+          // The page will reload/redirect after submission
+        });
+      });
+    });
+</script>
     
 {% endblock %}
 

@@ -163,13 +163,83 @@
     .close-modal:hover {
         color: red;
     }
+    
+    /* Loading Animation Styles */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        z-index: 1100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 5px solid #007bff;
+        animation: spin 1s linear infinite;
+    }
+    
+    .loading-text {
+        color: white;
+        margin-top: 15px;
+        font-size: 16px;
+    }
+    
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 
+    @keyframes fadeIn {
+        from {
+        opacity: 0;
+        transform: translateY(20px);
+        }
+        to {
+        opacity: 1;
+        transform: translateY(0);
+        }
+    }
+
+    .register-container {
+        animation: fadeIn 0.8s ease-out forwards;
+        opacity: 0; /* Start with opacity 0 */
+    }
+
+    .fade-out {
+        animation: fadeOut 0.5s ease-in forwards;
+    }
+
+    @keyframes fadeOut {
+        from {
+        opacity: 1;
+        transform: translateY(0);
+        }
+        to {
+        opacity: 0;
+        transform: translateY(-20px);
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="register-container">
-    <form action="/register" method="POST" class="register">
+    <form action="/register" method="POST" class="register" id="register-form">
         <h2>Register</h2>
         <div class="input-group">
             <div>
@@ -212,9 +282,17 @@
                     pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,32}$">
             </div>
         </div>
-        <button type="submit">Create Account</button>
+        <button type="submit" id="register-button">Create Account</button>
         <p>Already have an account? <a href="/login">Login</a></p>
     </form>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Sending verification email...</p>
+    </div>
 </div>
 
 <div id="flash-messages" style="display: none;">
@@ -274,18 +352,29 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        let showVerification = document.getElementById("verification-data").getAttribute("data-show-verification");
-        let modal = document.getElementById("verification-modal");
-        let closeModalBtn = document.querySelector(".close-modal");
-
-        // Show modal if needed
+        const showVerification = document.getElementById("verification-data").getAttribute("data-show-verification");
+        const modal = document.getElementById("verification-modal");
+        const closeModalBtn = document.querySelector(".close-modal");
+        const loadingOverlay = document.getElementById("loading-overlay");
+        const registerForm = document.getElementById("register-form");
+        
+        // Show modal if needed and hide loading animation
         if (showVerification === "true") {
             modal.style.display = "flex";
+            loadingOverlay.style.display = "none";
         }
 
         // Close the modal when clicking the exit button
         closeModalBtn.addEventListener("click", function () {
             modal.style.display = "none";
+        });
+
+        // Show loading overlay when form is submitted
+        registerForm.addEventListener("submit", function(event) {
+            // Only show loading if form is valid
+            if (registerForm.checkValidity()) {
+                loadingOverlay.style.display = "flex";
+            }
         });
 
         // Optional: Close the modal when clicking outside of it
@@ -297,5 +386,38 @@
     });
 </script>
 
-{% endblock %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Handle links for page transitions
+      const allLinks = document.querySelectorAll('a:not([target="_blank"])');
+      
+      allLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          // Only handle links to other pages, not anchor links
+          if (this.getAttribute('href') !== '#' && !this.getAttribute('href').startsWith('#')) {
+            e.preventDefault();
+            const container = document.querySelector('.register-container');
+            container.classList.add('fade-out');
+            
+            // Navigate to the new page after animation completes
+            setTimeout(() => {
+              window.location = this.getAttribute('href');
+            }, 500); // Match this with your fadeOut animation duration
+          }
+        });
+      });
+      
+      // Handle form submissions
+      const form = document.getElementById('register-form');
+      form.addEventListener('submit', function(e) {
+        // Only add the animation if form validation passes
+        if (form.checkValidity()) {
+          const container = document.querySelector('.register-container');
+          container.classList.add('fade-out');
+        }
+        // The form will submit normally
+      });
+    });
+</script>
 
+{% endblock %}

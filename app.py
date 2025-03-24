@@ -16,6 +16,15 @@ db = SQLAlchemy(app)
 
 app.secret_key = 'secret_key'
 
+# ✅ UserRole Model
+class UserRole(db.Model):
+    __tablename__ = 'userrole'
+    role_id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.String(100), unique=True, nullable=False)
+    
+    # Relationship with User
+    users = db.relationship('User', backref='role', lazy=True)
+
 # ✅ User Model
 class User(db.Model):
     __tablename__ = 'user'
@@ -23,6 +32,7 @@ class User(db.Model):
     last_name = db.Column(db.String(100), nullable=False)
     first_name = db.Column(db.String(100), nullable=False)
     middle_name = db.Column(db.String(100), nullable=True)
+    role_id = db.Column(db.Integer, db.ForeignKey('userrole.role_id'), nullable=False)
 
     email = db.relationship('Email', backref='user', uselist=False, cascade="all, delete-orphan")
     entrykey = db.relationship('EntryKey', backref='user', uselist=False, cascade="all, delete-orphan")
@@ -53,6 +63,16 @@ class EntryKey(db.Model):
 # ✅ Create database tables
 with app.app_context():
     db.create_all()
+    
+    # Initialize roles if they don't exist
+    if not UserRole.query.first():
+        roles = [
+            UserRole(role_id=1, role="OSOAD"),
+            UserRole(role_id=2, role="Organization_President"),
+            UserRole(role_id=3, role="Applicant")
+        ]
+        db.session.add_all(roles)
+        db.session.commit()
 
 
 # ✅ Redirect root to login
@@ -82,6 +102,8 @@ def register():
         email = request.form.get('email')
         entrykey = request.form.get('entrykey')
         confirm_password = request.form.get('confirm_password')
+        # Default role for new users (3 = Applicant)
+        role_id = 3  
 
         form_data = {
             "last_name": last_name,
@@ -111,12 +133,23 @@ def register():
             flash("Email already registered.", "error")
             return render_template('register.html', form_data=form_data, show_verification_modal=False)
 
-        # Cooldown Check for Verification Code Sending
-        if 'verification_code_sent_at' in session:
-            if time.time() - session['verification_code_sent_at'] < 60:  # 1 minute cooldown
-                flash("Please wait a minute before requesting another verification code.", "warning")
+        # Track verification code send attempts
+        session['verification_send_attempts'] = session.get('verification_send_attempts', 0) + 1
+        
+        # Limit to 2 verification code sends before cooldown
+        if session.get('verification_send_attempts', 0) >= 3:  # 3rd attempt triggers cooldown
+            if not session.get('verification_send_blocked_until'):
+                session['verification_send_blocked_until'] = time.time() + 300  # 5 minute cooldown
+            
+            if time.time() < session['verification_send_blocked_until']:
+                remaining_time = int(session['verification_send_blocked_until'] - time.time())
+                flash(f"Too many verification code requests. Please wait {remaining_time} seconds before requesting another code.", "error")
                 return render_template('register.html', form_data=form_data, show_verification_modal=False)
-
+            else:
+                # Reset after cooldown period expires
+                session.pop('verification_send_blocked_until', None)
+                session['verification_send_attempts'] = 1  # Reset but count this attempt
+        
         # ✅ Generate verification code
         verification_code = str(random.randint(100000, 999999))
         session['verification_code'] = verification_code
@@ -125,7 +158,8 @@ def register():
             "first_name": first_name,
             "middle_name": middle_name,
             "email": email,
-            "entrykey": entrykey
+            "entrykey": entrykey,
+            "role_id": role_id  # Add role_id to pending user data
         }
 
         # ✅ Initialize verification attempt tracking
@@ -140,7 +174,6 @@ def register():
         # Record the time when the verification code was sent
         session['verification_code_sent_at'] = time.time()
 
-        flash("A verification code has been sent to your email.", "info")
         return render_template('register.html', form_data=form_data, show_verification_modal=True)
 
     return render_template('register.html', show_verification_modal=False)
@@ -182,7 +215,8 @@ def verify_email():
     new_user = User(
         last_name=pending_user['last_name'],
         first_name=pending_user['first_name'],
-        middle_name=pending_user.get('middle_name')
+        middle_name=pending_user.get('middle_name'),
+        role_id=pending_user['role_id']  # Add role_id to user creation
     )
     db.session.add(new_user)
     db.session.commit()
