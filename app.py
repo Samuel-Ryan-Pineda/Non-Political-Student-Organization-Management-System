@@ -1,4 +1,4 @@
-from flask import Flask, get_flashed_messages, render_template_string, request, render_template, redirect, url_for, session, flash
+from flask import Flask, get_flashed_messages, jsonify, render_template_string, request, render_template, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
@@ -236,46 +236,95 @@ def verify_email():
 # ✅ Login Route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    email = ""  # Store email input for reuse
     if request.method == 'POST':
-        email = request.form.get('email')
-        entrykey = request.form.get('entrykey')
+        # Check if request expects JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            email = request.form.get('email')
+            entrykey = request.form.get('entrykey')
+            response = {'success': False, 'message': '', 'category': ''}
 
-        # Cooldown Check for Login Attempts
-        if 'login_blocked_until' in session:
-            if time.time() < session['login_blocked_until']:
-                flash("Too many failed login attempts. Try again later.", "error")
+            # Cooldown Check for Login Attempts
+            if 'login_blocked_until' in session:
+                if time.time() < session['login_blocked_until']:
+                    response['message'] = "Too many failed login attempts. Try again later."
+                    response['category'] = "error"
+                    return jsonify(response)
+                else:
+                    session.pop('login_blocked_until')
+                    session['login_attempts'] = 0
+
+            if not email or not entrykey:
+                response['message'] = "Please enter both email and password."
+                response['category'] = "warning"
+                return jsonify(response)
+
+            user_email = Email.query.filter_by(email=email).first()
+            if not user_email:
+                response['message'] = "Email not found."
+                response['category'] = "error"
+                return jsonify(response)
+
+            user_entrykey = EntryKey.query.filter_by(user_id=user_email.user_id).first()
+            if user_entrykey and user_entrykey.check_entrykey(entrykey):
+                session['user_id'] = user_email.user_id
+                response['success'] = True
+                response['redirect'] = url_for('dashboard')
+                return jsonify(response)
+
+            # Increment login attempts
+            session['login_attempts'] = session.get('login_attempts', 0) + 1
+
+            if session['login_attempts'] >= 5:
+                session['login_blocked_until'] = time.time() + 900  # Block for 15 minutes
+                response['message'] = "Too many failed login attempts. Please wait 15 minutes before trying again."
+                response['category'] = "error"
+                return jsonify(response)
+
+            response['message'] = "Incorrect password."
+            response['category'] = "error"
+            return jsonify(response)
+        
+        # Handle regular form submission (fallback)
+        else:
+            email = request.form.get('email')
+            entrykey = request.form.get('entrykey')
+
+            # Cooldown Check for Login Attempts
+            if 'login_blocked_until' in session:
+                if time.time() < session['login_blocked_until']:
+                    flash("Too many failed login attempts. Try again later.", "error")
+                    return render_template('login.html', email=email)
+                else:
+                    session.pop('login_blocked_until')  # Remove cooldown if time has passed
+                    session['login_attempts'] = 0  # Reset failed attempts
+
+            if not email or not entrykey:
+                flash("Please enter both email and password.", "warning")
                 return render_template('login.html', email=email)
-            else:
-                session.pop('login_blocked_until')  # Remove cooldown if time has passed
-                session['login_attempts'] = 0  # Reset failed attempts
 
-        if not email or not entrykey:
-            flash("Please enter both email and password.", "warning")
+            user_email = Email.query.filter_by(email=email).first()
+            if not user_email:
+                flash("Email not found.", "error")
+                return render_template('login.html', email=email)
+
+            user_entrykey = EntryKey.query.filter_by(user_id=user_email.user_id).first()
+            if user_entrykey and user_entrykey.check_entrykey(entrykey):
+                session['user_id'] = user_email.user_id
+                return redirect(url_for('dashboard'))
+
+            # Increment login attempts
+            session['login_attempts'] = session.get('login_attempts', 0) + 1
+
+            if session['login_attempts'] >= 5:
+                session['login_blocked_until'] = time.time() + 900  # Block for 15 minutes
+                flash("Too many failed login attempts. Please wait 15 minutes before trying again.", "error")
+                return render_template('login.html', email=email)
+
+            flash("Incorrect password.", "error")
             return render_template('login.html', email=email)
 
-        user_email = Email.query.filter_by(email=email).first()
-        if not user_email:
-            flash("Email not found.", "error")
-            return render_template('login.html', email=email)
-
-        user_entrykey = EntryKey.query.filter_by(user_id=user_email.user_id).first()
-        if user_entrykey and user_entrykey.check_entrykey(entrykey):
-            session['user_id'] = user_email.user_id
-            return redirect(url_for('dashboard'))
-
-        # Increment login attempts
-        session['login_attempts'] = session.get('login_attempts', 0) + 1
-
-        if session['login_attempts'] >= 5:
-            session['login_blocked_until'] = time.time() + 900  # Block for 15 minutes
-            flash("Too many failed login attempts. Please wait 15 minutes before trying again.", "error")
-            return render_template('login.html', email=email)
-
-        flash("Incorrect password.", "error")
-        return render_template('login.html', email=email)
-
-    return render_template('login.html', email=email)
+    # Make sure you have the imports
+    return render_template('login.html')
 
 # ✅ Dashboard Route
 @app.route('/dashboard')

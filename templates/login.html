@@ -135,6 +135,29 @@
         }
     }
 
+    /* Error message styles */
+    .error-message {
+        color: #ff5252;
+        background-color: rgba(255, 82, 82, 0.1);
+        border-left: 3px solid #ff5252;
+        padding: 8px 12px;
+        margin: 10px 0;
+        font-size: 13px;
+        border-radius: 3px;
+        display: none;
+    }
+
+    .warning-message {
+        color: #ffab40;
+        background-color: rgba(255, 171, 64, 0.1);
+        border-left: 3px solid #ffab40;
+        padding: 8px 12px;
+        margin: 10px 0;
+        font-size: 13px;
+        border-radius: 3px;
+        display: none;
+    }
+
     @keyframes fadeIn {
         from {
         opacity: 0;
@@ -166,6 +189,16 @@
         }
     }
 
+    /* Shake animation for error validation */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    .shake {
+        animation: shake 0.5s;
+    }
 </style>
 {% endblock %}
 
@@ -181,82 +214,118 @@
         <p class="system-title">Management System</p>
     </div>
     <div class="column">
-        <form class="login-container" action="/login" method="POST">
+        <div class="login-container">
             <h3>Login</h3>
-            <label for="email">Email</label>
-            <input type="email" id="register-email" name="email" placeholder="Enter your email" required
-            value="{{ email if email else '' }}">
-            <label for="password">Password</label>
-            <input type="password" id="register-password" name="entrykey" placeholder="Password" required>
-            <a href="#" class="forgotpassword">Forgot Password?</a>
-            <button type="submit">Sign in</button>
-            <p>Don’t have an account? <a href="/register">Register here</a></p>
-        </form>
+            <div id="error-container" class="error-message"></div>
+            <div id="warning-container" class="warning-message"></div>
+            <form id="login-form">
+                <label for="email">Email</label>
+                <input type="email" id="register-email" name="email" placeholder="Enter your email" required
+                value="{{ email if email else '' }}">
+                <label for="password">Password</label>
+                <input type="password" id="register-password" name="entrykey" placeholder="Password" required>
+                <a href="#" class="forgotpassword">Forgot Password?</a>
+                <button type="submit" id="login-button">Sign in</button>
+                <p>Don't have an account? <a href="/register">Register here</a></p>
+            </form>
+        </div>
     </div>
 </div>
 
-<div id="flash-messages" style="display: none;">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-message" data-category="{{ category }}" data-message="{{ message }}"></div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-</div>
-
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".flash-message").forEach(function (msg) {
-            let category = msg.dataset.category;
-            let message = msg.dataset.message;
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('login-form');
+    const errorContainer = document.getElementById('error-container');
+    const warningContainer = document.getElementById('warning-container');
+    const loginButton = document.getElementById('login-button');
+    const passwordInput = document.getElementById('register-password');
 
-            // Map Flask flash categories to Toastr types
-            let toastrType = {
-                "success": "success",
-                "info": "info",
-                "warning": "warning",
-                "error": "error"
-            }[category] || "info"; // Default to 'info' if undefined
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
 
-            toastr[toastrType](message);
+        // Clear previous error messages
+        errorContainer.style.display = 'none';
+        warningContainer.style.display = 'none';
+
+        // Change button text to show loading
+        loginButton.textContent = 'Signing in...';
+        loginButton.disabled = true;
+
+        // Get form data
+        const formData = new FormData(loginForm);
+
+        // Send AJAX request
+        fetch('/login', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button
+            loginButton.textContent = 'Sign in';
+            loginButton.disabled = false;
+
+            if (data.success) {
+                // If login successful, fade out and redirect
+                const rectangle = document.querySelector('.rectangle');
+                rectangle.classList.add('fade-out');
+
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 500);
+            } else {
+                // Handle error
+                if (data.category === 'error') {
+                    errorContainer.textContent = data.message;
+                    errorContainer.style.display = 'block';
+
+                    // Clear password field
+                    passwordInput.value = '';
+
+                    // Add shake animation to form
+                    loginForm.classList.add('shake');
+                    setTimeout(() => {
+                        loginForm.classList.remove('shake');
+                    }, 500);
+                } else if (data.category === 'warning') {
+                    warningContainer.textContent = data.message;
+                    warningContainer.style.display = 'block';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            errorContainer.textContent = 'An unexpected error occurred. Please try again.';
+            errorContainer.style.display = 'block';
+            loginButton.textContent = 'Sign in';
+            loginButton.disabled = false;
+
+            // Clear password field
+            passwordInput.value = '';
         });
     });
-</script>    
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Handle links for page transitions
-      const allLinks = document.querySelectorAll('a:not([target="_blank"])');
-      
-      allLinks.forEach(link => {
+    // Handle links for page transitions
+    const allLinks = document.querySelectorAll('a:not([target="_blank"])');
+
+    allLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-          // Only handle links to other pages, not anchor links
-          if (this.getAttribute('href') !== '#' && !this.getAttribute('href').startsWith('#')) {
-            e.preventDefault();
-            const rectangle = document.querySelector('.rectangle');
-            rectangle.classList.add('fade-out');
-            
-            // Navigate to the new page after animation completes
-            setTimeout(() => {
-              window.location = this.getAttribute('href');
-            }, 500); // Match this with your fadeOut animation duration
-          }
+            // Only handle links to other pages, not anchor links
+            if (this.getAttribute('href') !== '#' && !this.getAttribute('href').startsWith('#')) {
+                e.preventDefault();
+                const rectangle = document.querySelector('.rectangle');
+                rectangle.classList.add('fade-out');
+
+                // Navigate to the new page after animation completes
+                setTimeout(() => {
+                    window.location = this.getAttribute('href');
+                }, 500); // Match this with your fadeOut animation duration
+            }
         });
-      });
-      
-      // Handle form submissions
-      const forms = document.querySelectorAll('form');
-      forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-          const rectangle = document.querySelector('.rectangle');
-          rectangle.classList.add('fade-out');
-          // The page will reload/redirect after submission
-        });
-      });
     });
+});
 </script>
-    
 {% endblock %}
-
-
