@@ -1,6 +1,11 @@
-from flask import Flask, request, render_template, redirect, url_for, session, flash
+from flask import Flask, get_flashed_messages, render_template_string, request, render_template, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail, Message
+from dotenv import load_dotenv
+import os
+import random
 import bcrypt
+import time  # Added for cooldown handling
 
 app = Flask(__name__)
 
@@ -55,6 +60,17 @@ with app.app_context():
 def index():
     return redirect(url_for('login'))
 
+# ✅ Configure Flask-Mail
+load_dotenv()  # Load environment variables
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
+
+mail = Mail(app)
 
 # ✅ Registration Route
 @app.route('/register', methods=['GET', 'POST'])
@@ -67,58 +83,165 @@ def register():
         entrykey = request.form.get('entrykey')
         confirm_password = request.form.get('confirm_password')
 
+        form_data = {
+            "last_name": last_name,
+            "first_name": first_name,
+            "middle_name": middle_name,
+            "email": email
+        }
+
+        # Cooldown Check for Account Creation
+        if 'register_blocked_until' in session:
+            if time.time() < session['register_blocked_until']:
+                flash("Too many registration attempts. Try again later.", "error")
+                return render_template('register.html', form_data=form_data, show_verification_modal=False)
+            else:
+                session.pop('register_blocked_until')  # Remove cooldown if time has passed
+                session['register_attempts'] = 0  # Reset failed attempts
+
         if not all([last_name, first_name, email, entrykey, confirm_password]):
             flash("Please fill in all required fields.", "warning")
-            return redirect(url_for('register'))
+            return render_template('register.html', form_data=form_data, show_verification_modal=False)
 
         if entrykey != confirm_password:
             flash("Passwords do not match.", "error")
-            return redirect(url_for('register'))
+            return render_template('register.html', form_data=form_data, show_verification_modal=False)
 
         if Email.query.filter_by(email=email).first():
             flash("Email already registered.", "error")
+            return render_template('register.html', form_data=form_data, show_verification_modal=False)
+
+        # Cooldown Check for Verification Code Sending
+        if 'verification_code_sent_at' in session:
+            if time.time() - session['verification_code_sent_at'] < 60:  # 1 minute cooldown
+                flash("Please wait a minute before requesting another verification code.", "warning")
+                return render_template('register.html', form_data=form_data, show_verification_modal=False)
+
+        # ✅ Generate verification code
+        verification_code = str(random.randint(100000, 999999))
+        session['verification_code'] = verification_code
+        session['pending_user'] = {
+            "last_name": last_name,
+            "first_name": first_name,
+            "middle_name": middle_name,
+            "email": email,
+            "entrykey": entrykey
+        }
+
+        # ✅ Initialize verification attempt tracking
+        session['verify_attempts'] = 0
+        session.pop('verify_blocked_until', None)  # Remove cooldown if exists
+
+        # ✅ Send Email
+        msg = Message("Your Verification Code", recipients=[email])
+        msg.body = f"Your verification code is: {verification_code}"
+        mail.send(msg)
+
+        # Record the time when the verification code was sent
+        session['verification_code_sent_at'] = time.time()
+
+        flash("A verification code has been sent to your email.", "info")
+        return render_template('register.html', form_data=form_data, show_verification_modal=True)
+
+    return render_template('register.html', show_verification_modal=False)
+
+@app.route('/verify_email', methods=['POST'])
+def verify_email():
+    verification_code = request.form.get('verification_code')
+
+    # Cooldown Check
+    if 'verify_blocked_until' in session:
+        if time.time() < session['verify_blocked_until']:
+            flash("Too many failed attempts. Try again later.", "error")
+            return redirect(url_for('register'))
+        else:
+            session.pop('verify_blocked_until')  # Remove cooldown if time has passed
+            session['verify_attempts'] = 0  # Reset failed attempts
+
+    # Ensure there is a pending user session
+    if 'verification_code' not in session or 'pending_user' not in session:
+        flash("Session expired. Please register again.", "error")
+        return redirect(url_for('register'))
+
+    # Check if the entered code matches the session code
+    if verification_code != session['verification_code']:
+        session['verify_attempts'] = session.get('verify_attempts', 0) + 1
+
+        if session['verify_attempts'] >= 5:
+            session['verify_blocked_until'] = time.time() + 900  # Block for 15 minutes
+            flash("Too many failed attempts. Please wait 15 minutes before trying again.", "error")
             return redirect(url_for('register'))
 
-        new_user = User(last_name=last_name, first_name=first_name, middle_name=middle_name)
-        db.session.add(new_user)
-        db.session.commit()
+        flash("Invalid verification code. Please try again.", "error")
+        return render_template('register.html', form_data=session['pending_user'], show_verification_modal=True)
 
-        new_email = Email(email=email, user_id=new_user.user_id)
-        new_entrykey = EntryKey(entrykey=entrykey)
-        new_entrykey.user_id = new_user.user_id
+    # If verified, create the user
+    pending_user = session.pop('pending_user')
+    session.pop('verification_code')
 
-        db.session.add(new_email)
-        db.session.add(new_entrykey)
-        db.session.commit()
+    new_user = User(
+        last_name=pending_user['last_name'],
+        first_name=pending_user['first_name'],
+        middle_name=pending_user.get('middle_name')
+    )
+    db.session.add(new_user)
+    db.session.commit()
 
-        flash("Registration successful! Please log in.", "success")
-        return redirect(url_for('login'))
+    new_email = Email(email=pending_user['email'], user_id=new_user.user_id)
+    new_entrykey = EntryKey(entrykey=pending_user['entrykey'])
+    new_entrykey.user_id = new_user.user_id
 
-    return render_template('register.html')
+    db.session.add(new_email)
+    db.session.add(new_entrykey)
+    db.session.commit()
+
+    flash("Email verified! Your account has been created. You can now log in.", "success")
+    return redirect(url_for('register'))
+
 
 # ✅ Login Route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    email = ""  # Store email input for reuse
     if request.method == 'POST':
         email = request.form.get('email')
         entrykey = request.form.get('entrykey')
 
+        # Cooldown Check for Login Attempts
+        if 'login_blocked_until' in session:
+            if time.time() < session['login_blocked_until']:
+                flash("Too many failed login attempts. Try again later.", "error")
+                return render_template('login.html', email=email)
+            else:
+                session.pop('login_blocked_until')  # Remove cooldown if time has passed
+                session['login_attempts'] = 0  # Reset failed attempts
+
         if not email or not entrykey:
             flash("Please enter both email and password.", "warning")
-            return redirect(url_for('login'))
+            return render_template('login.html', email=email)
 
         user_email = Email.query.filter_by(email=email).first()
-        if user_email:
-            user_entrykey = EntryKey.query.filter_by(user_id=user_email.user_id).first()
-            if user_entrykey and user_entrykey.check_entrykey(entrykey):
-                session['user_id'] = user_email.user_id
-                flash("Login successful!", "success")
-                return redirect(url_for('dashboard'))
+        if not user_email:
+            flash("Email not found.", "error")
+            return render_template('login.html', email=email)
 
-        flash("Invalid email or password.", "error")
-        return redirect(url_for('login'))
+        user_entrykey = EntryKey.query.filter_by(user_id=user_email.user_id).first()
+        if user_entrykey and user_entrykey.check_entrykey(entrykey):
+            session['user_id'] = user_email.user_id
+            return redirect(url_for('dashboard'))
 
-    return render_template('login.html')
+        # Increment login attempts
+        session['login_attempts'] = session.get('login_attempts', 0) + 1
+
+        if session['login_attempts'] >= 5:
+            session['login_blocked_until'] = time.time() + 900  # Block for 15 minutes
+            flash("Too many failed login attempts. Please wait 15 minutes before trying again.", "error")
+            return render_template('login.html', email=email)
+
+        flash("Incorrect password.", "error")
+        return render_template('login.html', email=email)
+
+    return render_template('login.html', email=email)
 
 # ✅ Dashboard Route
 @app.route('/dashboard')

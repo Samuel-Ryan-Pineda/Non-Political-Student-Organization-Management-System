@@ -1,170 +1,198 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f4f4f4;
+        font-family: 'Instrument Sans', sans-serif;
+    }
+
+    .rectangle {
+        display: flex;
+        width: 710px;
+        height: 500px;
+        flex-shrink: 0;
+        border-radius: 20px;
+        background: #FFF;
+        box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 0px 97px 39px 0px rgba(0, 0, 0, 0.01), 0px 54px 33px 0px rgba(0, 0, 0, 0.05), 0px 24px 24px 0px rgba(0, 0, 0, 0.09), 0px 6px 13px 0px rgba(0, 0, 0, 0.10);
+    }
+
+    .column {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .column:first-child {
+        background-color: #fff;
+        border-radius: 20px 0 0 20px;
+        display: flex;
+        flex-direction: column;
+
+        img {
+            max-width: 80px;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            max-width: 150px;
+            margin: 50px 0;
+            filter: drop-shadow(0px 95px 26px rgba(0, 0, 0, 0.00)) drop-shadow(0px 61px 24px rgba(0, 0, 0, 0.01)) drop-shadow(0px 34px 20px rgba(0, 0, 0, 0.05)) drop-shadow(0px 15px 15px rgba(0, 0, 0, 0.09)) drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.10));
+        }
+
+        p {
+            font-size: 12px;
             margin: 0;
-            background-color: #f4f4f4;
-            font-family: 'Instrument Sans', sans-serif;
         }
 
-        .rectangle {
-            display: flex;
-            width: 710px;
-            height: 500px;
-            flex-shrink: 0;
-            border-radius: 20px;
-            background: #FFF;
-            box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 0px 97px 39px 0px rgba(0, 0, 0, 0.01), 0px 54px 33px 0px rgba(0, 0, 0, 0.05), 0px 24px 24px 0px rgba(0, 0, 0, 0.09), 0px 6px 13px 0px rgba(0, 0, 0, 0.10);
+        .system-title {
+            font-size: 16px;
+            margin-bottom: 5px;
         }
+    }
 
-        .column {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+    .column:last-child {
+        background-color: #0d3b44;
+        color: white;
+        border-radius: 0 20px 20px 0;
 
-        .column:first-child {
-            background-color: #fff;
-            border-radius: 20px 0 0 20px;
-            display: flex;
-            flex-direction: column;
+        .login-container {
+            width: 100%;
+            margin: auto 10%;
 
-            img {
-                max-width: 80px;
-                margin-bottom: 10px;
+            h3 {
+                margin-bottom: 25px;
+                text-align: center;
+            }
+            
+            label {
+                display: block;
+                text-align: left;
+                margin-top: 25px;
+                font-size: 13px;
+            }
+            
+            input {
+                width: calc(100% - 20px);
+                padding: 10px;
+                margin: 5px 0 10px;
+                border-radius: 5px;
+                font-size: 13px;
+                border: none;
+                display: block;
             }
 
-            .logo {
-                max-width: 150px;
-                margin: 50px 0;
-                filter: drop-shadow(0px 95px 26px rgba(0, 0, 0, 0.00)) drop-shadow(0px 61px 24px rgba(0, 0, 0, 0.01)) drop-shadow(0px 34px 20px rgba(0, 0, 0, 0.05)) drop-shadow(0px 15px 15px rgba(0, 0, 0, 0.09)) drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.10));
+            button {
+                width: 100%;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                background-color: #007bff;
+                color: white;
+                font-size: 13px;
+                cursor: pointer;
+                margin-top: 25px;
+            }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+            .forgotpassword {
+                color: white;
+                text-decoration: none;
+                display: block;
+                font-size: 13px;
+                margin-top: 5px;
+                margin-bottom: 5px;
+                text-align: right;
+            }
+
+            a {
+                color: white;
+                text-decoration: underline;;
+                font-size: 13px;
+            }
+
+            a:hover {
+                color: #2f94ff; 
             }
 
             p {
-                font-size: 12px;
-                margin: 0;
-            }
-
-            .system-title {
-                font-size: 16px;
-                margin-bottom: 5px;
+                font-size: 13px;
+                text-align: center;
+                margin-top: 15px;
             }
         }
+    }
 
-        .column:last-child {
-            background-color: #0d3b44;
-            color: white;
-            border-radius: 0 20px 20px 0;
+</style>
+{% endblock %}
 
-            .login-container {
-                width: 100%;
-                margin: auto 10%;
-
-                h3 {
-                    margin-bottom: 25px;
-                    text-align: center;
-                }
-                
-                label {
-                    display: block;
-                    text-align: left;
-                    margin-top: 25px;
-                    font-size: 13px;
-                }
-                
-                input {
-                    width: calc(100% - 20px);
-                    padding: 10px;
-                    margin: 5px 0 10px;
-                    border-radius: 5px;
-                    font-size: 13px;
-                    border: none;
-                    display: block;
-                }
-
-                button {
-                    width: 100%;
-                    padding: 10px;
-                    border: none;
-                    border-radius: 5px;
-                    background-color: #007bff;
-                    color: white;
-                    font-size: 13px;
-                    cursor: pointer;
-                    margin-top: 25px;
-                }
-
-                button:hover {
-                    background-color: #0056b3;
-                }
-
-                .forgotpassword {
-                    color: white;
-                    text-decoration: none;
-                    display: block;
-                    font-size: 13px;
-                    margin-top: 5px;
-                    margin-bottom: 5px;
-                    text-align: right;
-                }
-
-                a {
-                    color: white;
-                    text-decoration: underline;;
-                    font-size: 13px;
-                }
-
-                a:hover {
-                    color: #2f94ff; 
-                }
-
-                p {
-                    font-size: 13px;
-                    text-align: center;
-                    margin-top: 15px;
-                }
-            }
-        }
-
-    </style>
-</head>
-<body>
-    <div class="rectangle">
-        <div class="column">
-            <img src="./static/NEUST_logo.png" alt="NEUST Logo">
-            <p>Republic of the Philippines</p>
-            <p><b>Nueva Ecija University of Science and Technology</b></p>
-            <p>Cabanatuan City, Nueva Ecija, Philippines</p>
-            <img src="./static/OSOAD_logo.png" alt="OSOAD Logo" class="logo">
-            <p class="system-title">Non-Political Organization</p>
-            <p class="system-title">Management System</p>
-        </div>
-        <div class="column">
-            <form class="login-container" action="/login" method="POST">
-                <h3>Login</h3>
-                <label for="email">Email</label>
-                <input type="email" id="register-email" name="email" placeholder="Enter your email" required>
-                <label for="password">Password</label>
-                <input type="password" id="register-password" name="entrykey" placeholder="Password" required>
-                <a href="#" class="forgotpassword">Forgot Password?</a>
-                <button type="submit">Sign in</button>
-                <p>Don’t have an account? <a href="/register">Register here</a></p>
-            </form>
-        </div>
+{% block content %}
+<div class="rectangle">
+    <div class="column">
+        <img src="./static/NEUST_logo.png" alt="NEUST Logo">
+        <p>Republic of the Philippines</p>
+        <p><b>Nueva Ecija University of Science and Technology</b></p>
+        <p>Cabanatuan City, Nueva Ecija, Philippines</p>
+        <img src="./static/OSOAD_logo.png" alt="OSOAD Logo" class="logo">
+        <p class="system-title">Non-Political Organization</p>
+        <p class="system-title">Management System</p>
     </div>
+    <div class="column">
+        <form class="login-container" action="/login" method="POST">
+            <h3>Login</h3>
+            <label for="email">Email</label>
+            <input type="email" id="register-email" name="email" placeholder="Enter your email" required
+            value="{{ email if email else '' }}">
+            <label for="password">Password</label>
+            <input type="password" id="register-password" name="entrykey" placeholder="Password" required>
+            <a href="#" class="forgotpassword">Forgot Password?</a>
+            <button type="submit">Sign in</button>
+            <p>Don’t have an account? <a href="/register">Register here</a></p>
+        </form>
+    </div>
+</div>
+
+<div id="flash-messages" style="display: none;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message" data-category="{{ category }}" data-message="{{ message }}"></div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".flash-message").forEach(function (msg) {
+            let category = msg.dataset.category;
+            let message = msg.dataset.message;
+
+            // Map Flask flash categories to Toastr types
+            let toastrType = {
+                "success": "success",
+                "info": "info",
+                "warning": "warning",
+                "error": "error"
+            }[category] || "info"; // Default to 'info' if undefined
+
+            toastr[toastrType](message);
+        });
+    });
+</script>    
     
-</body>
-</html>
+{% endblock %}
+
+
