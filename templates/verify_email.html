@@ -1,0 +1,34 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Verify Email{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/verify_email.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="notification"></div>
+
+<div class="verification-container">
+    <button type="button" id="close-button" class="close-button">&times;</button>
+    <h2>Email Verification</h2>
+    <p>Enter the 6-digit code sent to your email</p>
+    <p class="user-email">{{ user_email }}</p>
+    <form id="verification-form">
+        <input type="text" name="verification_code" id="verification-code" required pattern="\d{6}" maxlength="6" inputmode="numeric" placeholder="123456">
+        <button type="submit" id="verify-button">Verify</button>
+        <div class="resend-container">
+            <button type="button" id="resend-button" class="resend-button" disabled>
+                Resend Code&nbsp;
+            </button>
+            <span id="countdown" class="countdown"></span>
+        </div>
+    </form>
+</div>
+
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/verify_email.js') }}"></script>
+{% endblock %}

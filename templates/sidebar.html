@@ -1,0 +1,105 @@
+<div class="sidebar">
+    <div class="menu-btn">
+        <i class="ph-bold ph-caret-left"></i>
+    </div>
+    <div class="head">
+        <div class="user-img">
+        <img src="user.jpg" alt="" />
+        </div>
+        <div class="user-details">
+        <p class="title">web developer</p>
+        <p class="name">John Doe</p>
+        </div>
+    </div>
+    <div class="nav">
+        <div class="menu">
+        <p class="title">Main</p>
+        <ul>
+            <li>
+            <a href="/dashboard">
+                <i class="icon ph-bold ph-house-simple"></i>
+                <span class="text">Dashboard</span>
+            </a>
+            </li>
+            <li>
+            <a href="#">
+                <i class="icon ph-bold ph-file-text"></i>
+                <span class="text">Application</span>
+                <i class="arrow ph-bold ph-caret-down"></i>
+            </a>
+            <ul class="sub-menu">
+                <li>
+                <a href="/neworganization">
+                    <span class="text">New Organization</span>
+                </a>
+                </li>
+                <li>
+                <a href="/renewal">
+                    <span class="text">Renewal</span>
+                </a>
+                </li>
+            </ul>
+            </li>
+            <li>
+                <a href="/organization">
+                    <i class="icon ph-bold ph-building"></i>
+                    <span class="text">Organization</span>
+                </a>
+                </li>
+            <li>
+            <a href="/analytics">
+                <i class="icon ph-bold ph-chart-bar"></i>
+                <span class="text">Analytics</span>
+            </a>
+            </li>
+            <li>
+            <a href="/schedules">
+                <i class="icon ph-bold ph-calendar-blank"></i>
+                <span class="text">Schedules</span>
+            </a>
+            </li>
+        </ul>
+        </div>
+        <div class="menu">
+        <p class="title">Settings</p>
+        <ul>
+            <li>
+            <a href="#">
+                <i class="icon ph-bold ph-gear"></i>
+                <span class="text">Settings</span>
+            </a>
+            </li>
+        </ul>
+        </div>
+    </div>
+    <div class="menu">
+        <p class="title">Account</p>
+        <ul>
+        <li>
+            <a href="#">
+            <i class="icon ph-bold ph-info"></i>
+            <span class="text">Help</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" onclick="document.getElementById('logoutDialog').showModal(); return false;">
+                <i class="icon ph-bold ph-sign-out"></i>
+                <span class="text">Logout</span>
+            </a>
+        </li>
+        
+        <!-- Logout Confirmation Dialog -->
+        <dialog id="logoutDialog">
+            <h2>Logout Confirmation</h2>
+            <p>Are you sure you want to log out?</p>
+            <div class="logout-buttons">
+                <button class="confirm-btn" onclick="window.location.href='/logout'">Confirm</button>
+                <button class="cancel-btn" onclick="document.getElementById('logoutDialog').close()">Cancel</button>
+            </div>
+        </dialog>
+        
+        </ul>
+    </div>
+    </div>
+    <div class="credits">
+</div>

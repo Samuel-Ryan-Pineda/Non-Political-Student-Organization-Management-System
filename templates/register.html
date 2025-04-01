@@ -1,243 +1,14 @@
-{% extends "base.html" %}
+{% extends "auth_base.html" %}
 
 {% block title %}Register{% endblock %}
 
 {% block head %}
-<style>
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
-        font-family: 'Instrument Sans', sans-serif;
-    }
-
-    .register-container {
-        width: 710px;
-        height: 500px;
-        border-radius: 20px;
-        background: #FFF;
-        box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 0px 97px 39px 0px rgba(0, 0, 0, 0.01), 0px 54px 33px 0px rgba(0, 0, 0, 0.05), 0px 24px 24px 0px rgba(0, 0, 0, 0.09), 0px 6px 13px 0px rgba(0, 0, 0, 0.10);
-        background-color: #0d3b44;
-        color: white;
-        font-size: 13px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-
-        .register {
-            padding: 20px;
-
-            h2 {
-                margin-bottom: 20px;
-            }
-
-            .input-group {
-                display: flex;
-                gap: 10px;
-            }
-
-            .input-group div {
-                flex: 1;
-            }
-
-            .input-group label,
-            label {
-                display: block;
-                text-align: left;
-                margin-top: 15px;
-            }
-
-            .input-group input,
-            input {
-                padding: 10px;
-                border-radius: 5px;
-                border: none;
-                font-size: 13px;
-                margin-top: 5px;
-            }
-
-            #register-email, #register-password, #confirm-password, #last-name, #first-name, #middle-name{
-                width: calc(100% - 20px);
-            }
-
-            .password-group {
-                display: flex;
-                gap: 10px;
-            }
-            .password-group div {
-                flex: 1;
-            }
-
-            button {
-                width: 100%;
-                padding: 10px;
-                border: none;
-                border-radius: 5px;
-                background-color: #007bff;
-                color: white;
-                font-size: 14px;
-                cursor: pointer;
-                margin-top: 40px;
-            }
-
-            button:hover {
-                background-color: #0056b3;
-            }
-
-            a {
-                color: white;
-                text-decoration: underline;
-            }
-
-            a:hover {
-                color: #2f94ff;
-            }
-
-            p {
-                text-align: center;
-            }
-        }
-    
-    }
-
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        justify-content: center;
-        align-items: center;
-    }
-
-    .modal-content {
-        position: relative;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        width: 350px;
-        text-align: center;
-    }
-
-    .modal input {
-        width: calc(100% - 20px);
-        padding: 10px;
-        margin-top: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        text-align: center;
-    }
-
-    .modal button {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        background-color: #007bff;
-        color: white;
-        font-size: 14px;
-        cursor: pointer;
-        margin-top: 20px;
-    }
-
-    .modal button:hover {
-        background-color: #0056b3;
-    }
-
-    .close-modal {
-        position: absolute;
-        top: 10px;
-        right: 15px;
-        font-size: 24px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .close-modal:hover {
-        color: red;
-    }
-    
-    /* Loading Animation Styles */
-    .loading-overlay {
-        display: none;
-        position: fixed;
-        z-index: 1100;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .loading-spinner {
-        width: 60px;
-        height: 60px;
-        border: 5px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top: 5px solid #007bff;
-        animation: spin 1s linear infinite;
-    }
-    
-    .loading-text {
-        color: white;
-        margin-top: 15px;
-        font-size: 16px;
-    }
-    
-    .loading-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    @keyframes fadeIn {
-        from {
-        opacity: 0;
-        transform: translateY(20px);
-        }
-        to {
-        opacity: 1;
-        transform: translateY(0);
-        }
-    }
-
-    .register-container {
-        animation: fadeIn 0.8s ease-out forwards;
-        opacity: 0; /* Start with opacity 0 */
-    }
-
-    .fade-out {
-        animation: fadeOut 0.5s ease-in forwards;
-    }
-
-    @keyframes fadeOut {
-        from {
-        opacity: 1;
-        transform: translateY(0);
-        }
-        to {
-        opacity: 0;
-        transform: translateY(-20px);
-        }
-    }
-</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
 {% endblock %}
 
 {% block content %}
+<div id="notification"></div>
+
 <div class="register-container">
     <form action="/register" method="POST" class="register" id="register-form">
         <h2>Register</h2>
@@ -245,30 +16,26 @@
             <div>
                 <label for="first-name">First Name</label>
                 <input type="text" id="first-name" name="first_name" placeholder="First Name"
-                required pattern="^[A-Za-z\s'-]+$" minlength="2" maxlength="50" style="text-transform: capitalize;"
-                value="{{ form_data.first_name if form_data else '' }}"
-                oninput="this.value = this.value.replace(/[^A-Za-z\s-]/g, '')">
+                required pattern="^[A-Za-z\s\'\-]+$" minlength="2" maxlength="50" style="text-transform: capitalize;"
+                oninput="this.value = this.value.replace(/[^A-Za-z\s\-\']/g, '')">
             </div>
             <div>
                 <label for="middle-name">Middle Name</label>
                 <input type="text" id="middle-name" name="middle_name" placeholder="Middle Name"
-                pattern="^[A-Za-z\s'-]+$" minlength="2" maxlength="50" style="text-transform: capitalize;"
-                value="{{ form_data.middle_name if form_data else '' }}"
-                oninput="this.value = this.value.replace(/[^A-Za-z\s-]/g, '')">
+                pattern="^[A-Za-z\s\'\-]+$" minlength="2" maxlength="50" style="text-transform: capitalize;"
+                oninput="this.value = this.value.replace(/[^A-Za-z\s\-\']/g, '')">
             </div>
             <div>
                 <label for="last-name">Last Name</label>
                 <input type="text" id="last-name" name="last_name" placeholder="Last Name" 
-                required pattern="^^[A-Za-z\s'-]+$" minlength="2" maxlength="50" style="text-transform: capitalize;"
-                value="{{ form_data.last_name if form_data else '' }}"
-                oninput="this.value = this.value.replace(/[^A-Za-z\s-]/g, '')">                
+                required pattern="^[A-Za-z\s\'\-]+$" minlength="2" maxlength="50" style="text-transform: capitalize;"
+                oninput="this.value = this.value.replace(/[^A-Za-z\s\-\']/g, '')">                
             </div>
         </div>
         <label for="register-email">Email</label>
         <input type="email" id="register-email" name="email" placeholder="Enter your email" required
-        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        title="Enter a valid email address (e.g., user@example.com)"
-        value="{{ form_data.email if form_data else '' }}">
+        pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
+        title="Enter a valid email address (e.g., user@example.com)">
         <div class="password-group">
             <div>
                 <label for="register-password">Password</label>
@@ -283,141 +50,16 @@
             </div>
         </div>
         <button type="submit" id="register-button">Create Account</button>
-        <p>Already have an account? <a href="/login">Login</a></p>
+        <p style="text-align: center;">Already have an account? <a href="/login">Login</a></p>
     </form>
 </div>
 
-<!-- Loading Overlay -->
 <div id="loading-overlay" class="loading-overlay">
     <div class="loading-container">
         <div class="loading-spinner"></div>
-        <p class="loading-text">Sending verification email...</p>
     </div>
 </div>
 
-<div id="flash-messages" style="display: none;">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-message" data-category="{{ category }}" data-message="{{ message }}"></div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-</div>
-
-<div id="verification-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <h3>Email Verification</h3>
-        <p>Enter the 6-digit code sent to your email</p>
-        <form action="/verify_email" method="POST">
-            <input type="text" name="verification_code" required pattern="\d{6}" maxlength="6">
-            <button type="submit">Verify</button>
-        </form>
-    </div>
-</div>
-
-<div id="verification-data" data-show-verification="{{ show_verification_modal | lower }}"></div>
-
-<script>
-    document.getElementById("confirm-password").addEventListener("input", function () {
-        const password = document.getElementById("register-password").value;
-        const confirmPassword = this.value;
-        if (password !== confirmPassword) {
-            this.setCustomValidity("Passwords do not match");
-        } else {
-            this.setCustomValidity("");
-        }
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".flash-message").forEach(function (msg) {
-            let category = msg.dataset.category;
-            let message = msg.dataset.message;
-
-            // Map Flask flash categories to Toastr types
-            let toastrType = {
-                "success": "success",
-                "info": "info",
-                "warning": "warning",
-                "error": "error"
-            }[category] || "info"; // Default to 'info' if undefined
-
-            toastr[toastrType](message);
-        });
-    });
-</script>    
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const showVerification = document.getElementById("verification-data").getAttribute("data-show-verification");
-        const modal = document.getElementById("verification-modal");
-        const closeModalBtn = document.querySelector(".close-modal");
-        const loadingOverlay = document.getElementById("loading-overlay");
-        const registerForm = document.getElementById("register-form");
-        
-        // Show modal if needed and hide loading animation
-        if (showVerification === "true") {
-            modal.style.display = "flex";
-            loadingOverlay.style.display = "none";
-        }
-
-        // Close the modal when clicking the exit button
-        closeModalBtn.addEventListener("click", function () {
-            modal.style.display = "none";
-        });
-
-        // Show loading overlay when form is submitted
-        registerForm.addEventListener("submit", function(event) {
-            // Only show loading if form is valid
-            if (registerForm.checkValidity()) {
-                loadingOverlay.style.display = "flex";
-            }
-        });
-
-        // Optional: Close the modal when clicking outside of it
-        window.addEventListener("click", function (event) {
-            if (event.target === modal) {
-                modal.style.display = "none";
-            }
-        });
-    });
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Handle links for page transitions
-      const allLinks = document.querySelectorAll('a:not([target="_blank"])');
-      
-      allLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-          // Only handle links to other pages, not anchor links
-          if (this.getAttribute('href') !== '#' && !this.getAttribute('href').startsWith('#')) {
-            e.preventDefault();
-            const container = document.querySelector('.register-container');
-            container.classList.add('fade-out');
-            
-            // Navigate to the new page after animation completes
-            setTimeout(() => {
-              window.location = this.getAttribute('href');
-            }, 500); // Match this with your fadeOut animation duration
-          }
-        });
-      });
-      
-      // Handle form submissions
-      const form = document.getElementById('register-form');
-      form.addEventListener('submit', function(e) {
-        // Only add the animation if form validation passes
-        if (form.checkValidity()) {
-          const container = document.querySelector('.register-container');
-          container.classList.add('fade-out');
-        }
-        // The form will submit normally
-      });
-    });
-</script>
+<script src="{{ url_for('static', filename='js/register.js') }}"></script>
 
 {% endblock %}

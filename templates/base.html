@@ -1,28 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My App{% endblock %}</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <title>{% block title %}Your App{% endblock %}</title>
+    <script>
+        function loadContent(url) {
+            fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById("content").innerHTML = html;
+                window.history.pushState(null, "", url); // Update URL without full reload
+            })
+            .catch(error => console.error('Error loading content:', error));
+        }
 
-    {% block head %}{% endblock %}
+        window.onpopstate = function() {
+            location.reload(); // Handles browser back/forward navigation
+        };
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const contentDiv = document.getElementById('content');
+            const sidebarLinks = document.querySelectorAll('.sidebar a');
 
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+
+                    // Skip links with "#" or JavaScript actions
+                    if (href === '#' || href.startsWith('javascript')) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    // Load content dynamically
+                    fetch(href)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to load content');
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newContent = doc.getElementById('content');
+
+                            if (newContent) {
+                                contentDiv.innerHTML = newContent.innerHTML;
+                                window.history.pushState(null, '', href); // Update URL without reloading
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading content:', error);
+                        });
+                });
+            });
+
+            // Handle browser back/forward navigation
+            window.onpopstate = function () {
+                const currentPath = window.location.pathname;
+                fetch(currentPath)
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newContent = doc.getElementById('content');
+
+                        if (newContent) {
+                            contentDiv.innerHTML = newContent.innerHTML;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error handling back/forward navigation:', error);
+                    });
+            };
+        });
+    </script>
 </head>
 <body>
-    {% block content %}
-    {% endblock %}
-    <script>
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-center",
-            "timeOut": "5000"
-        };
-    </script>    
+    <div class="container">
+        {% include 'sidebar.html' %}
+        <div class="content" id="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.js"></script>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

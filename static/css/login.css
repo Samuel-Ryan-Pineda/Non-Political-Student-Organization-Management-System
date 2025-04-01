@@ -1,0 +1,336 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100dvh;
+    margin: 0;
+    background-color: #f4f4f4;
+    font-family: 'Instrument Sans', sans-serif;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.rectangle {
+    display: flex;
+    width: 100%;
+    max-width: 710px;
+    min-height: 500px;
+    flex-direction: row;
+    border-radius: 20px;
+    background: #FFF;
+    box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 
+                0px 97px 39px 0px rgba(0, 0, 0, 0.01), 
+                0px 54px 33px 0px rgba(0, 0, 0, 0.05), 
+                0px 24px 24px 0px rgba(0, 0, 0, 0.09), 
+                0px 6px 13px 0px rgba(0, 0, 0, 0.10);
+    margin: auto;
+}
+
+.column {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.column:first-child {
+    background-color: #fff;
+    border-radius: 20px 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.header-container {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.neust-logo {
+    max-width: 80px;
+}
+
+.university-info {
+    text-align: center;
+    width: auto;
+}
+
+.column:first-child p {
+    font-size: 12px;
+    margin: 0;
+}
+
+.system-title-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.column:first-child .logo {
+    max-width: 150px;
+    margin: 10px auto 20px;
+    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.10));
+    display: block;
+}
+
+.column:first-child .system-title {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.column:last-child {
+    background-color: #0d3b44;
+    color: white;
+    border-radius: 0 20px 20px 0;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 300px;
+    padding: auto 10px;
+}
+
+.login-container h3 {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.login-container label {
+    display: block;
+    text-align: left;
+    margin-top: 25px;
+    font-size: 13px;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    border: none;
+    box-sizing: border-box;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 25px;
+}
+
+.login-container button:hover {
+    background-color: #0056b3;
+}
+
+.check-forgot-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.remember-me input[type="checkbox"] {
+    width: auto;
+    margin: 0 5px 0 0;
+    display: inline;
+}
+
+.remember-me label {
+    display: inline;
+    margin: 0;
+}
+
+.forgotpassword {
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    text-align: right;
+}
+
+.login-container a {
+    color: white;
+    text-decoration: underline;
+    font-size: 13px;
+}
+
+.login-container a:hover {
+    color: #2f94ff; 
+}
+
+.login-container p {
+    font-size: 13px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.error-message {
+    color: #ff5252;
+    background-color: rgba(255, 82, 82, 0.1);
+    border-left: 3px solid #ff5252;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    border-radius: 3px;
+    display: none;
+}
+
+.warning-message {
+    color: #ffab40;
+    background-color: rgba(255, 171, 64, 0.1);
+    border-left: 3px solid #ffab40;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    border-radius: 3px;
+    display: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rectangle {
+    animation: fadeIn 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.fade-out {
+    animation: fadeOut 0.5s ease-in forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-10px); }
+    30% { transform: translateX(10px); }
+    50% { transform: translateX(-10px); }
+    70% { transform: translateX(10px); }
+    90% { transform: translateX(-10px); }
+}
+
+.shake {
+    animation: shake 0.5s linear;
+}
+
+@media (max-width: 768px) {
+    .rectangle {
+        flex-direction: column;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        min-height: auto;
+    }
+
+    .column:first-child {
+        border-radius: 20px 20px 0 0;
+        padding: 30px 15px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .header-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .neust-logo {
+        max-width: 60px;
+        margin-right: 10px;
+        margin-bottom: 0;
+    }
+    
+    .university-info {
+        text-align: left;
+        width: auto;
+    }
+    
+    .system-title-container {
+        width: 100%;
+        text-align: center;
+        align-items: center;
+        margin-top: -10px;
+    }
+    
+    .column:first-child .logo {
+        width: 100%;
+        max-width: 90px;
+        margin: 20px auto;
+        display: block;
+    }
+
+    .column:first-child .system-title-container p {
+        font-size: 15px;
+        line-height: 10px;
+    }
+
+    .column:last-child {
+        border-radius: 0 0 20px 20px;
+        padding: 30px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        width: 100px;
+    }
+
+    .login-container {
+        padding: 15px;
+        max-width: 100%;
+    }
+
+    .login-container h3 {
+        font-size: 26px;
+    }
+
+    .login-container label,
+    .login-container input,
+    .login-container button,
+    .forgotpassword,
+    .login-container a,
+    .login-container p {
+        font-size: 14px;
+    }
+    
+    .neust-logo {
+        max-width: 50px;
+    }
+}

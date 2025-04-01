@@ -1,0 +1,266 @@
+/* Base styles remain the same */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100dvh;
+    margin: 0;
+    background-color: #f4f4f4;
+    box-sizing: border-box;
+    overflow-y: auto;
+    font-family: 'Instrument Sans', sans-serif;
+}
+
+.register-container {
+    width: 90%;
+    max-width: 710px;
+    min-height: 500px;
+    border-radius: 20px;
+    background: #0d3b44;
+    box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 0px 97px 39px 0px rgba(0, 0, 0, 0.01), 0px 54px 33px 0px rgba(0, 0, 0, 0.05), 0px 24px 24px 0px rgba(0, 0, 0, 0.09), 0px 6px 13px 0px rgba(0, 0, 0, 0.10);
+    color: white;
+    font-size: 13px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    opacity: 0; /* Start with opacity 0 for fade-in */
+    padding: 20px 0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+.register-container {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.fade-out {
+    animation: fadeOut 0.5s ease-in forwards;
+}
+
+/* Form styles */
+.register {
+    padding: 5%;
+    width: 100%;
+    max-width: 600px;
+}
+
+.register h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.input-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.input-group div {
+    flex: 1 1 calc(33.333% - 10px);
+    min-width: 120px;
+}
+
+.input-group label, label {
+    display: block;
+    text-align: left;
+    margin-top: 15px;
+}
+
+.input-group input, input {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    font-size: 13px;
+    margin-top: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.password-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.password-group div {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 150px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 30px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+a {
+    color: white;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #2f94ff;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    z-index: 1100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 5px solid #007bff;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    color: white;
+    margin-top: 15px;
+    font-size: 16px;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Notification styles */
+#notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    font-size: 14px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease-in-out;
+    width: 90%;
+    max-width: 400px;
+}
+
+#notification.error-message {
+    color: white;
+    background-color: #ff5252;
+    border-left: 3px solid #4f0000;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    border-radius: 3px;
+    display: none;
+}
+
+#notification.success-message {
+    color: white;
+    background-color: #008000;
+    border-left: 3px solid #ffab40;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    border-radius: 3px;
+    display: none;
+}
+
+/* Animations */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Media queries for responsiveness */
+@media screen and (max-width: 768px) {
+    .register-container {
+        width: 95%;
+        min-height: auto;
+        padding: 30px 0;
+    }
+    
+    .register {
+        padding: 5% 8%;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .input-group div {
+        flex: 1 1 100%;
+    }
+    
+    .password-group div {
+        flex: 1 1 100%;
+    }
+    
+    body {
+        align-items: flex-start;
+        padding: 20px 0;
+    }
+    
+    .register-container {
+        margin: 20px 0;
+    }
+}
+
+@media screen and (max-height: 600px) {
+    body {
+        height: auto;
+        padding: 20px 0;
+    }
+}

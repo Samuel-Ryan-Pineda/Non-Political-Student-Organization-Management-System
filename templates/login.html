@@ -1,331 +1,51 @@
-{% extends "base.html" %}
+{% extends "auth_base.html" %}
 
 {% block title %}Login{% endblock %}
 
 {% block head %}
-<style>
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
-        font-family: 'Instrument Sans', sans-serif;
-    }
-
-    .rectangle {
-        display: flex;
-        width: 710px;
-        height: 500px;
-        flex-shrink: 0;
-        border-radius: 20px;
-        background: #FFF;
-        box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 0px 97px 39px 0px rgba(0, 0, 0, 0.01), 0px 54px 33px 0px rgba(0, 0, 0, 0.05), 0px 24px 24px 0px rgba(0, 0, 0, 0.09), 0px 6px 13px 0px rgba(0, 0, 0, 0.10);
-    }
-
-    .column {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-
-    .column:first-child {
-        background-color: #fff;
-        border-radius: 20px 0 0 20px;
-        display: flex;
-        flex-direction: column;
-
-        img {
-            max-width: 80px;
-            margin-bottom: 10px;
-        }
-
-        .logo {
-            max-width: 150px;
-            margin: 50px 0;
-            filter: drop-shadow(0px 95px 26px rgba(0, 0, 0, 0.00)) drop-shadow(0px 61px 24px rgba(0, 0, 0, 0.01)) drop-shadow(0px 34px 20px rgba(0, 0, 0, 0.05)) drop-shadow(0px 15px 15px rgba(0, 0, 0, 0.09)) drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.10));
-        }
-
-        p {
-            font-size: 12px;
-            margin: 0;
-        }
-
-        .system-title {
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-    }
-
-    .column:last-child {
-        background-color: #0d3b44;
-        color: white;
-        border-radius: 0 20px 20px 0;
-
-        .login-container {
-            width: 100%;
-            margin: auto 10%;
-
-            h3 {
-                margin-bottom: 25px;
-                text-align: center;
-            }
-            
-            label {
-                display: block;
-                text-align: left;
-                margin-top: 25px;
-                font-size: 13px;
-            }
-            
-            input {
-                width: calc(100% - 20px);
-                padding: 10px;
-                margin: 5px 0 10px;
-                border-radius: 5px;
-                font-size: 13px;
-                border: none;
-                display: block;
-            }
-
-            button {
-                width: 100%;
-                padding: 10px;
-                border: none;
-                border-radius: 5px;
-                background-color: #007bff;
-                color: white;
-                font-size: 13px;
-                cursor: pointer;
-                margin-top: 25px;
-            }
-
-            button:hover {
-                background-color: #0056b3;
-            }
-
-            .forgotpassword {
-                color: white;
-                text-decoration: none;
-                display: block;
-                font-size: 13px;
-                margin-top: 5px;
-                margin-bottom: 5px;
-                text-align: right;
-            }
-
-            a {
-                color: white;
-                text-decoration: underline;;
-                font-size: 13px;
-            }
-
-            a:hover {
-                color: #2f94ff; 
-            }
-
-            p {
-                font-size: 13px;
-                text-align: center;
-                margin-top: 15px;
-            }
-        }
-    }
-
-    /* Error message styles */
-    .error-message {
-        color: #ff5252;
-        background-color: rgba(255, 82, 82, 0.1);
-        border-left: 3px solid #ff5252;
-        padding: 8px 12px;
-        margin: 10px 0;
-        font-size: 13px;
-        border-radius: 3px;
-        display: none;
-    }
-
-    .warning-message {
-        color: #ffab40;
-        background-color: rgba(255, 171, 64, 0.1);
-        border-left: 3px solid #ffab40;
-        padding: 8px 12px;
-        margin: 10px 0;
-        font-size: 13px;
-        border-radius: 3px;
-        display: none;
-    }
-
-    @keyframes fadeIn {
-        from {
-        opacity: 0;
-        transform: translateY(20px);
-        }
-        to {
-        opacity: 1;
-        transform: translateY(0);
-        }
-    }
-
-    .rectangle {
-        animation: fadeIn 0.8s ease-out forwards;
-        opacity: 0; /* Start with opacity 0 */
-    }
-
-    .fade-out {
-        animation: fadeOut 0.5s ease-in forwards;
-    }
-
-    @keyframes fadeOut {
-        from {
-        opacity: 1;
-        transform: translateY(0);
-        }
-        to {
-        opacity: 0;
-        transform: translateY(-20px);
-        }
-    }
-
-    /* Shake animation for error validation */
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-        20%, 40%, 60%, 80% { transform: translateX(5px); }
-    }
-
-    .shake {
-        animation: shake 0.5s;
-    }
-</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="rectangle">
-    <div class="column">
-        <img src="./static/NEUST_logo.png" alt="NEUST Logo">
-        <p>Republic of the Philippines</p>
-        <p><b>Nueva Ecija University of Science and Technology</b></p>
-        <p>Cabanatuan City, Nueva Ecija, Philippines</p>
-        <img src="./static/OSOAD_logo.png" alt="OSOAD Logo" class="logo">
-        <p class="system-title">Non-Political Organization</p>
-        <p class="system-title">Management System</p>
-    </div>
-    <div class="column">
-        <div class="login-container">
-            <h3>Login</h3>
-            <div id="error-container" class="error-message"></div>
-            <div id="warning-container" class="warning-message"></div>
-            <form id="login-form">
-                <label for="email">Email</label>
-                <input type="email" id="register-email" name="email" placeholder="Enter your email" required
-                value="{{ email if email else '' }}">
-                <label for="password">Password</label>
-                <input type="password" id="register-password" name="entrykey" placeholder="Password" required>
-                <a href="#" class="forgotpassword">Forgot Password?</a>
-                <button type="submit" id="login-button">Sign in</button>
-                <p>Don't have an account? <a href="/register">Register here</a></p>
-            </form>
+    <div class="rectangle">
+        <div class="column">
+            <div class="header-container">
+                <img src="{{ url_for('static', filename='images/NEUST_logo.png') }}" alt="NEUST Logo" class="neust-logo">
+                <div class="university-info">
+                    <p>Republic of the Philippines</p>
+                    <p><b>Nueva Ecija University of Science and Technology</b></p>
+                    <p>Cabanatuan City, Nueva Ecija, Philippines</p>
+                </div>
+            </div>
+            <div class="system-title-container">
+                <img src="{{ url_for('static', filename='images/OSOAD_logo.png') }}" alt="OSOAD Logo" class="logo">
+                <p class="system-title">Non-Political Organization</p>
+                <p class="system-title">Management System</p>
+            </div>
+        </div>
+        <div class="column">
+            <div class="login-container">
+                <h3>Login</h3>
+                <div id="error-container" class="error-message"></div>
+                <div id="warning-container" class="warning-message"></div>
+                <form id="login-form">
+                    <label for="email">Email</label>
+                    <input type="email" id="register-email" name="email" placeholder="Enter your email">
+                    <label for="password">Password</label>
+                    <input type="password" id="register-password" name="entrykey" placeholder="Password" >
+                    <div class="check-forgot-container">
+                        <div class="remember-me">
+                            <input type="checkbox" id="remember" name="remember">
+                            <label for="remember">Remember me</label>
+                        </div>
+                        <a href="#" class="forgotpassword">Forgot Password?</a>
+                    </div>
+                    <button type="submit" id="login-button">Sign in</button>
+                    <p>Don't have an account? <a href="/register">Register here</a></p>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('login-form');
-    const errorContainer = document.getElementById('error-container');
-    const warningContainer = document.getElementById('warning-container');
-    const loginButton = document.getElementById('login-button');
-    const passwordInput = document.getElementById('register-password');
-
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        // Clear previous error messages
-        errorContainer.style.display = 'none';
-        warningContainer.style.display = 'none';
-
-        // Change button text to show loading
-        loginButton.textContent = 'Signing in...';
-        loginButton.disabled = true;
-
-        // Get form data
-        const formData = new FormData(loginForm);
-
-        // Send AJAX request
-        fetch('/login', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Reset button
-            loginButton.textContent = 'Sign in';
-            loginButton.disabled = false;
-
-            if (data.success) {
-                // If login successful, fade out and redirect
-                const rectangle = document.querySelector('.rectangle');
-                rectangle.classList.add('fade-out');
-
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 500);
-            } else {
-                // Handle error
-                if (data.category === 'error') {
-                    errorContainer.textContent = data.message;
-                    errorContainer.style.display = 'block';
-
-                    // Clear password field
-                    passwordInput.value = '';
-
-                    // Add shake animation to form
-                    loginForm.classList.add('shake');
-                    setTimeout(() => {
-                        loginForm.classList.remove('shake');
-                    }, 500);
-                } else if (data.category === 'warning') {
-                    warningContainer.textContent = data.message;
-                    warningContainer.style.display = 'block';
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            errorContainer.textContent = 'An unexpected error occurred. Please try again.';
-            errorContainer.style.display = 'block';
-            loginButton.textContent = 'Sign in';
-            loginButton.disabled = false;
-
-            // Clear password field
-            passwordInput.value = '';
-        });
-    });
-
-    // Handle links for page transitions
-    const allLinks = document.querySelectorAll('a:not([target="_blank"])');
-
-    allLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            // Only handle links to other pages, not anchor links
-            if (this.getAttribute('href') !== '#' && !this.getAttribute('href').startsWith('#')) {
-                e.preventDefault();
-                const rectangle = document.querySelector('.rectangle');
-                rectangle.classList.add('fade-out');
-
-                // Navigate to the new page after animation completes
-                setTimeout(() => {
-                    window.location = this.getAttribute('href');
-                }, 500); // Match this with your fadeOut animation duration
-            }
-        });
-    });
-});
-</script>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}
