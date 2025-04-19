@@ -579,10 +579,10 @@ def login():
     return render_template('login.html')
 
 # ✅ Dashboard Route (protected with login_required)
-@app.route('/dashboard')
+@app.route('/member')
 @login_required
 def dashboard():
-    return render_template('pages/dashboard.html', user=current_user)
+    return render_template('pages/member.html', user=current_user)
 
 @app.route('/neworganization')
 @login_required
@@ -602,17 +602,23 @@ def organization():
     # current_user is provided by Flask-Login
     return render_template('pages/organization.html', user=current_user)
 
-@app.route('/analytics')
+@app.route('/organizationdetails')
+@login_required
+def organizationdetails():
+    # current_user is provided by Flask-Login
+    return render_template('pages/organizationdetails.html', user=current_user)
+
+@app.route('/announcement')
 @login_required
 def analytics():
     # current_user is provided by Flask-Login
-    return render_template('pages/analytics.html', user=current_user)
+    return render_template('pages/announcement.html', user=current_user)
 
-@app.route('/schedules')
+@app.route('/reports')
 @login_required
 def schedules():
     # current_user is provided by Flask-Login
-    return render_template('pages/schedules.html', user=current_user)
+    return render_template('pages/reports.html', user=current_user)
 
 # ✅ Logout Route (Updated for Flask-Login)
 @app.route('/logout')

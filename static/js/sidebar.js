@@ -4,32 +4,32 @@ $(document).ready(function() {
   
   // Apply saved state on initial page load
   if (sidebarCollapsed && $(window).width() > 768) {
-    $(".sidebar").addClass("active");
+    $(".custom-sidebar").addClass("active");
   }
 
   // Get current page URL path
   const currentPath = window.location.pathname;
   
   // Find the menu item that matches the current path and add 'active' class
-  $(".menu ul li a").each(function() {
+  $(".custom-menu ul li a").each(function() {
     const menuLink = $(this).attr("href");
     if (menuLink === currentPath) {
       // Add active class to the li element (parent of this anchor)
       $(this).parent("li").addClass("active");
       
       // If this is in a submenu, also make the parent menu item active
-      if ($(this).closest(".sub-menu").length) {
-        $(this).closest(".sub-menu").parent("li").addClass("active");
+      if ($(this).closest(".custom-sub-menu").length) {
+        $(this).closest(".custom-sub-menu").parent("li").addClass("active");
         // Make the submenu visible
-        $(this).closest(".sub-menu").show();
+        $(this).closest(".custom-sub-menu").show();
       }
     }
   });
 
-  // Toggle submenu on click (your existing code)
-  $(".menu > ul > li").click(function(e) {
+  // Toggle submenu on click
+  $(".custom-menu > ul > li").click(function(e) {
     // Only execute this if clicking the main li item, not a submenu item
-    if ($(e.target).closest(".sub-menu").length === 0) {
+    if ($(e.target).closest(".custom-sub-menu").length === 0) {
       // remove active from already active
       $(this).siblings().removeClass("active");
       // add active to clicked
@@ -47,54 +47,56 @@ $(document).ready(function() {
       }
       
       // Stop event from triggering link navigation when clicking on parent items with submenus
-      if ($(this).find(".sub-menu").length && 
-          $(e.target).is(".arrow") || 
-          $(e.target).closest("a").find(".arrow").length) {
+      if ($(this).find(".custom-sub-menu").length && 
+          $(e.target).is(".custom-arrow") || 
+          $(e.target).closest("a").find(".custom-arrow").length) {
         e.preventDefault();
       }
     }
   });
   
   // Handle submenu item clicks
-  $(".menu .sub-menu li a").click(function(e) {
+  $(".custom-menu .custom-sub-menu li a").click(function(e) {
     // Remove active class from all menu items
-    $(".menu ul li").removeClass("active");
+    $(".custom-menu ul li").removeClass("active");
 
     // Add active class to the clicked submenu item
     $(this).parent("li").addClass("active");
 
     // Add active class to the parent menu item
-    $(this).closest(".sub-menu").parent("li").addClass("active");
+    $(this).closest(".custom-sub-menu").parent("li").addClass("active");
+    
+    // Do not prevent default - allow normal navigation
   });
 
   // Toggle sidebar on menu button click with localStorage saving
-  $(".menu-btn").click(function() {
+  $(".custom-menu-btn").click(function() {
     // Check if we're in mobile view
     if ($(window).width() <= 768) {
       // In mobile: toggle mobile-active class
-      $(".sidebar").toggleClass("mobile-active");
+      $(".custom-sidebar").toggleClass("mobile-active");
       
       // When sidebar is closed (mobile-active added)
-      if ($(".sidebar").hasClass("mobile-active")) {
+      if ($(".custom-sidebar").hasClass("mobile-active")) {
         setTimeout(function() {
-          $(".sidebar .head, .sidebar .nav, .sidebar .menu:not(.menu-btn)").css({
+          $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
             "opacity": "0",
             "visibility": "hidden"
           });
         }, 1);
       } else {
         // When sidebar is opened
-        $(".sidebar .head, .sidebar .nav, .sidebar .menu:not(.menu-btn)").css({
+        $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
           "opacity": "1",
           "visibility": "visible"
         });
       }
     } else {
       // In desktop: toggle the regular active class
-      $(".sidebar").toggleClass("active");
+      $(".custom-sidebar").toggleClass("active");
       
       // Save the state to localStorage
-      localStorage.setItem('sidebarCollapsed', $(".sidebar").hasClass("active"));
+      localStorage.setItem('sidebarCollapsed', $(".custom-sidebar").hasClass("active"));
     }
   });
   
@@ -110,21 +112,21 @@ $(document).ready(function() {
   function checkMobileView() {
     if ($(window).width() <= 768) {
       // On mobile, add mobile-specific class
-      $(".sidebar").addClass("mobile-active");
+      $(".custom-sidebar").addClass("mobile-active");
       
       // Remove desktop active class if present
-      $(".sidebar").removeClass("active");
+      $(".custom-sidebar").removeClass("active");
       
       // Hide sidebar content
-      $(".sidebar .head, .sidebar .nav, .sidebar .menu:not(.menu-btn)").css({
+      $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
         "opacity": "0",
         "visibility": "hidden"
       });
     } else {
       // On desktop, remove mobile-specific class and styles
-      $(".sidebar").removeClass("mobile-active");
+      $(".custom-sidebar").removeClass("mobile-active");
       
-      $(".sidebar .head, .sidebar .nav, .sidebar .menu:not(.menu-btn)").css({
+      $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
         "opacity": "",
         "visibility": ""
       });
@@ -132,53 +134,15 @@ $(document).ready(function() {
       // Apply saved state if it exists
       const savedState = localStorage.getItem('sidebarCollapsed');
       if (savedState === 'true') {
-        $(".sidebar").addClass("active");
+        $(".custom-sidebar").addClass("active");
       } else if (savedState === 'false') {
-        $(".sidebar").removeClass("active");
+        $(".custom-sidebar").removeClass("active");
       }
     }
   }
   
-  // Handle regular link clicks to maintain sidebar state
-  $(".menu ul li a").click(function(e) {
-    const href = $(this).attr("href");
-
-    // Skip links with "#" or JavaScript actions
-    if (href === "#" || href.startsWith("javascript")) {
-        return;
-    }
-
-    e.preventDefault();
-
-    // Load content dynamically
-    fetch(href)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Failed to load content");
-            }
-            return response.text();
-        })
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-            const newContent = doc.getElementById("content");
-
-            if (newContent) {
-                $("#content").html(newContent.innerHTML);
-                window.history.pushState(null, "", href); // Update URL without reloading
-            }
-
-            // Collapse the sidebar in mobile mode
-            if ($(window).width() <= 768) {
-                $(".sidebar").addClass("mobile-active");
-                $(".sidebar .head, .sidebar .nav, .sidebar .menu:not(.menu-btn)").css({
-                    "opacity": "0",
-                    "visibility": "hidden"
-                });
-            }
-        })
-        .catch(error => {
-            console.error("Error loading content:", error);
-        });
-  });
+  // Initialize tooltips if Bootstrap is present
+  if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+    $('[data-bs-toggle="tooltip"]').tooltip();
+  }
 });
