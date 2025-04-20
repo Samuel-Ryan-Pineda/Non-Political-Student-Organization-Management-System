@@ -1,0 +1,145 @@
+:root {
+    --primary-color: #0a3b44;
+    --secondary-color: #2f4f58;
+    --text-color: #0a3b44;
+    --bg-color: #d3e0eb;
+    --button-color: #4f6ef7;
+    --button-hover: #3b56d1;
+    --white: #ffffff;
+  }
+
+  h1 {
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1.2;
+    color: var(--primary-color);
+  }
+
+  p {
+    color: var(--primary-color);
+  }
+
+  /* Search component styles */
+  .search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .search-input {
+    border-radius: 50px;
+    border: 1.5px solid var(--primary-color);
+    padding: 0.75rem 3.5rem 0.75rem 1.25rem;
+    color: #6b7280;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .search-btn {
+    position: absolute;
+    right: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+
+  /* Table styles */
+  .table-container {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    width: 100%;
+  }
+
+  /* Smaller font size for table */
+  .table {
+    font-size: 0.800rem;
+  }
+
+  .table th {
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
+    font-size: 0.8125rem;
+  }
+
+  .table th, 
+  .table td {
+    vertical-align: middle;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .table tbody tr {
+    border-bottom: 1px solid var(--secondary-color);
+  }
+
+  /* Modal-specific styles */
+  .modal-table thead {
+    background-color: #2f5963;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.800rem;
+    text-align: left;
+  }
+
+  .modal-table tbody tr {
+    border-top: 1px solid #4a6a70;
+    vertical-align: top;
+    text-align: left;
+  }
+
+  .modal-table tbody td {
+    color: #2f5963;
+    font-size: 0.800rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    vertical-align: top;
+  }
+
+  .status-active {
+    color: #7ed321;
+    font-weight: 600;
+  }
+
+  .status-inactive {
+    color: #ff0000;
+    font-weight: 600;
+  }
+
+  /* Responsive styles */
+  @media (max-width: 576px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    .table-container {
+      padding: 1rem;
+    }
+    
+    .table {
+      font-size: 0.8125rem;
+    }
+    
+    .table th {
+      font-size: 0.75rem;
+    }
+
+    .modal-table thead th,
+    .modal-table tbody td {
+      font-size: 0.800rem;
+    }
+  }

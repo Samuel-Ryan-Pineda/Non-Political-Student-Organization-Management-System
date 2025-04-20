@@ -1,0 +1,133 @@
+  h1 {
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1.2;
+    color: #0f3b47;
+  }
+
+  p {
+    color: #0f3b47;
+  }
+  
+  .tab-btn {
+    border: 1px solid #0f3b47;
+    font-size: 0.800rem;
+    font-weight: 400;
+    color: #0f3b47;
+    padding: 0.375rem 1rem;
+    cursor: pointer;
+    background-color: #d3dbe9;
+  }
+  
+  .tab-btn.active {
+    background-color: white;
+    font-weight: 600;
+    border-bottom-color: white;
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .tab-btn.create-announcement {
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0;
+  }
+  
+  .tab-btn.sent-history {
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0;
+  }
+  
+  .table thead {
+    background-color: #0f3b47;
+    color: white;
+    font-weight: 600;
+    font-size: 0.800rem;
+  }
+  
+  .table tbody tr {
+    border-bottom: 1px solid #0f3b47;
+    color: #0f3b47;
+    font-size: 0.800rem;
+    font-weight: 400;
+  }
+  
+  .container-custom {
+    max-width: 900px;
+  }
+  
+  .card-custom {
+    border: 1px solid #0f3b47;
+    border-radius: 0 0.5rem 0.5rem 0.5rem;
+    background-color: white;
+    padding: 1.5rem;
+    overflow-x: auto;
+    position: relative;
+  }
+  
+  input,
+  textarea {
+    background-color: #eaeaea !important;
+    border: 1px solid #ccc !important;
+    color: #0f3b47 !important;
+    font-size: 0.800rem !important;
+    font-weight: 400 !important;
+    border-radius: 0.375rem !important;
+  }
+  
+  textarea {
+    resize: none;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .form-label {
+    color: #0f3b47;
+    font-size: 0.800rem;
+  }
+
+  /* Announcement-specific modal styles */
+  .announcement-metadata {
+    margin-bottom: 1.5rem;
+    font-size: 0.800rem;
+  }
+  
+  .announcement-metadata p {
+    margin-bottom: 0.5rem;
+  }
+
+  .announcement-content {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border: 1px solid #dee2e6;
+  }
+
+  .announcement-message {
+    white-space: pre-line;
+    line-height: 1.2;
+    color: #0f3b47cb;
+    font-size: 0.800rem;
+  }
+
+  /* Responsive styles */
+  @media (max-width: 576px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    .card-custom {
+      padding: 1rem;
+    }
+    
+    .table {
+      font-size: 0.8125rem;
+    }
+    
+    .table th {
+      font-size: 0.75rem;
+    }
+  }

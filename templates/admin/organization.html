@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Organizations{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/organization.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2 class="org-header text-start">Organizations</h2>
+  <hr class="divider">
+  
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 gap-3">
+    <a class="sort-btn" href="#" aria-label="Sort by"></a>
+    <form class="search-container" role="search" aria-label="Search form">
+      <input type="search" placeholder="Search..." aria-label="Search">
+      <i class="fas fa-search"></i>
+    </form>
+  </div>
+  
+  <div class="row row-eq-height g-3" role="list">
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Student Society in Information Technology Education - NEUST Chapter</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Association of Computer Engineering Students - Regional Division</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">National Federation of Mathematics and Science Scholars - Local Council</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">International Alliance of Future Business Leaders - Provincial Branch</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">College of Arts and Humanities Student Association - Western Campus</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Society for Advancement of Engineering Research - Undergraduate Division</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Alliance of Environmental Science Students - Conservation Chapter</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Federation of Psychology and Behavioral Sciences - Research Council</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Council for Literary Advancement and Cultural Studies - Main Branch</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Association of Healthcare Management Students - Eastern Division</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">Institute of Future Educators and Teaching Professionals - City Chapter</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3" role="listitem">
+      <div class="card card-custom">
+        <div class="card-header-custom">
+          <img
+            src="https://placehold.co/64x64/png?text=Logo"
+            alt="Organization logo"
+            width="64"
+            height="64"
+          >
+          <div class="text-start">United Association of Agricultural Science Scholars - Rural Development</div>
+        </div>
+        <div class="card-footer-custom">
+          <a href="/organizationdetails" class="btn btn-primary">View Details</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

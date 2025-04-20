@@ -554,8 +554,15 @@ def login():
                 # Get the next page from the request if it exists
                 next_page = request.args.get('next')
                 
+                # Check user role and redirect accordingly
+                if user.role_id == 1:  # OSOAD (Admin)
+                    redirect_url = url_for('dashboard')  # Points to admin/organization.html
+                else:
+                    # For non-admin roles, redirect to user application page
+                    redirect_url = url_for('user_application')
+                
                 response['success'] = True
-                response['redirect'] = next_page or url_for('dashboard')
+                response['redirect'] = next_page or redirect_url
                 return jsonify(response)
 
             # Increment login attempts
@@ -579,46 +586,80 @@ def login():
     return render_template('login.html')
 
 # ✅ Dashboard Route (protected with login_required)
-@app.route('/member')
+@app.route('/organization')
 @login_required
 def dashboard():
-    return render_template('pages/member.html', user=current_user)
+    return render_template('admin/organization.html', user=current_user)
+
+# ✅ User Application Route (for non-admin users)
+@app.route('/user/application')
+@login_required
+def user_application():
+    # Only accessible for non-admin users
+    if current_user.role_id == 1:  # If admin tries to access
+        return redirect(url_for('dashboard'))
+    return render_template('user/application.html', user=current_user)
 
 @app.route('/neworganization')
 @login_required
 def neworganization():
     # current_user is provided by Flask-Login
-    return render_template('pages/neworganization.html', user=current_user)
+    return render_template('admin/neworganization.html', user=current_user)
+
+@app.route('/member')
+@login_required
+def member():
+    # current_user is provided by Flask-Login
+    return render_template('admin/member.html', user=current_user)
+
+
+@app.route('/neworganizationfiles')
+@login_required
+def neworganizationfiles():
+    # current_user is provided by Flask-Login
+    return render_template('admin/neworganizationfiles.html', user=current_user)
 
 @app.route('/renewal')
 @login_required
 def renewal():
     # current_user is provided by Flask-Login
-    return render_template('pages/renewal.html', user=current_user)
+    return render_template('admin/renewal.html', user=current_user)
+
+@app.route('/organizationrenewals')
+@login_required
+def organizationrenewals():
+    # current_user is provided by Flask-Login
+    return render_template('admin/organizationrenewals.html', user=current_user)
 
 @app.route('/organization')
 @login_required
 def organization():
     # current_user is provided by Flask-Login
-    return render_template('pages/organization.html', user=current_user)
+    return render_template('admin/organization.html', user=current_user)
 
 @app.route('/organizationdetails')
 @login_required
 def organizationdetails():
     # current_user is provided by Flask-Login
-    return render_template('pages/organizationdetails.html', user=current_user)
+    return render_template('admin/organizationdetails.html', user=current_user)
 
 @app.route('/announcement')
 @login_required
 def analytics():
     # current_user is provided by Flask-Login
-    return render_template('pages/announcement.html', user=current_user)
+    return render_template('admin/announcement.html', user=current_user)
 
 @app.route('/reports')
 @login_required
 def schedules():
     # current_user is provided by Flask-Login
-    return render_template('pages/reports.html', user=current_user)
+    return render_template('admin/reports.html', user=current_user)
+
+@app.route('/organizationreports')
+@login_required
+def organizationreports():
+    # current_user is provided by Flask-Login
+    return render_template('admin/organizationreports.html', user=current_user)
 
 # ✅ Logout Route (Updated for Flask-Login)
 @app.route('/logout')

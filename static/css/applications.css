@@ -1,0 +1,45 @@
+
+  :root {
+    --primary-color: #3b56f5;
+    --text-color: #13454f;
+    --bg-color: #d3dbe9;
+    --card-radius: 0.75rem;
+    --avatar-bg: #dedede;
+  }
+
+  .card {
+    border-radius: var(--card-radius);
+    border: 1px solid var(--text-color);
+  }
+
+  .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .badge-pending {
+    background-color: var(--text-color);
+    font-size: 0.800rem;
+    padding: 0.25rem 1rem;
+    border-radius: 9999px;
+    color: white;
+  }
+
+  .submitted-text, 
+  .btn,
+  .org-text {
+    font-size: 0.800rem;
+  }
+
+  .org-text {
+    max-width: 14rem;
+    text-align: left;
+  }
+
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--avatar-bg);
+    flex-shrink: 0;
+  }

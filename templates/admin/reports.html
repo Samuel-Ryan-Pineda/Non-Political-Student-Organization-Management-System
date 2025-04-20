@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization Reports{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/applications.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2 class="org-header">Organization Reports</h2>
+  <hr class="divider">
+  <p class="mb-4 fs-5 text-start" style="color: var(--text-color);">Pending organization reports</p>
+  
+  <div class="row g-4">
+    {% set org_names = [
+      "Global Climate Research Initiative",
+      "Quantum Computing Innovation Alliance",
+      "Healthcare Access Partnership",
+      "Urban Sustainability Consortium",
+      "Digital Education Foundation",
+      "Biodiversity Conservation Network"
+    ] %}
+    
+    {% set submission_dates = [
+      "April 12, 2025",
+      "April 5, 2025",
+      "April 15, 2025",
+      "April 8, 2025",
+      "April 10, 2025",
+      "April 3, 2025"
+    ] %}
+    
+    {% set report_counts = [3, 5, 2, 4, 6, 3] %}
+    
+    {% for i in range(6) %}
+    <div class="col-12 col-sm-6 col-lg-4">
+      <div class="card p-3 d-flex flex-column justify-content-between h-100">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <p class="submitted-text mb-0">Updated on: {{ submission_dates[i] }}</p>
+            <span class="badge-pending">{{ report_counts[i] }} reports</span>
+          </div>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="avatar" aria-label="Organization placeholder logo"></div>
+            <p class="org-text mb-0">{{ org_names[i] }}</p>
+          </div>
+        </div>
+        <a href="/organizationreports" type="button" class="btn btn-primary w-auto">Open Report</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

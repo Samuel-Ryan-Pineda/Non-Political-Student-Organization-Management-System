@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization Renewals{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/applications.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2 class="org-header">Organization Renewals</h2>
+  <hr class="divider">
+  <p class="mb-4 fs-5 text-start" style="color: var(--text-color);">Pending organization renewal applications</p>
+  
+  <div class="row g-4">
+    {% set org_names = [
+      "Global Institute for Sustainable Technology and Innovation",
+      "Association for Digital Ethics and Privacy Standards",
+      "Center for Advanced Materials Research and Development",
+      "Pacific Coalition for Marine Conservation and Oceanic Studies",
+      "International Forum for Renewable Energy Integration",
+      "Consortium for Artificial Intelligence Ethics and Governance",
+      "Southeast Asian Medical Research Collaborative",
+      "European Network for Urban Sustainability Solutions"
+    ] %}
+    
+    {% set submission_dates = [
+      "July 5, 2025",
+      "June 28, 2025",
+      "July 2, 2025",
+      "June 30, 2025",
+      "July 8, 2025",
+      "July 10, 2025",
+      "July 3, 2025",
+      "June 25, 2025"
+    ] %}
+    
+    {% set pending_counts = [5, 3, 5, 2, 4, 6, 3, 4] %}
+    
+    {% for i in range(8) %}
+    <div class="col-12 col-sm-6 col-lg-4">
+      <div class="card p-3 d-flex flex-column justify-content-between h-100">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <p class="submitted-text mb-0">Submitted on: {{ submission_dates[i] }}</p>
+            <span class="badge-pending">{{ pending_counts[i] }} pending</span>
+          </div>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="avatar" aria-label="Organization placeholder logo"></div>
+            <p class="org-text mb-0">{{ org_names[i] }}</p>
+          </div>
+        </div>
+        <a href="/organizationrenewals" type="button" class="btn btn-primary w-auto">Open Renewal</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+
+{% block title %}New Organization Application Files{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orgfiles.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="container">
+  <h2 class="org-header">New Organizations</h2>
+  <hr class="divider">
+  <section class="bg-white rounded-3 p-4" aria-label="New Organization Application Details">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <h2 class="highlight-title fs-6 fw-semibold mb-0">New Organization Application</h2>
+      <a href="/neworganization" type="button" class="btn btn-light btn-sm d-flex align-items-center gap-1 ">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+    
+    <div class="org-info">
+      <p class="mb-1">
+        <span class="fw-semibold">Organization:</span> International Association for Technological Advancement and Sustainable Development
+      </p>
+      <p class="mb-4">
+        <span class="fw-semibold">Date Submitted:</span> July 5, 2025
+      </p>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th scope="col" style="text-align: left;">File Name</th>
+            <th scope="col" style="text-align: left;">Submission Date</th>
+            <th scope="col" style="text-align: left;">Form Type</th>
+            <th scope="col">Status</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set file_data = [
+            {
+              "name": "appforrecog.pdf",
+              "date": "July 5, 2025, 1:00 PM",
+              "type_code": "Form 1A",
+              "type_desc": "APPLICATION FOR RECOGNITION",
+              "status": "Verified",
+              "status_class": "status-verified",
+              "feedback_count": 0
+            },
+            {
+              "name": "lettofacceptance.pdf",
+              "date": "July 5, 2025, 1:01 PM",
+              "type_code": "Form 2",
+              "type_desc": "LETTER OF ACCEPTANCE",
+              "status": "Verified",
+              "status_class": "status-verified",
+              "feedback_count": 0
+            },
+            {
+              "name": "listofactivities.pdf",
+              "date": "July 5, 2025, 1:01 PM",
+              "type_code": "Form 3",
+              "type_desc": "LIST OF PROGRAMS/PROJECTS/ACTIVITIES",
+              "status": "Verified",
+              "status_class": "status-verified",
+              "feedback_count": 0
+            },
+            {
+              "name": "listofmembers.pdf",
+              "date": "July 5, 2025, 1:02 PM",
+              "type_code": "Form 4",
+              "type_desc": "LIST OF MEMBERS",
+              "status": "For Revision",
+              "status_class": "status-revision",
+              "feedback_count": 2
+            },
+            {
+              "name": "boardofofficer.pdf",
+              "date": "July 5, 2025, 1:02 PM",
+              "type_code": "",
+              "type_desc": "BOARD OF OFFICERS",
+              "status": "Pending",
+              "status_class": "status-pending",
+              "feedback_count": 0
+            }
+          ] %}
+          
+          {% for file in file_data %}
+          <tr>
+            <td class="fw-semibold" style="text-align: left;">{{ file.name }}</td>
+            <td style="text-align: left;">{{ file.date }}</td>
+            <td style="text-align: left;">
+              {% if file.type_code %}
+              <span class="fw-semibold text-dark">{{ file.type_code }}</span> - {{ file.type_desc }}
+              {% else %}
+              {{ file.type_desc }}
+              {% endif %}
+            </td>
+            <td>
+              <span class="status-badge {{ file.status_class }}">{{ file.status }}</span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button type="button" class="btn btn-preview btn-sm">Preview</button>
+                <button type="button" class="btn btn-update btn-sm">Update Status</button>
+                <button type="button" class="btn btn-feedback btn-sm position-relative" 
+                   onclick="openFeedbackModal('{{ file.name }}', '{% if file.type_code %}{{ file.type_code }} - {% endif %}{{ file.type_desc }}', '{{ file.status }}')">
+                  Add Feedback
+                  {% if file.feedback_count > 0 %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ file.feedback_count }}
+                  </span>
+                  {% endif %}
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Feedback History Section -->
+  <section class="feedback-history-section" aria-label="Feedback History">
+    <div class="feedback-history-tabs">
+      <div class="feedback-tab active" onclick="showTab('sent')">Sent Feedback <span class="feedback-count">2</span></div>
+      <div class="feedback-tab" onclick="showTab('received')">Received Feedback <span class="feedback-count">1</span></div>
+    </div>
+    
+    <!-- Sent Feedback Tab -->
+    <div class="feedback-tab-content active" id="sent-tab">
+      <!-- Feedback Item 1 -->
+      <div class="feedback-card sent">
+        <div class="feedback-card-header">
+          <div class="feedback-card-title">Missing Information in Member List</div>
+          <div class="feedback-card-date">July 10, 2025, 3:45 PM</div>
+        </div>
+        <div class="feedback-card-body">
+          <p>The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.</p>
+        </div>
+        <div class="feedback-card-file">
+          <strong>File:</strong> listofmembers.pdf
+        </div>
+        <div class="d-flex justify-content-end mt-2">
+          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('sent', 1)">View Details</button>
+        </div>
+      </div>
+      
+      <!-- Feedback Item 2 -->
+      <div class="feedback-card sent">
+        <div class="feedback-card-header">
+          <div class="feedback-card-title">Mentor Information Required</div>
+          <div class="feedback-card-date">July 10, 2025, 4:00 PM</div>
+        </div>
+        <div class="feedback-card-body">
+          <p>Please include faculty mentor information in the member list document as required by the guidelines. This should include their department, contact information, and years of experience.</p>
+        </div>
+        <div class="feedback-card-file">
+          <strong>File:</strong> listofmembers.pdf
+        </div>
+        <div class="d-flex justify-content-end mt-2">
+          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('sent', 2)">View Details</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Received Feedback Tab -->
+    <div class="feedback-tab-content" id="received-tab">
+      <!-- Received Feedback Item 1 -->
+      <div class="feedback-card received">
+        <div class="feedback-card-header">
+          <div class="feedback-card-title">Response to Member List Feedback</div>
+          <div class="feedback-card-date">July 11, 2025, 9:30 AM</div>
+        </div>
+        <div class="feedback-card-body">
+          <p>We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.</p>
+        </div>
+        <div class="feedback-card-file">
+          <strong>File:</strong> listofmembers.pdf
+        </div>
+        <div class="d-flex justify-content-end mt-2">
+          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('received', 1)">View Details</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="global-modal" aria-labelledby="feedbackModalTitle" aria-modal="true" role="dialog">
+    <div class="modal-container">
+      <button type="button" class="btn-back" onclick="closeFeedbackModal()" aria-label="Close">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+
+      <div class="modal-section">
+        <h2 class="form-title">Details</h2>
+        <div class="form-info">
+          <p><strong>Organization:</strong> Technological Advancement and Innovation Society of Future Engineers</p>
+          <p><strong>File Name:</strong> <span id="file-name"></span></p>
+          <p><strong>Form Type:</strong> <span id="form-type"></span></p>
+          <p><strong>Form Status:</strong> <span id="form-status"></span></p>
+        </div>
+
+        <form id="feedback-form">
+          <h2 class="form-title">Send a Feedback</h2>
+          <div class="mb-3">
+            <label for="subject" class="form-label">Subject</label>
+            <input
+              type="text"
+              class="form-control"
+              id="subject"
+              name="subject"
+              autocomplete="off"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="message" class="form-label">Message Content</label>
+            <textarea
+              class="form-control"
+              id="message"
+              name="message"
+              rows="8"
+            ></textarea>
+          </div>
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn-send">Send Feedback</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Detail Modal -->
+  <div id="feedbackDetailModal" class="global-modal feedback-detail-modal" aria-labelledby="feedbackDetailModalTitle" aria-modal="true" role="dialog">
+    <div class="modal-container">
+      <button type="button" class="btn-back" onclick="closeFeedbackDetailModal()" aria-label="Close">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+
+      <div class="modal-section">
+        <div class="feedback-detail-header">
+          <h2 class="form-title mb-0" id="feedback-detail-title">Feedback Detail</h2>
+          <span class="feedback-badge" id="feedback-detail-badge">Sent</span>
+        </div>
+        
+        <div class="feedback-metadata">
+          <p><strong>Date:</strong> <span id="feedback-detail-date"></span></p>
+          <p><strong>File:</strong> <span id="feedback-detail-file"></span></p>
+          <p><strong>Form Type:</strong> <span id="feedback-detail-form-type"></span></p>
+        </div>
+        
+        <div class="feedback-content">
+          <h3 class="fs-6 fw-semibold mb-2" id="feedback-detail-subject"></h3>
+          <p id="feedback-detail-message"></p>
+        </div>
+        
+        <div class="feedback-reply-section" id="feedback-reply-section">
+          <h3 class="fs-6 fw-semibold mb-3">Reply</h3>
+          <div class="feedback-content">
+            <h3 class="fs-6 fw-semibold mb-2" id="feedback-reply-subject"></h3>
+            <p id="feedback-reply-message"></p>
+            <div class="text-end text-muted mt-2" id="feedback-reply-date"></div>
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-3">
+          <button type="button" class="btn btn-feedback" id="btn-reply-feedback">Reply to Feedback</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Toggle between feedback history tabs
+  function showTab(tabId) {
+    // Hide all tab content
+    document.querySelectorAll('.feedback-tab-content').forEach(function(tab) {
+      tab.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
+      tab.classList.remove('active');
+    });
+    
+    // Show the selected tab content
+    document.getElementById(tabId + '-tab').classList.add('active');
+    
+    // Add active class to the clicked tab
+    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
+      if (tab.textContent.toLowerCase().includes(tabId)) {
+        tab.classList.add('active');
+      }
+    });
+  }
+
+  // Feedback Modal Functions
+  function openFeedbackModal(fileName, formType, formStatus) {
+    // Set the modal content with the file information
+    document.getElementById('file-name').textContent = fileName;
+    document.getElementById('form-type').textContent = formType;
+    document.getElementById('form-status').textContent = formStatus;
+    
+    // Show the modal
+    document.getElementById('feedbackModal').classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  }
+  
+  function closeFeedbackModal() {
+    document.getElementById('feedbackModal').classList.remove('show');
+    document.body.style.overflow = ''; // Restore scrolling
+  }
+  
+  // Feedback Detail Modal Functions
+function openFeedbackDetail(type, id) {
+  // Sample feedback data - in a real app, this would be fetched from a database
+  const feedbackData = {
+    sent: [
+      {
+        id: 1,
+        title: "Missing Information in Member List",
+        date: "July 10, 2025, 3:45 PM",
+        file: "listofmembers.pdf",
+        formType: "Form 4 - LIST OF MEMBERS",
+        subject: "Missing Information in Member List",
+        message: "The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.\n\nSpecifically, we need the following details for each board member:\n- Full Name\n- Position\n- Student ID\n- Email Address\n- Phone Number\n- Department\n\nPlease ensure all this information is included in your revised submission.",
+        hasReply: true,
+        reply: {
+          subject: "Response to Member List Feedback",
+          message: "We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.\n\nAll requested information has now been included for each board member, including full names, positions, student IDs, email addresses, phone numbers, and departments.\n\nPlease let us know if any further information is required.",
+          date: "July 11, 2025, 9:30 AM"
+        }
+      },
+      {
+        id: 2,
+        title: "Mentor Information Required",
+        date: "July 10, 2025, 4:00 PM",
+        file: "listofmembers.pdf",
+        formType: "Form 4 - LIST OF MEMBERS",
+        subject: "Mentor Information Required",
+        message: "Please include faculty mentor information in the member list document as required by the guidelines. This should include their department, contact information, and years of experience.\n\nAdditionally, please make sure to include the mentor's signature on the document to confirm their commitment to advising the organization.",
+        hasReply: false
+      }
+    ],
+    received: [
+      {
+        id: 1,
+        title: "Response to Member List Feedback",
+        date: "July 11, 2025, 9:30 AM",
+        file: "listofmembers.pdf",
+        formType: "Form 4 - LIST OF MEMBERS",
+        subject: "Response to Member List Feedback",
+        message: "We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.\n\nAll requested information has now been included for each board member, including full names, positions, student IDs, email addresses, phone numbers, and departments.\n\nPlease let us know if any further information is required.",
+        original: {
+          subject: "Missing Information in Member List",
+          message: "The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.\n\nSpecifically, we need the following details for each board member:\n- Full Name\n- Position\n- Student ID\n- Email Address\n- Phone Number\n- Department\n\nPlease ensure all this information is included in your revised submission.",
+          date: "July 10, 2025, 3:45 PM"
+        },
+        hasBeenRepliedTo: false
+      }
+    ]
+  };
+  
+  // Get the feedback data based on type and id
+  const feedback = feedbackData[type].find(item => item.id === id);
+  
+  if (feedback) {
+    // Set up modal title and badge
+    document.getElementById('feedback-detail-title').textContent = feedback.subject;
+    const badge = document.getElementById('feedback-detail-badge');
+    badge.textContent = type === 'sent' ? 'Sent' : 'Received';
+    badge.className = 'feedback-badge ' + type;
+    
+    // Set up metadata
+    document.getElementById('feedback-detail-date').textContent = feedback.date;
+    document.getElementById('feedback-detail-file').textContent = feedback.file;
+    document.getElementById('feedback-detail-form-type').textContent = feedback.formType;
+    
+    // Set up feedback content
+    document.getElementById('feedback-detail-subject').textContent = feedback.subject;
+    document.getElementById('feedback-detail-message').textContent = feedback.message;
+    
+    // Set up reply section if exists
+    const replySection = document.getElementById('feedback-reply-section');
+    const replyButton = document.getElementById('btn-reply-feedback');
+    
+    if (type === 'sent' && feedback.hasReply) {
+      // Show reply for sent feedback
+      replySection.style.display = 'block';
+      document.getElementById('feedback-reply-subject').textContent = feedback.reply.subject;
+      document.getElementById('feedback-reply-message').textContent = feedback.reply.message;
+      document.getElementById('feedback-reply-date').textContent = feedback.reply.date;
+      replyButton.style.display = 'none'; // Hide reply button for sent feedback
+    } else if (type === 'received') {
+      // Show original message for received feedback
+      replySection.style.display = 'block';
+      document.getElementById('feedback-reply-subject').textContent = feedback.original.subject;
+      document.getElementById('feedback-reply-message').textContent = feedback.original.message;
+      document.getElementById('feedback-reply-date').textContent = feedback.original.date;
+      
+      // Only show reply button for received feedback that hasn't been replied to
+      replyButton.style.display = feedback.hasBeenRepliedTo ? 'none' : 'block';
+    } else {
+      // No reply yet for sent feedback
+      replySection.style.display = 'none';
+      replyButton.style.display = 'none'; // Never show reply button for sent feedback
+    }
+    
+    // Show the modal
+    document.getElementById('feedbackDetailModal').classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  }
+}
+  
+  function closeFeedbackDetailModal() {
+  document.getElementById('feedbackDetailModal').classList.remove('show');
+  document.body.style.overflow = ''; // Restore scrolling
+}
+
+// Form submission handling
+document.getElementById('feedback-form').addEventListener('submit', function(event) {
+  event.preventDefault();
+  
+  // Get form values
+  const subject = document.getElementById('subject').value;
+  const message = document.getElementById('message').value;
+  
+  // Validate form
+  if (!subject || !message) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+  
+  // In a real application, you would send this data to the server
+  console.log('Feedback submitted:', {
+    subject: subject,
+    message: message,
+    file: document.getElementById('file-name').textContent,
+    formType: document.getElementById('form-type').textContent
+  });
+  
+  // Show success message
+  alert('Feedback sent successfully!');
+  
+  // Reset form and close modal
+  this.reset();
+  closeFeedbackModal();
+  
+  // In a real application, you would refresh the feedback history here
+  // For now, we'll just reload the page after a short delay
+  setTimeout(function() {
+    location.reload();
+  }, 500);
+});
+
+// Reply button functionality
+document.getElementById('btn-reply-feedback').addEventListener('click', function() {
+  // In a real application, this would open a reply form
+  // For now, we'll just redirect to the feedback modal
+  closeFeedbackDetailModal();
+  openFeedbackModal('listofmembers.pdf', 'Form 4 - LIST OF MEMBERS', 'For Revision');
+});
+
+// Close modals when clicking outside (optional)
+window.addEventListener('click', function(event) {
+  const feedbackModal = document.getElementById('feedbackModal');
+  const feedbackDetailModal = document.getElementById('feedbackDetailModal');
+  
+  if (event.target === feedbackModal) {
+    closeFeedbackModal();
+  } else if (event.target === feedbackDetailModal) {
+    closeFeedbackDetailModal();
+  }
+});
+
+// Initialize tooltips and popovers if using Bootstrap
+document.addEventListener('DOMContentLoaded', function() {
+  // If using Bootstrap tooltips
+  if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  }
+});
+</script>
+{% endblock %}

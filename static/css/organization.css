@@ -1,0 +1,96 @@
+
+  .search-container {
+    background-color: #e9e6f1;
+    border-radius: 9999px;
+    padding: 0.375rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 280px;
+  }
+  
+  .search-container input {
+    border: none;
+    background: transparent;
+    color: var(--primary-color);
+    font-size: 0.800rem;
+    flex-grow: 1;
+    padding: 0;
+  }
+  
+  .search-container input::placeholder {
+    color: var(--primary-color);
+  }
+  
+  .search-container input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  
+  /* Make card groups (rows) display as flexbox */
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  /* Make card column containers full height */
+  .card-column {
+    display: flex;
+    margin-bottom: 1rem;
+  }
+  
+  .card-custom {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    width: 100%;  /* Take full width of parent */
+  }
+  
+  .card-header-custom {
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    color: white;
+    font-size: 0.800rem;
+    font-weight: 400;
+    line-height: 1.25rem;
+    flex-grow: 1;  /* Allow header to expand */
+  }
+  
+  .card-header-custom img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .card-footer-custom {
+    background-color: white;
+    padding: 0.700rem 0.700rem;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  /* Ensure each row maintains equal heights */
+  @media (min-width: 768px) {
+    .row-eq-height {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .row-eq-height > [class*='col-'] {
+      display: flex;
+      flex-direction: column;
+    }
+    .row-eq-height .card-custom {
+      flex: 1;
+    }
+  }

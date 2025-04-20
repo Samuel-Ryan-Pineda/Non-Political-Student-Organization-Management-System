@@ -1,10 +1,13 @@
 $(document).ready(function() {
-  // Check for saved sidebar state on page load
-  const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+  // No longer checking for saved sidebar state on desktop
+  // Desktop sidebar will always be expanded
   
-  // Apply saved state on initial page load
-  if (sidebarCollapsed && $(window).width() > 768) {
-    $(".custom-sidebar").addClass("active");
+  // Only apply collapsed state on mobile
+  if ($(window).width() <= 768) {
+    const mobileCollapsed = localStorage.getItem('mobileSidebarCollapsed') === 'true';
+    if (mobileCollapsed) {
+      $(".custom-sidebar").addClass("mobile-active");
+    }
   }
 
   // Get current page URL path
@@ -26,29 +29,30 @@ $(document).ready(function() {
     }
   });
 
-  // Toggle submenu on click
+  // Show all submenus on page load but don't automatically set parent as active
+  $(".custom-menu > ul > li").each(function() {
+    if ($(this).find(".custom-sub-menu").length) {
+      // Only show the submenu without adding active class to parent
+      $(this).find(".custom-sub-menu").show();
+      
+      // Check if any submenu item matches current path
+      const hasActiveSubmenu = $(this).find(".custom-sub-menu li a").filter(function() {
+        return $(this).attr("href") === currentPath;
+      }).length > 0;
+      
+      // Only add active class to parent if a submenu item is active
+      if (hasActiveSubmenu) {
+        $(this).addClass("active");
+      }
+    }
+  });
+  
+  // Only handle clicks for navigation, no toggling of submenus
   $(".custom-menu > ul > li").click(function(e) {
     // Only execute this if clicking the main li item, not a submenu item
     if ($(e.target).closest(".custom-sub-menu").length === 0) {
-      // remove active from already active
-      $(this).siblings().removeClass("active");
-      // add active to clicked
-      $(this).toggleClass("active");
-      // if has sub menu open it
-      $(this).find("ul").slideToggle();
-      // close other sub menu if any open
-      $(this).siblings().find("ul").slideUp();
-      // remove active class of sub menu items
-      $(this).siblings().find("ul").find("li").removeClass("active");
-      
-      // If the clicked item contains the active submenu item, keep it active
-      if ($(this).find("li.active").length > 0) {
-        $(this).addClass("active");
-      }
-      
-      // Stop event from triggering link navigation when clicking on parent items with submenus
-      if ($(this).find(".custom-sub-menu").length && 
-          $(e.target).is(".custom-arrow") || 
+      // Stop event from triggering link navigation only when clicking on arrows
+      if ($(e.target).is(".custom-arrow") || 
           $(e.target).closest("a").find(".custom-arrow").length) {
         e.preventDefault();
       }
@@ -69,12 +73,15 @@ $(document).ready(function() {
     // Do not prevent default - allow normal navigation
   });
 
-  // Toggle sidebar on menu button click with localStorage saving
+  // Toggle sidebar only in mobile view
   $(".custom-menu-btn").click(function() {
-    // Check if we're in mobile view
+    // Only allow toggling in mobile view
     if ($(window).width() <= 768) {
       // In mobile: toggle mobile-active class
       $(".custom-sidebar").toggleClass("mobile-active");
+      
+      // Save mobile state to localStorage
+      localStorage.setItem('mobileSidebarCollapsed', $(".custom-sidebar").hasClass("mobile-active"));
       
       // When sidebar is closed (mobile-active added)
       if ($(".custom-sidebar").hasClass("mobile-active")) {
@@ -91,13 +98,8 @@ $(document).ready(function() {
           "visibility": "visible"
         });
       }
-    } else {
-      // In desktop: toggle the regular active class
-      $(".custom-sidebar").toggleClass("active");
-      
-      // Save the state to localStorage
-      localStorage.setItem('sidebarCollapsed', $(".custom-sidebar").hasClass("active"));
     }
+    // No action in desktop mode - sidebar always stays expanded
   });
   
   // Check if mobile view on page load
@@ -111,33 +113,40 @@ $(document).ready(function() {
   // Function to check if mobile view and set initial state
   function checkMobileView() {
     if ($(window).width() <= 768) {
-      // On mobile, add mobile-specific class
-      $(".custom-sidebar").addClass("mobile-active");
+      // On mobile, check saved state
+      const mobileCollapsed = localStorage.getItem('mobileSidebarCollapsed') === 'true';
+      
+      if (mobileCollapsed) {
+        // Apply mobile-active class if it was collapsed
+        $(".custom-sidebar").addClass("mobile-active");
+        
+        // Hide sidebar content
+        $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
+          "opacity": "0",
+          "visibility": "hidden"
+        });
+      } else {
+        // Remove mobile-active if it wasn't collapsed
+        $(".custom-sidebar").removeClass("mobile-active");
+        
+        // Show sidebar content
+        $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
+          "opacity": "1",
+          "visibility": "visible"
+        });
+      }
       
       // Remove desktop active class if present
       $(".custom-sidebar").removeClass("active");
-      
-      // Hide sidebar content
-      $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
-        "opacity": "0",
-        "visibility": "hidden"
-      });
     } else {
-      // On desktop, remove mobile-specific class and styles
+      // On desktop, always show expanded sidebar
       $(".custom-sidebar").removeClass("mobile-active");
+      $(".custom-sidebar").removeClass("active"); // Never collapsed in desktop
       
       $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
         "opacity": "",
         "visibility": ""
       });
-      
-      // Apply saved state if it exists
-      const savedState = localStorage.getItem('sidebarCollapsed');
-      if (savedState === 'true') {
-        $(".custom-sidebar").addClass("active");
-      } else if (savedState === 'false') {
-        $(".custom-sidebar").removeClass("active");
-      }
     }
   }
   

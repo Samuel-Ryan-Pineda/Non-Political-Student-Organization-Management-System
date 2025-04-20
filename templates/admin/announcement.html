@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Organization Announcement{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/announcement.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2 class="org-header">Send Announcement</h2>
+  <hr class="divider">
+  <main class="d-flex flex-column align-items-center">
+    <h1 class="text-center mt-4">
+      Student Organization Announcement
+    </h1>
+    <p class="text-center fs-5 mt-2 mb-4">
+      Create and send announcements to student organizations
+    </p>
+  </main>
+
+  <div class="container container-custom py-4">
+    <div class="d-flex mb-0">
+      <button type="button" id="tab-create" class="tab-btn create-announcement active">Create Announcement</button>
+      <button type="button" id="tab-history" class="tab-btn sent-history">Sent History</button>
+    </div>
+    
+    <!-- Create Announcement Tab Content -->
+    <div class="card-custom" id="create-content">
+      <form id="announcement-form">
+        <div class="mb-3">
+          <label for="subject" class="form-label text-start d-block">Subject</label>
+          <input type="text" id="subject" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label for="message" class="form-label text-start d-block">Message Content</label>
+          <textarea id="message" rows="8" class="form-control"></textarea>
+        </div>
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary">Send Announcement</button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Sent History Tab Content -->
+    <div class="card-custom hidden" id="history-content">
+      <table class="table mb-0" style="min-width: 600px;">
+        <thead>
+          <tr>
+            <th scope="col" class="py-2 px-2" style="background-color: #0f3a40; color: white;">Date Sent</th>
+            <th scope="col" class="py-2 px-2" style="background-color: #0f3a40; color: white;">Subject</th>
+            <th scope="col" class="py-2 px-2" style="background-color: #0f3a40; color: white;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="py-2 px-2">May 15, 2023</td>
+            <td class="py-2 px-2">Summer Break Activities</td>
+            <td class="py-2 px-2">
+              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('May 15, 2023', 'Summer Break Activities', 'Dear Student Organization Leaders,\n\nWe hope this message finds you well as we approach the end of the academic year. We are excited to share information about the various activities planned for the summer break.\n\n1. Campus Facilities Access: The main campus buildings will be open from 8:00 AM to 5:00 PM on weekdays throughout the summer. The library will maintain special summer hours which can be found on the university website.\n\n2. Summer Workshops: We are hosting a series of leadership and skill development workshops during the summer. These workshops are designed to help you enhance your organization management skills and prepare for the upcoming academic year.\n\n3. Funding Applications: Summer is an excellent time to prepare your funding applications for the fall semester. The online portal will open on July 1st, and early submissions will be prioritized.\n\nPlease share this information with your organization members who might be staying on campus during the summer break.\n\nBest regards,\nOffice of Student Organizations')">View Details</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2 px-2">May 10, 2023</td>
+            <td class="py-2 px-2">End of Year Ceremony</td>
+            <td class="py-2 px-2">
+              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('May 10, 2023', 'End of Year Ceremony', 'Dear Student Organization Officers,\n\nWe are pleased to invite you to the End of Year Ceremony for all student organizations. This event will celebrate the achievements and contributions of your organizations throughout the academic year.\n\nEvent Details:\n- Date: May 30, 2023\n- Time: 3:00 PM - 5:00 PM\n- Location: University Grand Hall\n- Dress Code: Semi-formal\n\nEach organization is requested to send at least two representatives. Awards for Outstanding Organization, Community Service, and Innovation will be presented during the ceremony.\n\nPlease RSVP by May 20 through the student portal.\n\nWe look forward to celebrating with you!\n\nSincerely,\nDean of Student Affairs')">View Details</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2 px-2">May 1, 2023</td>
+            <td class="py-2 px-2">Renewal Opening</td>
+            <td class="py-2 px-2">
+              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('May 1, 2023', 'Renewal Opening', 'Dear Student Organization Leaders,\n\nThis announcement is to inform you that the annual organization renewal process for the upcoming academic year is now open. All registered student organizations must complete the renewal process to maintain active status.\n\nRenewal Process:\n1. Update your organization\'s constitution and bylaws if necessary\n2. Submit a list of officers for the upcoming year\n3. Provide a summary of activities from the current year\n4. Outline planned activities for the upcoming year\n5. Confirm faculty advisor commitment\n\nThe deadline for submission is June 15, 2023. Organizations that fail to complete the renewal process by this date will need to reapply as new organizations in the fall.\n\nIf you have any questions about the renewal process, please contact the Office of Student Organizations.\n\nBest regards,\nStudent Organizations Coordinator')">View Details</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2 px-2">Apr 20, 2023</td>
+            <td class="py-2 px-2">Campus Clean-up Day</td>
+            <td class="py-2 px-2">
+              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('Apr 20, 2023', 'Campus Clean-up Day', 'Dear Student Organization Representatives,\n\nThe University Environmental Committee is organizing a Campus Clean-up Day on April 30, 2023, from 9:00 AM to 12:00 PM. We invite all student organizations to participate in this important community service event.\n\nParticipating organizations will receive:\n- Community service hours for all members who attend\n- Recognition on the university\'s sustainability website\n- Entry into a drawing for additional funding for your organization\n\nPlease register your organization\'s participation by April 25 through the Environmental Committee\'s webpage. Indicate the number of members who will be attending so we can prepare sufficient supplies and refreshments.\n\nAll participants should meet at the Campus Center at 8:45 AM. Gloves, trash bags, and other cleaning supplies will be provided.\n\nThank you for your commitment to keeping our campus beautiful!\n\nEnvironmental Committee Chair')">View Details</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="py-2 px-2">Apr 15, 2023</td>
+            <td class="py-2 px-2">Leadership Workshop</td>
+            <td class="py-2 px-2">
+              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('Apr 15, 2023', 'Leadership Workshop', 'Dear Student Leaders,\n\nWe are excited to announce an upcoming Leadership Workshop designed specifically for student organization officers. This workshop will provide valuable insights and practical skills to enhance your leadership effectiveness.\n\nWorkshop Details:\n- Date: April 25, 2023\n- Time: 2:00 PM - 4:30 PM\n- Location: Student Center, Room 205\n\nTopics covered will include:\n- Effective communication strategies\n- Conflict resolution techniques\n- Event planning and management\n- Member recruitment and retention\n- Financial management for student organizations\n\nEach organization is encouraged to send at least two representatives, preferably current or incoming officers. Certificates of participation will be provided, which can be included in your organization\'s annual report.\n\nPlease register by April 22 using the form available on the Student Affairs website.\n\nWe look forward to seeing you there!\n\nOffice of Leadership Development')">View Details</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Announcement Details Modal -->
+<div id="announcementDetailsModal" class="global-modal" aria-labelledby="announcementDetailsModalTitle" aria-modal="true" role="dialog">
+  <div class="modal-container">
+    <button type="button" class="btn-back" onclick="closeAnnouncementModal()" aria-label="Close">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+
+    <section class="modal-section mb-4">
+      <h2 id="announcementDetailsModalTitle">ANNOUNCEMENT DETAILS</h2>
+      <div class="announcement-metadata">
+        <p><strong>Date Sent:</strong> <span id="announcementDate">May 15, 2023</span></p>
+        <p><strong>Subject:</strong> <span id="announcementSubject">Summer Break Activities</span></p>
+      </div>
+      <hr />
+    </section>
+
+    <section class="modal-section">
+      <h3>MESSAGE CONTENT</h3>
+      <div class="announcement-content">
+        <div id="announcementMessage" class="announcement-message">
+          <!-- Announcement message will be inserted here -->
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabCreate = document.getElementById('tab-create');
+    const tabHistory = document.getElementById('tab-history');
+    const createContent = document.getElementById('create-content');
+    const historyContent = document.getElementById('history-content');
+    
+    tabCreate.addEventListener('click', function() {
+      tabCreate.classList.add('active');
+      tabHistory.classList.remove('active');
+      createContent.classList.remove('hidden');
+      historyContent.classList.add('hidden');
+    });
+    
+    tabHistory.addEventListener('click', function() {
+      tabHistory.classList.add('active');
+      tabCreate.classList.remove('active');
+      historyContent.classList.remove('hidden');
+      createContent.classList.add('hidden');
+    });
+    
+    document.getElementById('announcement-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Announcement sent successfully!');
+    });
+  });
+  
+  // Function to open the announcement modal with specific announcement data
+  function openAnnouncementModal(date, subject, message) {
+    // Update the modal contents with announcement information
+    document.getElementById('announcementDate').textContent = date;
+    document.getElementById('announcementSubject').textContent = subject;
+    document.getElementById('announcementMessage').textContent = message;
+    
+    // Show the modal
+    document.getElementById('announcementDetailsModal').classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  }
+
+  // Function to close the announcement modal
+  function closeAnnouncementModal() {
+    document.getElementById('announcementDetailsModal').classList.remove('show');
+    document.body.style.overflow = ''; // Restore scrolling
+  }
+
+  // Close modal when clicking outside the modal content
+  document.getElementById('announcementDetailsModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+      closeAnnouncementModal();
+    }
+  });
+
+  // Close modal when pressing Escape key
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeAnnouncementModal();
+    }
+  });
+</script>
+{% endblock %}
