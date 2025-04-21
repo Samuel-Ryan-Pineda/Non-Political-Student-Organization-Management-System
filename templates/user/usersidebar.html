@@ -1,0 +1,66 @@
+<div class="custom-sidebar">
+    <div class="custom-menu-btn">
+        <i class="ph-bold ph-caret-left"></i>
+    </div>
+    <div class="custom-head">
+        <div class="custom-user-img">
+        <img src="user.jpg" alt="" />
+        </div>
+        <div class="custom-user-details">
+        <p class="custom-title">web developer</p>
+        <p class="custom-name">John Doe</p>
+        </div>
+    </div>
+    <div class="custom-nav">
+        <div class="custom-menu">
+        <p class="custom-title">Main</p>
+        <ul>
+            <li>
+            <a href="/applicationfirststep">
+                <i class="custom-icon ph-bold ph-house-simple"></i>
+                <span class="custom-text">Application</span>
+            </a>
+            </li>
+        </ul>
+        </div>
+        <div class="custom-menu">
+        <p class="custom-title">Settings</p>
+        <ul>
+            <li>
+            <a href="#">
+                <i class="custom-icon ph-bold ph-gear"></i>
+                <span class="custom-text">Settings</span>
+            </a>
+            </li>
+        </ul>
+        </div>
+    </div>
+    <div class="custom-menu">
+        <p class="custom-title">Account</p>
+        <ul>
+        <li>
+            <a href="#">
+            <i class="custom-icon ph-bold ph-info"></i>
+            <span class="custom-text">Help</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" onclick="document.getElementById('custom-logoutDialog').showModal(); return false;">
+                <i class="custom-icon ph-bold ph-sign-out"></i>
+                <span class="custom-text">Logout</span>
+            </a>
+        </li>
+        
+        <!-- Logout Confirmation Dialog -->
+        <dialog id="custom-logoutDialog" class="custom-dialog">
+            <h2>Logout Confirmation</h2>
+            <p>Are you sure you want to log out?</p>
+            <div class="custom-logout-buttons">
+                <button class="custom-confirm-btn" onclick="window.location.href='/logout'">Confirm</button>
+                <button class="custom-cancel-btn" onclick="document.getElementById('custom-logoutDialog').close()">Cancel</button>
+            </div>
+        </dialog>
+        
+        </ul>
+    </div>
+</div>

@@ -493,7 +493,6 @@ def verify_email():
     response['category'] = 'success'
     return jsonify(response)
 
-# ✅ Login Route (Updated for Flask-Login)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -556,10 +555,9 @@ def login():
                 
                 # Check user role and redirect accordingly
                 if user.role_id == 1:  # OSOAD (Admin)
-                    redirect_url = url_for('dashboard')  # Points to admin/organization.html
-                else:
-                    # For non-admin roles, redirect to user application page
-                    redirect_url = url_for('user_application')
+                    redirect_url = url_for('dashboard')  # Points to admin dashboard
+                else:  # Applicant
+                    redirect_url = url_for('applicationfirststep')  # Points to user dashboard
                 
                 response['success'] = True
                 response['redirect'] = next_page or redirect_url
@@ -590,15 +588,6 @@ def login():
 @login_required
 def dashboard():
     return render_template('admin/organization.html', user=current_user)
-
-# ✅ User Application Route (for non-admin users)
-@app.route('/user/application')
-@login_required
-def user_application():
-    # Only accessible for non-admin users
-    if current_user.role_id == 1:  # If admin tries to access
-        return redirect(url_for('dashboard'))
-    return render_template('user/application.html', user=current_user)
 
 @app.route('/neworganization')
 @login_required
@@ -661,6 +650,18 @@ def organizationreports():
     # current_user is provided by Flask-Login
     return render_template('admin/organizationreports.html', user=current_user)
 
+# ✅ Login Route (Updated for Flask-Login)
+@app.route('/applicationfirststep')
+@login_required
+def applicationfirststep():
+    return render_template('user/applicationfirststep.html')
+
+@app.route('/application')
+@login_required
+def application():
+    # current_user is provided by Flask-Login
+    return render_template('user/application.html', user=current_user, active_page='application')
+
 # ✅ Logout Route (Updated for Flask-Login)
 @app.route('/logout')
 @login_required
@@ -672,3 +673,4 @@ def logout():
 if __name__ == '__main__':
     # app.run(debug=True)
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
