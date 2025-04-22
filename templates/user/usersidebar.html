@@ -15,33 +15,56 @@
         <div class="custom-menu">
         <p class="custom-title">Main</p>
         <ul>
-            <li>
+            <li class="{{ 'active' if active_page == 'application' }}">
             <a href="/applicationfirststep">
-                <i class="custom-icon ph-bold ph-house-simple"></i>
+                <i class="custom-icon ph-bold ph-file-text"></i>
                 <span class="custom-text">Application</span>
             </a>
+            </li>
+            <li class="{{ 'active' if active_page == 'manageorganization' }}">
+                <a href="/manageorganization">
+                    <i class="custom-icon ph-bold ph-buildings"></i>
+                    <span class="custom-text">Manage Organization</span>
+                </a>
+            </li>
+            <li class="{{ 'active' if active_page in ['userrenewal', 'reports'] }}">
+                <a href="#">
+                    <i class="custom-icon ph-bold ph-gear"></i>
+                    <span class="custom-text">Manage Documents</span>
+                </a>
+                <ul class="custom-sub-menu">
+                    <li class="{{ 'active' if active_page == 'userrenewal' }}">
+                    <a href="/userrenewal">
+                        <span class="custom-text">Renewal</span>
+                    </a>
+                    </li>
+                    <li class="{{ 'active' if active_page == 'userreport' }}">
+                    <a href="/userreport">
+                        <span class="custom-text">Reports</span>
+                    </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="{{ 'active' if active_page == 'documentcompilation' }}">
+                <a href="/documentcompilation">
+                    <i class="custom-icon ph-bold ph-stack"></i>
+                    <span class="custom-text">Document Compilation</span>
+                </a>
             </li>
         </ul>
         </div>
         <div class="custom-menu">
-        <p class="custom-title">Settings</p>
         <ul>
-            <li>
-            <a href="#">
-                <i class="custom-icon ph-bold ph-gear"></i>
-                <span class="custom-text">Settings</span>
-            </a>
-            </li>
         </ul>
         </div>
     </div>
     <div class="custom-menu">
         <p class="custom-title">Account</p>
         <ul>
-        <li>
-            <a href="#">
+        <li class="{{ 'active' if active_page == 'useraccount' }}"">
+            <a href="/useraccount">
             <i class="custom-icon ph-bold ph-info"></i>
-            <span class="custom-text">Help</span>
+            <span class="custom-text">My Account</span>
             </a>
         </li>
         <li>

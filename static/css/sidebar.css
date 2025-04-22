@@ -100,6 +100,20 @@ body {
   margin-bottom: 5px;
 }
 
+.custom-menu ul li.active > a {
+  background-color: #1a5865;
+  color: #fff;
+}
+
+.custom-menu ul li.active .custom-icon {
+  color: #1a5865;
+}
+
+.custom-sub-menu li.active > a {
+  background-color: #1a5865;
+  color: #1a5865 !important;
+}
+
 .custom-menu ul li a {
   display: flex;
   align-items: center;

@@ -68,28 +68,30 @@
         <table>
         <thead>
             <tr>
-            <th style="width:20%;">Position</th>
+            <th style="width:15%;">Position</th>
+            <th style="width:15%;">Student No.</th>
             <th style="width:30%;">Name</th>
-            <th style="width:15%;">Program</th>
-            <th style="width:35%;">Address</th>
+            <th style="width:10%;">Program</th>
+            <th style="width:30%;">Address</th>
             </tr>
         </thead>
         <tbody>
             {% set officers = [
-            {'position': 'President', 'name': 'Juan Dela Cruz', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-            {'position': 'Vice President', 'name': 'Maria Santos', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
-            {'position': 'Secretary', 'name': 'Angelo Reyes', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-            {'position': 'Treasurer', 'name': 'Bianca Mendoza', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-            {'position': 'Public Relations Officer', 'name': 'Jasmine Lim', 'program': 'BSIT', 'address': 'Palayan City, Nueva Ecija'},
-            {'position': 'Treasurer', 'name': 'Miguel Tan', 'program': 'BSIT', 'address': 'Talavera, Nueva Ecija'},
-            {'position': 'Events Coordinator', 'name': 'Sofia Garcia', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-            {'position': 'Technical Lead', 'name': 'Diego Bautista', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
-            {'position': 'Membership Coordinator', 'name': 'Isabella Lopez', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'}
+            {'position': 'President', 'student_no': 'SUM2022-00001', 'name': 'Juan Miguel Dela Cruz', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+            {'position': 'Vice President', 'student_no': 'SUM2022-00002', 'name': 'Maria Elena Santos', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
+            {'position': 'Secretary', 'student_no': 'SUM2022-00003', 'name': 'Angelo Martin Reyes', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+            {'position': 'Treasurer', 'student_no': 'SUM2022-00004', 'name': 'Bianca Rose Mendoza', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+            {'position': 'Public Relations Officer', 'student_no': 'SUM2022-00005', 'name': 'Jasmine Mae Lim', 'program': 'BSIT', 'address': 'Palayan City, Nueva Ecija'},
+            {'position': 'Treasurer', 'student_no': 'SUM2022-00006', 'name': 'Miguel Antonio Tan', 'program': 'BSIT', 'address': 'Talavera, Nueva Ecija'},
+            {'position': 'Events Coordinator', 'student_no': 'SUM2022-00007', 'name': 'Sofia Marie Garcia', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+            {'position': 'Technical Lead', 'student_no': 'SUM2022-00008', 'name': 'Diego Rafael Bautista', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
+            {'position': 'Membership Coordinator', 'student_no': 'SUM2022-00009', 'name': 'Isabella Marie Lopez', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'}
             ] %}
             
             {% for officer in officers %}
             <tr>
             <td>{{ officer.position }}</td>
+            <td>{{ officer.student_no }}</td>
             <td>{{ officer.name }}</td>
             <td>{{ officer.program }}</td>
             <td>{{ officer.address }}</td>
@@ -115,20 +117,30 @@
             <thead>
                 <tr>
                 <th style="width:10%;">No.</th>
-                <th style="width:65%;">Name</th>
+                <th style="width:25%;">Student No.</th>
+                <th style="width:40%;">Name</th>
                 <th style="width:25%;">Program</th>
                 </tr>
             </thead>
             <tbody>
                 {% set names = [
-                'Miguel Sanchez', 'Sophia Chen', 'Amir Khan', 'Isabella Rodríguez', 'Liam O\'Connor',
-                'Priya Patel', 'Mateo Fernandez', 'Zoe Williams', 'Jamal Washington', 'Mei Lin Zhang'
+                {'student_no': 'SUM2022-00001', 'name': 'Miguel Santos Sanchez'},
+                {'student_no': 'SUM2022-00002', 'name': 'Sophia Marie Chen'},
+                {'student_no': 'SUM2022-00003', 'name': 'Amir Hassan Khan'},
+                {'student_no': 'SUM2022-00004', 'name': 'Isabella Maria Rodríguez'},
+                {'student_no': 'SUM2022-00005', 'name': 'Liam Patrick O\'Connor'},
+                {'student_no': 'SUM2022-00006', 'name': 'Priya Raj Patel'},
+                {'student_no': 'SUM2022-00007', 'name': 'Mateo Luis Fernandez'},
+                {'student_no': 'SUM2022-00008', 'name': 'Zoe Elizabeth Williams'},
+                {'student_no': 'SUM2022-00009', 'name': 'Jamal Andre Washington'},
+                {'student_no': 'SUM2022-00010', 'name': 'Mei Ling Zhang'}
                 ] %}
                 
                 {% for i in range(1, 11) %}
                 <tr>
                 <td>{{ i }}</td>
-                <td>{{ names[i-1] }}</td>
+                <td>{{ names[i-1].student_no }}</td>
+                <td>{{ names[i-1].name }}</td>
                 <td>BSIT</td>
                 </tr>
                 {% endfor %}

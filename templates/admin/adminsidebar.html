@@ -15,42 +15,42 @@
         <div class="custom-menu">
         <p class="custom-title">Main</p>
         <ul>
-            <li>
+            <li class="{{ 'active' if active_page == 'organization' }}">
             <a href="/organization">
                 <i class="custom-icon ph-bold ph-buildings"></i>
                 <span class="custom-text">Organizations</span>
             </a>
             </li>
-            <li>
+            <li class="{{ 'active' if active_page == 'member' }}">
             <a href="/member">
                 <i class="custom-icon ph-bold ph-users"></i>
                 <span class="custom-text">Search Member</span>
             </a>
             </li>
-            <li>
+            <li class="{{ 'active' if active_page in ['neworganization', 'renewal', 'reports'] }}">
             <a href="#">
                 <i class="custom-icon ph-bold ph-file-text"></i>
                 <span class="custom-text">Application</span>
             </a>
             <ul class="custom-sub-menu">
-                <li>
+                <li class="{{ 'active' if active_page == 'neworganization' }}">
                 <a href="/neworganization">
                     <span class="custom-text">New Organization</span>
                 </a>
                 </li>
-                <li>
+                <li class="{{ 'active' if active_page == 'renewal' }}">
                 <a href="/renewal">
                     <span class="custom-text">Renewal</span>
                 </a>
                 </li>
-                <li>
+                <li class="{{ 'active' if active_page == 'reports' }}">
                     <a href="/reports">
                         <span class="custom-text">Reports</span>
                     </a>
                 </li>
             </ul>
             </li>
-            <li>
+            <li class="{{ 'active' if active_page == 'announcement' }}">
                 <a href="/announcement">
                     <i class="custom-icon ph-bold ph-megaphone"></i>
                     <span class="custom-text">Announcements</span>
@@ -59,24 +59,17 @@
         </ul>
         </div>
         <div class="custom-menu">
-        <p class="custom-title">Settings</p>
         <ul>
-            <li>
-            <a href="#">
-                <i class="custom-icon ph-bold ph-gear"></i>
-                <span class="custom-text">Settings</span>
-            </a>
-            </li>
         </ul>
         </div>
     </div>
     <div class="custom-menu">
         <p class="custom-title">Account</p>
         <ul>
-        <li>
-            <a href="#">
+        <li class="{{ 'active' if active_page == 'adminaccount' }}">
+            <a href="/adminaccount">
             <i class="custom-icon ph-bold ph-info"></i>
-            <span class="custom-text">Help</span>
+            <span class="custom-text">My Account</span>
             </a>
         </li>
         <li>

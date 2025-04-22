@@ -241,7 +241,7 @@
 
 {% block content %}
 <div class="container">
-  <h2 class="org-header">New Organization Application</h2>
+  <h2 class="org-header">Organization Reports</h2>
   <hr class="divider">
   
   <!-- Changed class from "row" to "row info-progress-row" -->
@@ -272,8 +272,8 @@
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
               <p class="fw-semibold fs-6 mb-0">APPLICATION PROGRESS</p>
-              <p class="small text-secondary mb-1">1 of 7 documents verified</p>
-              <p class="fw-semibold small mb-0">14% Complete</p>
+              <p class="small text-secondary mb-1">0 of 3 documents verified</p>
+              <p class="fw-semibold small mb-0">0% Complete</p>
             </div>
             <div>
               <span class="badge bg-secondary">In Progress</span>
@@ -281,25 +281,25 @@
           </div>
           
           <div class="progress mb-3" style="height: 8px;">
-            <div class="progress-bar bg-dark" role="progressbar" style="width: 14%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar bg-dark" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
           </div>
           
           <div class="d-flex justify-content-between small text-secondary">
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-check-circle text-success"></i>
-              <span>Verified: 1</span>
+              <span>Verified: 0</span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-clock text-primary"></i>
-              <span>Pending: 4</span>
+              <span>Pending: 3</span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-exclamation-circle text-warning"></i>
-              <span>Needs Revision: 1</span>
+              <span>Needs Revision: 0</span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-times-circle text-danger"></i>
-              <span>Rejected: 1</span>
+              <span>Rejected: 0</span>
             </div>
           </div>
         </div>
@@ -314,89 +314,12 @@
   
   <!-- Document Upload Forms -->
   <div class="row g-3 mb-3" style="display: flex; flex-wrap: wrap;">
-    <!-- Form 1 -->
+    <!-- Compliance Letter -->
     <div class="col-12 col-md-4">
       <div class="card h-100 document-card border-0 shadow-sm">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
-            <span class="small fw-semibold">Form 1A -APPLICATION FOR RECOGNITION</span>
-            <span class="badge bg-success status-badge">
-              <i class="fas fa-check"></i> Verified
-            </span>
-          </div>
-          
-          <div class="dropzone mb-3">
-            <i class="fas fa-arrow-up mb-1"></i>
-            Drag & drop or click to upload
-          </div>
-          
-          <div class="d-flex justify-content-between align-items-center gap-2">
-            <button class="btn btn-outline-dark btn-sm" type="button">Preview</button>
-            <button class="btn btn-outline-secondary btn-sm" type="button">Select File</button>
-            <button class="btn btn-primary btn-sm" type="button">Upload</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Form 2 -->
-    <div class="col-12 col-md-4">
-      <div class="card h-100 document-card border-0 shadow-sm">
-        <div class="card-body p-3 p-md-4">
-          <div class="d-flex align-items-center mb-3">
-            <span class="small fw-semibold">Form 2 - LETTER OF ACCEPTANCE</span>
-            <span class="badge bg-warning text-dark status-badge">
-              <i class="fas fa-exclamation"></i> Needs Revision
-            </span>
-          </div>
-          
-          <div class="dropzone mb-3">
-            <i class="fas fa-arrow-up mb-1"></i>
-            Drag & drop or click to upload
-          </div>
-          
-          <div class="d-flex justify-content-between align-items-center gap-2">
-            <button class="btn btn-outline-dark btn-sm" type="button">Preview</button>
-            <button class="btn btn-outline-secondary btn-sm" type="button">Select File</button>
-            <button class="btn btn-primary btn-sm" type="button">Upload</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Form 3 -->
-    <div class="col-12 col-md-4">
-      <div class="card h-100 document-card border-0 shadow-sm">
-        <div class="card-body p-3 p-md-4">
-          <div class="d-flex align-items-center mb-3">
-            <span class="small fw-semibold">Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES</span>
-            <span class="badge bg-danger status-badge">
-              <i class="fas fa-times"></i> Rejected
-            </span>
-          </div>
-          
-          <div class="dropzone mb-3">
-            <i class="fas fa-arrow-up mb-1"></i>
-            Drag & drop or click to upload
-          </div>
-          
-          <div class="d-flex justify-content-between align-items-center gap-2">
-            <button class="btn btn-outline-dark btn-sm" type="button">Preview</button>
-            <button class="btn btn-outline-secondary btn-sm" type="button">Select File</button>
-            <button class="btn btn-primary btn-sm" type="button">Upload</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="row g-3 mb-3 justify-content-left" style="display: flex; flex-wrap: wrap;">
-    <!-- Form 4 -->
-    <div class="col-12 col-md-4">
-      <div class="card h-100 document-card border-0 shadow-sm">
-        <div class="card-body p-3 p-md-4">
-          <div class="d-flex align-items-center mb-3">
-            <span class="small fw-semibold">Form 4 - LIST OF MEMBERS</span>
+            <span class="small fw-semibold">Compliance Letter</span>
             <span class="badge bg-primary status-badge">
               <i class="fas fa-clock"></i> Pending
             </span>
@@ -416,12 +339,12 @@
       </div>
     </div>
     
-    <!-- Board of Officers -->
+    <!-- Income Generating Project -->
     <div class="col-12 col-md-4">
       <div class="card h-100 document-card border-0 shadow-sm">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
-            <span class="small fw-semibold">BOARD OF OFFICERS</span>
+            <span class="small fw-semibold">Income Generating Project</span>
             <span class="badge bg-primary status-badge">
               <i class="fas fa-clock"></i> Pending
             </span>
@@ -441,37 +364,12 @@
       </div>
     </div>
     
-    <!-- Constitution and Bylaws -->
+    <!-- Liquidation Report -->
     <div class="col-12 col-md-4">
       <div class="card h-100 document-card border-0 shadow-sm">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
-            <span class="small fw-semibold">CONSTITUTION AND BYLAWS</span>
-            <span class="badge bg-primary status-badge">
-              <i class="fas fa-clock"></i> Pending
-            </span>
-          </div>
-          
-          <div class="dropzone mb-3">
-            <i class="fas fa-arrow-up mb-1"></i>
-            Drag & drop or click to upload
-          </div>
-          
-          <div class="d-flex justify-content-between align-items-center gap-2">
-            <button class="btn btn-outline-dark btn-sm" type="button">Preview</button>
-            <button class="btn btn-outline-secondary btn-sm" type="button">Select File</button>
-            <button class="btn btn-primary btn-sm" type="button">Upload</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Logo with Explanation -->
-    <div class="col-12 col-md-4">
-      <div class="card h-100 document-card border-0 shadow-sm">
-        <div class="card-body p-3 p-md-4">
-          <div class="d-flex align-items-center mb-3">
-            <span class="small fw-semibold">LOGO WITH EXPLANATION</span>
+            <span class="small fw-semibold">Liquidation Report</span>
             <span class="badge bg-primary status-badge">
               <i class="fas fa-clock"></i> Pending
             </span>

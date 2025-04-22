@@ -1,0 +1,250 @@
+{% extends 'user/userbase.html' %}
+
+{% block title %}Document Compilation{% endblock %}
+
+{% block head_css %}
+<style>
+.form-label {
+    background: white;
+    border-radius: 0.375rem 0 0 0.375rem;
+    padding: 0.375rem 1rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #0c3a47;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-right: none;
+  }
+  select.form-select {
+    border-color: #0c3a47;
+    border-radius: 0 0.375rem 0.375rem 0;
+    color: #0c3a47;
+    font-size: 0.875rem;
+    padding-right: 2.5rem;
+    position: relative;
+    cursor: pointer;
+    width: 100%; /* Ensure select takes full width of wrapper */
+  }
+  select.form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(12, 58, 71, 0.25);
+    border-color: #0c3a47;
+  }
+  .select-wrapper {
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%; /* Ensure wrapper takes all available space */
+  }
+  .select-wrapper i {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #0c3a47;
+    font-size: 0.875rem;
+  }
+  .form-container {
+    width: 100%;
+    max-width: 100%;
+  }
+  form.year-select-form {
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .table thead {
+    background-color: #0c3a47;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+  .table td,
+  .table th {
+    vertical-align: middle;
+    border-top: none;
+    font-size: 0.875rem;
+    color: #0c3a47;
+  }
+  .table tbody tr:not(:last-child) {
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .table tbody tr td:first-child {
+    font-weight: 600;
+  }
+  .badge-verified {
+    background-color: #cde6d6;
+    color: #2f6e3e;
+    font-weight: 600;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    display: inline-block;
+  }
+  .btn-preview {
+    border: 1px solid #0c3a47;
+    color: #0c3a47;
+    font-size: 0.875rem;
+    padding: 0.25rem 1rem;
+    border-radius: 0.375rem;
+    background-color: transparent;
+    transition: background-color 0.15s ease-in-out;
+  }
+  .btn-preview:hover,
+  .btn-preview:focus {
+    background-color: #f9fafb;
+    color: #0c3a47;
+  }
+  .btn-feedback {
+    background-color: #3b63f5;
+    color: white;
+    font-size: 0.875rem;
+    padding: 0.25rem 1rem;
+    border-radius: 0.375rem;
+    border: none;
+    transition: background-color 0.15s ease-in-out;
+  }
+  .btn-feedback:hover,
+  .btn-feedback:focus {
+    background-color: #2a4edb;
+    color: white;
+  }
+  @media (max-width: 575.98px) {
+    body {
+      padding: 1.5rem 1rem;
+    }
+    .form-label {
+      border-radius: 0.375rem 0.375rem 0 0;
+      border-right: 1px solid #0c3a47;
+      border-bottom: none;
+      padding: 0.375rem 0.75rem;
+      white-space: normal;
+    }
+    .select-wrapper {
+      flex: none;
+      width: 100%;
+      position: relative;
+    }
+    select.form-select {
+      border-radius: 0 0 0.375rem 0.375rem;
+      padding-right: 2rem;
+    }
+    .form-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .btn-preview,
+    .btn-feedback {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.75rem;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="mb-4">
+        <h2 class="org-header text-start">Document Compilation</h2>
+        <hr class="divider">
+    </header>
+    <form class="year-select-form mb-5">
+        <label for="academic-year" class="form-label mb-0">Academic Year:</label>
+        <div class="select-wrapper">
+          <select id="academic-year" name="academic-year" class="form-select">
+            <option>2022-2023</option>
+          </select>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+    </form>
+  
+    <div class="bg-white rounded-3 p-4 table-responsive">
+        <table class="table table-borderless align-middle mb-0" style="min-width: 900px;">
+          <thead>
+            <tr>
+              <th scope="col" style="min-width: 180px; background-color: #0c3a47; color: white;">File Name</th>
+              <th scope="col" style="min-width: 180px; background-color: #0c3a47; color: white;">Submission Date</th>
+              <th scope="col" style="min-width: 220px; background-color: #0c3a47; color: white;">Form Type</th>
+              <th scope="col" style="min-width: 120px; background-color: #0c3a47; color: white;">Status</th>
+              <th scope="col" style="min-width: 140px; background-color: #0c3a47; color: white;">Action</th>
+            </tr>
+          </thead>
+          <tbody class="text-start">
+            <tr>
+              <td>appforrecog.pdf</td>
+              <td>July 5, 2025, 1:00 PM</td>
+              <td><strong>Form 1A</strong> - APPLICATION FOR RECOGNITION</td>
+              <td class="text-center"><span class="badge-verified">Verified</span></td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn-preview">Preview</button>
+                <button type="button" class="btn-feedback">Download</button>
+              </td>
+            </tr>
+            <tr>
+              <td>lettofacceptance.pdf</td>
+              <td>July 5, 2025, 1:01 PM</td>
+              <td><strong>Form 2</strong> - LETTER OF ACCEPTANCE</td>
+              <td class="text-center"><span class="badge-verified">Verified</span></td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn-preview">Preview</button>
+                <button type="button" class="btn-feedback">Download</button>
+              </td>
+            </tr>
+            <tr>
+              <td>listofactivities.pdf</td>
+              <td>July 5, 2025, 1:01 PM</td>
+              <td><strong>Form 3</strong> - LIST OF PROGRAMS/PROJECTS/ACTIVITIES</td>
+              <td class="text-center"><span class="badge-verified">Verified</span></td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn-preview">Preview</button>
+                <button type="button" class="btn-feedback">Download</button>
+              </td>
+            </tr>
+            <tr>
+              <td>listofmembers.pdf</td>
+              <td>July 5, 2025, 1:02 PM</td>
+              <td><strong>Form 4</strong> - LIST OF MEMBERS</td>
+              <td class="text-center"><span class="badge-verified">Verified</span></td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn-preview">Preview</button>
+                <button type="button" class="btn-feedback">Download</button>
+              </td>
+            </tr>
+            <tr>
+              <td>boardofficer.pdf</td>
+              <td>July 5, 2025, 1:02 PM</td>
+              <td>BOARD OF OFFICERS</td>
+              <td class="text-center"><span class="badge-verified">Verified</span></td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn-preview">Preview</button>
+                <button type="button" class="btn-feedback">Download</button>
+              </td>
+            </tr>
+            <tr>
+              <td>constitution.pdf</td>
+              <td>July 5, 2025, 1:03 PM</td>
+              <td>CONSTITUTION AND BYLAWS</td>
+              <td class="text-center"><span class="badge-verified">Verified</span></td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn-preview">Preview</button>
+                <button type="button" class="btn-feedback">Download</button>
+              </td>
+            </tr>
+            <tr>
+              <td>logo_explanation.pdf</td>
+              <td>July 5, 2025, 1:03 PM</td>
+              <td>LOGO WITH EXPLANATION</td>
+              <td class="text-center"><span class="badge-verified text-center">Verified</span></td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn-preview">Preview</button>
+                <button type="button" class="btn-feedback">Download</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+</div>
+{% endblock %}

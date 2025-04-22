@@ -1,0 +1,813 @@
+{% extends 'user/userbase.html' %}
+
+{% block title %}Organization Details{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/organizationdetails.css') }}">
+<script src="{{ url_for('static', filename='js/manageorganization.js') }}" defer></script>
+<style>
+  .btn-edit {
+    background-color: #007bff;
+    color: #fff;
+    border: none; 
+    border-radius: 5px;
+    padding: 10px 10px;
+    cursor: pointer;
+    margin: 0 auto;
+    display: block;
+    font-size: 0.800rem;
+  }
+  
+  table th:nth-last-child(1),
+  table td:nth-last-child(1) {
+    text-align: center;
+  }
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="mb-4">
+        <h2 class="org-header text-start">Organizations</h2>
+        <hr class="divider">
+        <div class="text-start">
+            <a href="/organization" class="back-link d-inline-flex align-items-center">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+        </div>
+    </header>
+
+    <section class="organization-header d-flex flex-column flex-sm-row gap-4">
+        <img src="https://placehold.co/100x100/png/ffffff/000000?text=Logo" alt="Organization logo" class="org-logo">
+        <div class="flex-grow-1 text-start">
+            <h2 class="org-title">STUDENT SOCIETY IN INFORMATION TECHNOLOGY EDUCATION - NEUST CHAPTER</h2>
+            <p class="org-quote">"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed consequat vehicula ornare."</p>
+            <p class="org-description">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed consequat vehicula ornare. Vestibulum mauris nulla, laoreet nec faucibus vel, lobortis quis sem. Cras erat sem, dapibus non nisi id, ultricies porta urna. Suspendisse tempus ut lectus a rhoncus. Phasellus ac magna id velit dignissim pellentesque in condimentum neque.
+            </p>
+            <p class="org-adviser">Adviser: Dr. John Miranda</p>
+            <p class="org-social">
+                <strong>Social Media:</strong><br>
+                Facebook: facebook.com/ColAdvoSusLeadEmp
+            </p>
+        </div>
+        <button type="button" class="btn-edit" aria-label="Edit" onclick="showEditModal()">
+            <i class="fas fa-edit"></i> Edit
+        </button>
+    </section>
+
+    <section class="stats-container">
+        {% set stats = [
+            {'class': 'stat-members', 'label': 'No. of Members', 'icon': 'fas fa-users', 'value': '35'},
+            {'class': 'stat-volunteers', 'label': 'No. of Volunteers', 'icon': 'fas fa-hand-holding-heart', 'value': '13'},
+            {'class': 'stat-activities', 'label': 'Accomplished Activities', 'icon': 'fas fa-tasks', 'value': '2'}
+        ] %}
+        
+        {% for stat in stats %}
+        <div class="stat-card {{ stat.class }}">
+            <div>{{ stat.label }}</div>
+            <div class="d-flex align-items-center fw-semibold fs-4">
+                <i class="{{ stat.icon }} stat-icon"></i> {{ stat.value }}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div class="stat-card stat-status">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                Organization Status
+                <span class="status-active">Active</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="table-container">
+        <h3 class="table-title">Board of Officers</h3>
+        <div class="d-flex justify-content-end mb-2">
+            <button type="button" class="btn btn-primary" onclick="showOfficerModal()">
+                <i class="fas fa-plus"></i> Add Officer
+            </button>
+        </div>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:12%;">Position</th>
+                        <th style="width:13%;">Student No.</th>
+                        <th style="width:25%;">Name</th>
+                        <th style="width:10%;">Program</th>
+                        <th style="width:25%;">Address</th>
+                        <th style="width:15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set officers = [
+                    {'position': 'President', 'student_no': 'SUM2022-00001', 'name': 'Juan Miguel Dela Cruz', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+                    {'position': 'Vice President', 'student_no': 'SUM2022-00002', 'name': 'Maria Elena Santos', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
+                    {'position': 'Secretary', 'student_no': 'SUM2022-00003', 'name': 'Angelo Martin Reyes', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+                    {'position': 'Treasurer', 'student_no': 'SUM2022-00004', 'name': 'Bianca Rose Mendoza', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+                    {'position': 'Public Relations Officer', 'student_no': 'SUM2022-00005', 'name': 'Jasmine Mae Lim', 'program': 'BSIT', 'address': 'Palayan City, Nueva Ecija'},
+                    {'position': 'Treasurer', 'student_no': 'SUM2022-00006', 'name': 'Miguel Antonio Tan', 'program': 'BSIT', 'address': 'Talavera, Nueva Ecija'},
+                    {'position': 'Events Coordinator', 'student_no': 'SUM2022-00007', 'name': 'Sofia Marie Garcia', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
+                    {'position': 'Technical Lead', 'student_no': 'SUM2022-00008', 'name': 'Diego Rafael Bautista', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
+                    {'position': 'Membership Coordinator', 'student_no': 'SUM2022-00009', 'name': 'Isabella Marie Lopez', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'}
+                    ] %}
+                    
+                    {% for officer in officers %}
+                    <tr>
+                        <td>{{ officer.position }}</td>
+                        <td>{{ officer.student_no }}</td>
+                        <td>{{ officer.name }}</td>
+                        <td>{{ officer.program }}</td>
+                        <td>{{ officer.address }}</td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditOfficerModal('{{ officer.position }}', '{{ officer.student_no }}', '{{ officer.name }}', '{{ officer.program }}', '{{ officer.address }}')">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="row g-4 mb-1">
+        {% set people_tables = [
+            {'title': 'Members', 'id': 'members'},
+            {'title': 'Volunteer', 'id': 'volunteers'}
+        ] %}
+        
+        {% for table in people_tables %}
+        <div class="col-12 col-md-6">
+            <section class="table-container">
+                <h3 class="table-title">{{ table.title }}</h3>
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn btn-primary" onclick="show{{ table.id|capitalize }}Modal()">
+                        <i class="fas fa-plus"></i> Add {{ table.title }}
+                    </button>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:8%;">No.</th>
+                                <th style="width:20%;">Student No.</th>
+                                <th style="width:27%;">Name</th>
+                                <th style="width:20%;">Program</th>
+                                <th style="width:25%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set members = [
+                            {'no': '1', 'student_no': 'SUM2022-00001', 'name': 'Miguel Santos Sanchez', 'program': 'BSIT'},
+                            {'no': '2', 'student_no': 'SUM2022-00002', 'name': 'Sophia Marie Chen', 'program': 'BSIT'},
+                            {'no': '3', 'student_no': 'SUM2022-00003', 'name': 'Amir Hassan Khan', 'program': 'BSIT'},
+                            {'no': '4', 'student_no': 'SUM2022-00004', 'name': 'Isabella Maria Rodríguez', 'program': 'BSIT'},
+                            {'no': '5', 'student_no': 'SUM2022-00005', 'name': 'Liam Patrick O\'Connor', 'program': 'BSIT'},
+                            {'no': '6', 'student_no': 'SUM2022-00006', 'name': 'Priya Raj Patel', 'program': 'BSIT'},
+                            {'no': '7', 'student_no': 'SUM2022-00007', 'name': 'Mateo Luis Fernandez', 'program': 'BSIT'},
+                            {'no': '8', 'student_no': 'SUM2022-00008', 'name': 'Zoe Elizabeth Williams', 'program': 'BSIT'},
+                            {'no': '9', 'student_no': 'SUM2022-00009', 'name': 'Jamal Andre Washington', 'program': 'BSIT'},
+                            {'no': '10', 'student_no': 'SUM2022-00010', 'name': 'Mei Ling Zhang', 'program': 'BSIT'}
+                            ] %}
+
+                            {% for member in members %}
+                            <tr>
+                                <td>{{ member.no }}</td>
+                                <td>{{ member.student_no }}</td>
+                                <td>{{ member.name }}</td>
+                                <td>{{ member.program }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="showEditMemberModal('{{ member.student_no }}', '{{ member.name }}', '{{ member.program }}')">
+                                        <i class="fas fa-edit"></i> Update
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls">
+                    <button type="button"><i class="fas fa-chevron-left"></i> Previous</button>
+                    <button type="button">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </section>
+        </div>
+        {% endfor %}
+    </section>
+
+    <section class="table-container">
+    <h3 class="table-title">Plans</h3>
+    <div class="d-flex justify-content-end mb-2">
+        <button type="button" class="btn btn-primary" onclick="showAddPlanModal()">
+            <i class="fas fa-plus"></i> Add Plan
+        </button>
+    </div>
+    <div class="table-scroll">
+        <table>
+        <thead>
+            <tr>
+            <th style="width:4%;">No.</th>
+            <th style="width:18%;">Programs/Projects/Activities</th>
+            <th style="width:23%;">Objectives</th>
+            <th style="width:10%;">Proposed Date</th>
+            <th style="width:13%;">People Involved</th>
+            <th style="width:10%;">Source of Funds</th>
+            <th style="width:10%;">Venue</th>
+            <th style="width:7%;">Outcome</th>
+            <th style="width:5%;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set plans = [
+            {
+                'no': '1',
+                'title': 'Alay sa First Year',
+                'objectives': 'Support the competitors in different contests in the event. To disseminate SSITE objectives through booth pitching',
+                'date': 'August 05, 2023',
+                'people': 'SSITE Officers and Members',
+                'funds': 'SSITE Funds<br><small>(if necessary)</small>',
+                'venue': 'NEUST Close Gym',
+                'outcome': 'Successful'
+            },
+            {
+                'no': '2',
+                'title': 'Midterm Exam 2023 motivational support to CICT Students',
+                'objectives': 'Provide members support for their review and preparation for the term examinations.',
+                'date': 'October 13, 2023',
+                'people': 'SSITE Officers',
+                'funds': 'SSITE Funds<br><small>(if necessary)</small>',
+                'venue': 'CICT Department',
+                'outcome': 'Successful'
+            }
+            ] %}
+            
+            {% for plan in plans %}
+            <tr>
+            <td>{{ plan.no }}</td>
+            <td>{{ plan.title }}</td>
+            <td>{{ plan.objectives }}</td>
+            <td>{{ plan.date }}</td>
+            <td>{{ plan.people }}</td>
+            <td>{{ plan.funds|safe }}</td>
+            <td>{{ plan.venue }}</td>
+            <td class="outcome-successful">{{ plan.outcome }}</td>
+            <td>
+                <button type="button" class="btn btn-primary btn-sm" onclick="showEditPlanModal('{{ plan.no }}', '{{ plan.title }}', '{{ plan.objectives }}', '{{ plan.date }}', '{{ plan.people }}', '{{ plan.funds }}', '{{ plan.venue }}', '{{ plan.outcome }}')">
+                    <i class="fas fa-edit"></i> Update
+                </button>
+            </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+    </section>
+
+    <!-- Add Plan Modal -->
+    <div id="addPlanModal" class="global-modal" style="display: none; align-items: center; justify-content: center;">
+        <div class="modal-container">
+            <button class="btn-back" onclick="hideAddPlanModal()">
+                <i class="fas fa-times"></i> Close
+            </button>
+            
+            <div class="modal-section">
+                <h2>Add New Plan</h2>
+                <form id="addPlanForm">
+                    <div class="mb-3">
+                        <label for="addPlanTitle" class="form-label">Programs/Projects/Activities</label>
+                        <input type="text" class="form-control" id="addPlanTitle" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="addPlanObjectives" class="form-label">Objectives</label>
+                        <textarea class="form-control" id="addPlanObjectives" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="addPlanDate" class="form-label">Proposed Date</label>
+                        <input type="date" class="form-control" id="addPlanDate" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="addPlanPeople" class="form-label">People Involved</label>
+                        <input type="text" class="form-control" id="addPlanPeople" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="addPlanFunds" class="form-label">Source of Funds</label>
+                        <input type="text" class="form-control" id="addPlanFunds" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="addPlanVenue" class="form-label">Venue</label>
+                        <input type="text" class="form-control" id="addPlanVenue" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="addPlanOutcome" class="form-label">Outcome</label>
+                        <select class="form-select" id="addPlanOutcome" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Successful">Successful</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Add Plan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Plan Modal -->
+    <div id="editPlanModal" class="global-modal" style="display: none; align-items: center; justify-content: center;">
+        <div class="modal-container">
+            <button class="btn-back" onclick="hideEditPlanModal()">
+                <i class="fas fa-times"></i> Close
+            </button>
+            
+            <div class="modal-section">
+                <h2>Edit Plan Information</h2>
+                <form id="editPlanForm">
+                    <div class="mb-3">
+                        <label for="editPlanTitle" class="form-label">Programs/Projects/Activities</label>
+                        <input type="text" class="form-control" id="editPlanTitle" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editPlanObjectives" class="form-label">Objectives</label>
+                        <textarea class="form-control" id="editPlanObjectives" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editPlanDate" class="form-label">Proposed Date</label>
+                        <input type="date" class="form-control" id="editPlanDate" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editPlanPeople" class="form-label">People Involved</label>
+                        <input type="text" class="form-control" id="editPlanPeople" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editPlanFunds" class="form-label">Source of Funds</label>
+                        <input type="text" class="form-control" id="editPlanFunds" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editPlanVenue" class="form-label">Venue</label>
+                        <input type="text" class="form-control" id="editPlanVenue" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editPlanOutcome" class="form-label">Outcome</label>
+                        <select class="form-select" id="editPlanOutcome" required>
+                            <option value="Successful">Successful</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Officer Modal -->
+<div id="editOfficerModal" class="global-modal">
+    <div class="modal-container">
+        <button class="btn-back" onclick="hideEditOfficerModal()">
+            <i class="fas fa-times"></i> Close
+        </button>
+        
+        <div class="modal-section">
+            <h2>Edit Officer Information</h2>
+            <form id="editOfficerForm">
+                <div class="mb-3">
+                    <label for="editOfficerPosition" class="form-label">Position</label>
+                    <input type="text" class="form-control" id="editOfficerPosition" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="editOfficerStudentNo" class="form-label">Student No.</label>
+                    <input type="text" class="form-control" id="editOfficerStudentNo" required>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="editOfficerFirstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="editOfficerFirstName" required>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="editOfficerMiddleName" class="form-label">Middle Name</label>
+                        <input type="text" class="form-control" id="editOfficerMiddleName">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="editOfficerLastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="editOfficerLastName" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="editOfficerProgram" class="form-label">Program</label>
+                    <input type="text" class="form-control" id="editOfficerProgram" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="editOfficerAddress" class="form-label">Address</label>
+                    <input type="text" class="form-control" id="editOfficerAddress" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="editOfficerStatus" class="form-label">Status</label>
+                    <select class="form-select" id="editOfficerStatus" required>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Member Modal -->
+<div id="editMemberModal" class="global-modal">
+    <div class="modal-container">
+        <button class="btn-back" onclick="hideEditMemberModal()">
+            <i class="fas fa-times"></i> Close
+        </button>
+        
+        <div class="modal-section">
+            <h2>Edit Member Information</h2>
+            <form id="editMemberForm">
+                <div class="mb-3">
+                    <label for="editMemberStudentNo" class="form-label">Student No.</label>
+                    <input type="text" class="form-control" id="editMemberStudentNo" required>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="editMemberFirstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="editMemberFirstName" required>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="editMemberMiddleName" class="form-label">Middle Name</label>
+                        <input type="text" class="form-control" id="editMemberMiddleName">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="editMemberLastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="editMemberLastName" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="editMemberProgram" class="form-label">Program</label>
+                    <input type="text" class="form-control" id="editMemberProgram" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="editMemberStatus" class="form-label">Status</label>
+                    <select class="form-select" id="editMemberStatus" required>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Organization Modal -->
+<div id="editOrgModal" class="global-modal">
+    <div class="modal-container">
+        <button class="btn-back" onclick="hideEditModal()">
+            <i class="fas fa-times"></i> Close
+        </button>
+        
+        <div class="modal-section">
+            <h2>Edit Organization Information</h2>
+            <form id="editOrgForm">
+                <div class="mb-3">
+                    <label for="orgLogo" class="form-label">Organization Logo</label>
+                    <input type="file" class="form-control" id="orgLogo" accept="image/*">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="orgName" class="form-label">Organization Name</label>
+                    <input type="text" class="form-control" id="orgName" value="STUDENT SOCIETY IN INFORMATION TECHNOLOGY EDUCATION - NEUST CHAPTER">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="orgTagline" class="form-label">Tagline</label>
+                    <input type="text" class="form-control" id="orgTagline" value="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed consequat vehicula ornare.">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="orgDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="orgDescription" rows="4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed consequat vehicula ornare. Vestibulum mauris nulla, laoreet nec faucibus vel, lobortis quis sem. Cras erat sem, dapibus non nisi id, ultricies porta urna. Suspendisse tempus ut lectus a rhoncus. Phasellus ac magna id velit dignissim pellentesque in condimentum neque.</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Advisers</label>
+                    <div id="advisersContainer">
+                        <div class="input-group mb-2">
+                            <select class="form-select" style="max-width: 150px;">
+                                <option value="adviser">Adviser</option>
+                                <option value="co-adviser">Co-Adviser</option>
+                            </select>
+                            <input type="text" class="form-control" value="Dr. John Miranda">
+                            <button type="button" class="btn btn-danger" onclick="toggleAdviserStatus(this)">Mark Inactive</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addAdviser()">Add Adviser</button>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Social Media Links</label>
+                    <div id="socialMediaContainer">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" value="facebook.com/ColAdvoSusLeadEmp">
+                            <button type="button" class="btn btn-danger" onclick="removeSocialMedia(this)">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addSocialMedia()">Add Social Media</button>
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Officer Modal -->
+<div id="officerModal" class="global-modal">
+  <div class="modal-container">
+      <button class="btn-back" onclick="hideOfficerModal()">
+          <i class="fas fa-times"></i> Close
+      </button>
+      
+      <div class="modal-section">
+          <h2>Add Officer</h2>
+          <form id="officerForm">
+              <div class="mb-3">
+                  <label for="officerPosition" class="form-label">Position</label>
+                  <input type="text" class="form-control" id="officerPosition" required>
+              </div>
+              
+              <div class="mb-3">
+                  <label for="officerStudentNo" class="form-label">Student No.</label>
+                  <input type="text" class="form-control" id="officerStudentNo" required>
+              </div>
+              
+              <div class="row">
+                  <div class="col-md-4 mb-3">
+                      <label for="officerFirstName" class="form-label">First Name</label>
+                      <input type="text" class="form-control" id="officerFirstName" required>
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                      <label for="officerMiddleName" class="form-label">Middle Name</label>
+                      <input type="text" class="form-control" id="officerMiddleName">
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                      <label for="officerLastName" class="form-label">Last Name</label>
+                      <input type="text" class="form-control" id="officerLastName" required>
+                  </div>
+              </div>
+              
+              <div class="mb-3">
+                  <label for="officerProgram" class="form-label">Program</label>
+                  <input type="text" class="form-control" id="officerProgram" required>
+              </div>
+              
+              <div class="mb-3">
+                  <label for="officerAddress" class="form-label">Address</label>
+                  <input type="text" class="form-control" id="officerAddress" required>
+              </div>
+              
+              <div class="text-end">
+                  <button type="submit" class="btn btn-primary">Add Officer</button>
+              </div>
+          </form>
+      </div>
+  </div>
+</div>
+
+<!-- Members Modal -->
+<div id="membersModal" class="global-modal">
+  <div class="modal-container">
+      <button class="btn-back" onclick="hideMembersModal()">
+          <i class="fas fa-times"></i> Close
+      </button>
+      
+      <div class="modal-section">
+          <h2>Add Member</h2>
+          <form id="memberForm">
+              <div class="mb-3">
+                  <label for="memberStudentNo" class="form-label">Student No.</label>
+                  <input type="text" class="form-control" id="memberStudentNo" required>
+              </div>
+              
+              <div class="row">
+                  <div class="col-md-4 mb-3">
+                      <label for="memberFirstName" class="form-label">First Name</label>
+                      <input type="text" class="form-control" id="memberFirstName" required>
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                      <label for="memberMiddleName" class="form-label">Middle Name</label>
+                      <input type="text" class="form-control" id="memberMiddleName">
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                      <label for="memberLastName" class="form-label">Last Name</label>
+                      <input type="text" class="form-control" id="memberLastName" required>
+                  </div>
+              </div>
+              
+              <div class="mb-3">
+                  <label for="memberProgram" class="form-label">Program</label>
+                  <input type="text" class="form-control" id="memberProgram" required>
+              </div>
+              
+              <div class="text-end">
+                  <button type="submit" class="btn btn-primary">Add Member</button>
+              </div>
+          </form>
+      </div>
+  </div>
+</div>
+
+<!-- Volunteer Modal -->
+<div id="volunteersModal" class="global-modal">
+  <div class="modal-container">
+      <button class="btn-back" onclick="hideVolunteersModal()">
+          <i class="fas fa-times"></i> Close
+      </button>
+      
+      <div class="modal-section">
+          <h2>Add Volunteer</h2>
+          <form id="volunteerForm">
+              <div class="mb-3">
+                  <label for="volunteerStudentNo" class="form-label">Student No.</label>
+                  <input type="text" class="form-control" id="volunteerStudentNo" required>
+              </div>
+              
+              <div class="row">
+                  <div class="col-md-4 mb-3">
+                      <label for="volunteerFirstName" class="form-label">First Name</label>
+                      <input type="text" class="form-control" id="volunteerFirstName" required>
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                      <label for="volunteerMiddleName" class="form-label">Middle Name</label>
+                      <input type="text" class="form-control" id="volunteerMiddleName">
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                      <label for="volunteerLastName" class="form-label">Last Name</label>
+                      <input type="text" class="form-control" id="volunteerLastName" required>
+                  </div>
+              </div>
+              
+              <div class="mb-3">
+                  <label for="volunteerProgram" class="form-label">Program</label>
+                  <input type="text" class="form-control" id="volunteerProgram" required>
+              </div>
+              
+              <div class="text-end">
+                  <button type="submit" class="btn btn-primary">Add Volunteer</button>
+              </div>
+          </form>
+      </div>
+  </div>
+</div>
+
+<script>
+function showEditModal() {
+    document.getElementById('editOrgModal').classList.add('show');
+}
+
+function hideEditModal() {
+    document.getElementById('editOrgModal').classList.remove('show');
+}
+
+function addAdviser() {
+    const container = document.getElementById('advisersContainer');
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `
+        <select class="form-select" style="max-width: 150px;">
+            <option value="adviser">Adviser</option>
+            <option value="co-adviser">Co-Adviser</option>
+        </select>
+        <input type="text" class="form-control" placeholder="Adviser name">
+        <button type="button" class="btn btn-danger" onclick="toggleAdviserStatus(this)">Mark Inactive</button>
+    `;
+    container.appendChild(div);
+}
+
+function toggleAdviserStatus(button) {
+    const input = button.parentElement.querySelector('input');
+    const isActive = !input.value.includes('(Inactive)');
+    
+    if (isActive) {
+        input.value = input.value + ' (Inactive)';
+        button.textContent = 'Mark Active';
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-warning');
+    } else {
+        input.value = input.value.replace(' (Inactive)', '');
+        button.textContent = 'Mark Inactive';
+        button.classList.remove('btn-warning');
+        button.classList.add('btn-danger');
+    }
+}
+
+function addSocialMedia() {
+    const container = document.getElementById('socialMediaContainer');
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `
+        <input type="text" class="form-control" placeholder="Social media link">
+        <button type="button" class="btn btn-danger" onclick="removeSocialMedia(this)">Remove</button>
+    `;
+    container.appendChild(div);
+}
+
+function removeSocialMedia(button) {
+    button.parentElement.remove();
+}
+
+document.getElementById('editOrgForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Handle form submission here
+    hideEditModal();
+});
+
+function showOfficerModal() {
+    document.getElementById('officerModal').classList.add('show');
+}
+
+function hideOfficerModal() {
+    document.getElementById('officerModal').classList.remove('show');
+}
+
+function showMembersModal() {
+    document.getElementById('membersModal').classList.add('show');
+}
+
+function hideMembersModal() {
+    document.getElementById('membersModal').classList.remove('show');
+}
+
+function showVolunteersModal() {
+    document.getElementById('volunteersModal').classList.add('show');
+}
+
+function hideVolunteersModal() {
+    document.getElementById('volunteersModal').classList.remove('show');
+}
+
+document.getElementById('officerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Handle form submission here
+    hideOfficerModal();
+});
+
+document.getElementById('memberForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Handle form submission here
+    hideMembersModal();
+});
+
+document.getElementById('volunteerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Handle form submission here
+    hideVolunteersModal();
+});
+</script>
+{% endblock %}
