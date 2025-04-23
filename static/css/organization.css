@@ -1,32 +1,38 @@
 
-  .search-container {
-    background-color: #e9e6f1;
-    border-radius: 9999px;
-    padding: 0.375rem 1rem;
+  /* Search component styles */
+  .search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .search-input {
+    border-radius: 50px;
+    border: 1.5px solid var(--primary-color);
+    padding: 0.75rem 3.5rem 0.75rem 1.25rem;
+    color: #6b7280;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .search-btn {
+    position: absolute;
+    right: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--white);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    max-width: 280px;
-  }
-  
-  .search-container input {
-    border: none;
-    background: transparent;
-    color: var(--primary-color);
-    font-size: 0.800rem;
-    flex-grow: 1;
+    justify-content: center;
+    cursor: pointer;
     padding: 0;
+    line-height: 1;
   }
-  
-  .search-container input::placeholder {
-    color: var(--primary-color);
-  }
-  
-  .search-container input:focus {
-    outline: none;
-    box-shadow: none;
-  }
-  
   /* Make card groups (rows) display as flexbox */
   .row {
     display: flex;

@@ -30,7 +30,7 @@
 {% block content %}
 <div class="container">
     <header class="mb-4">
-        <h2 class="org-header text-start">Organizations</h2>
+        <h2 class="org-header text-start">Organization</h2>
         <hr class="divider">
         <div class="text-start">
             <a href="/organization" class="back-link d-inline-flex align-items-center">
@@ -84,11 +84,6 @@
 
     <section class="table-container">
         <h3 class="table-title">Board of Officers</h3>
-        <div class="d-flex justify-content-end mb-2">
-            <button type="button" class="btn btn-primary" onclick="showOfficerModal()">
-                <i class="fas fa-plus"></i> Add Officer
-            </button>
-        </div>
         <div class="table-scroll">
             <table>
                 <thead>
@@ -131,6 +126,11 @@
                 </tbody>
             </table>
         </div>
+        <div class="d-flex justify-content-end mb-2 mt-3">
+            <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="showOfficerModal()">
+                <i class="fas fa-plus"></i> Add Officer
+            </button>
+        </div>
     </section>
 
     <section class="row g-4 mb-1">
@@ -143,11 +143,6 @@
         <div class="col-12 col-md-6">
             <section class="table-container">
                 <h3 class="table-title">{{ table.title }}</h3>
-                <div class="d-flex justify-content-end mb-2">
-                    <button type="button" class="btn btn-primary" onclick="show{{ table.id|capitalize }}Modal()">
-                        <i class="fas fa-plus"></i> Add {{ table.title }}
-                    </button>
-                </div>
                 <div class="table-scroll">
                     <table>
                         <thead>
@@ -193,6 +188,11 @@
                     <button type="button"><i class="fas fa-chevron-left"></i> Previous</button>
                     <button type="button">Next <i class="fas fa-chevron-right"></i></button>
                 </div>
+                <div class="d-flex justify-content-end mb-2 mt-3">
+                    <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="show{{ table.title }}Modal()">
+                        <i class="fas fa-plus"></i> Add {{ table.title }}
+                    </button>
+                </div>
             </section>
         </div>
         {% endfor %}
@@ -200,11 +200,6 @@
 
     <section class="table-container">
     <h3 class="table-title">Plans</h3>
-    <div class="d-flex justify-content-end mb-2">
-        <button type="button" class="btn btn-primary" onclick="showAddPlanModal()">
-            <i class="fas fa-plus"></i> Add Plan
-        </button>
-    </div>
     <div class="table-scroll">
         <table>
         <thead>
@@ -263,6 +258,11 @@
             {% endfor %}
         </tbody>
         </table>
+    </div>
+    <div class="d-flex justify-content-end mb-2 mt-3">
+        <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="showAddPlanModal()">
+            <i class="fas fa-plus"></i> Add Plan
+        </button>
     </div>
     </section>
 

@@ -11,13 +11,19 @@
   <h2 class="org-header text-start">Organizations</h2>
   <hr class="divider">
   
-  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 gap-3">
-    <a class="sort-btn" href="#" aria-label="Sort by"></a>
-    <form class="search-container" role="search" aria-label="Search form">
-      <input type="search" placeholder="Search..." aria-label="Search">
-      <i class="fas fa-search"></i>
-    </form>
-  </div>
+  <form class="mb-4 mt-4 w-100 d-flex justify-content-center" role="search" aria-label="Search Organization">
+    <div class="search-wrapper">
+      <input
+        type="search"
+        class="search-input"
+        placeholder="Search an organization..."
+        aria-label="Search a organization"
+      />
+      <button type="submit" class="search-btn" aria-label="Search">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </form>
   
   <div class="row row-eq-height g-3" role="list">
     <div class="col-12 col-sm-6 col-md-3" role="listitem">

@@ -31,7 +31,6 @@ body {
   gap: 20px;
   background-color: #0d3b44;
   padding: 24px;
-  border-radius: 0 30px 30px 0;
   transition: all 0.3s;
   z-index: 1030; /* Above Bootstrap's default z-index */
 }
@@ -300,27 +299,30 @@ body {
 
 /* Mobile view media queries */
 @media screen and (max-width: 768px) {
-  /* Add mobile-active class for mobile-specific behavior */
-  .custom-sidebar.mobile-active {
-    transform: translateX(-100%);
-    width: 0;
-  }
-  
   .custom-sidebar {
     position: fixed;
     left: 0;
-    z-index: 1030;
-    transition: all 0.3s ease;
+    z-index: 1050;
+    transition: transform 0.3s ease;
+    transform: translateX(0);
   }
   
-  /* Class added by JS when sidebar is ready */
-  .custom-sidebar.initialized {
-    visibility: visible;
-    opacity: 1;
+  .custom-sidebar.mobile-active {
+    transform: translateX(-100%);
+  }
+  
+  .custom-content {
+    margin-left: 0;
+    width: 100%;
+    z-index: 1;
+    transition: margin-left 0.3s ease;
+  }
+  
+  .custom-sidebar:not(.mobile-active) ~ .custom-content {
+    margin-left: 240px;
   }
   
   .custom-menu-btn {
-    /* Show menu button only in mobile view */
     display: flex;
     width: 40px;
     height: 40px;
@@ -328,41 +330,23 @@ body {
     border-radius: 10px;
     background-color: #0d3b44;
     color: white;
+    z-index: 1051;
     box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 0px 97px 39px 0px rgba(0, 0, 0, 0.01), 0px 54px 33px 0px rgba(0, 0, 0, 0.05), 0px 24px 24px 0px rgba(0, 0, 0, 0.09), 0px 6px 13px 0px rgba(0, 0, 0, 0.10);
   }
   
   .custom-sidebar.mobile-active .custom-menu-btn {
-    /* Make menu button stay visible when sidebar is hidden */
     right: -56px;
     background-color: #0d3b44;
-    transform: rotate(0);
   }
   
   .custom-sidebar.mobile-active .custom-menu-btn i {
     transform: rotate(180deg);
   }
   
-  /* Hide all sidebar content when in mobile-active (closed) state */
   .custom-sidebar.mobile-active .custom-head,
   .custom-sidebar.mobile-active .custom-nav,
   .custom-sidebar.mobile-active .custom-menu:not(.custom-menu-btn) {
     opacity: 0;
     visibility: hidden;
-  }
-  
-  /* Adjust content to fill screen when sidebar is hidden */
-  .custom-content {
-    width: 100%;
-    margin-left: 0;
-    transition: margin-left 0.3s ease;
-  }
-  
-  .custom-sidebar.mobile-active ~ .custom-content {
-    margin-left: 0;
-  }
-  
-  /* For mobile devices, ensure content takes full width when sidebar is hidden */
-  .custom-sidebar:not(.mobile-active) ~ .custom-content {
-    margin-left: 240px;
   }
 }
