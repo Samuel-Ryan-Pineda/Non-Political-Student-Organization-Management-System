@@ -17,9 +17,9 @@ def create_app():
     load_dotenv()  # Load environment variables
     
     # Database configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/npsoms_db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI", 'mysql+pymysql://root:@localhost/npsoms_db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.secret_key = 'secret_key'
+    app.secret_key = os.getenv("SECRET_KEY", 'secret_key')
     
     # Mail configuration
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -46,15 +46,15 @@ def create_app():
     
     # Create database tables
     with app.app_context():
-        from app.models import UserRole
+        from app.models import Role
         db.create_all()
         
         # Initialize roles if they don't exist
-        if not UserRole.query.first():
+        if not Role.query.first():
             roles = [
-                UserRole(role_id=1, role="OSOAD"),
-                UserRole(role_id=2, role="Organization_President"),
-                UserRole(role_id=3, role="Applicant")
+                Role(role_id=1, role_name="OSOAD", role_description="Office of Student Organization and Activities Development"),
+                Role(role_id=2, role_name="Organization_President", role_description="President of a Student Organization"),
+                Role(role_id=3, role_name="Applicant", role_description="Student Organization Applicant")
             ]
             db.session.add_all(roles)
             db.session.commit()

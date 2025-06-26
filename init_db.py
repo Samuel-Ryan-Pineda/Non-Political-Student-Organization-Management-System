@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Email, EntryKey, UserRole
+from app.models import User, EntryKey, Role
 
 def init_database():
     app = create_app()
@@ -9,12 +9,12 @@ def init_database():
         db.create_all()
         
         # Check if roles already exist
-        if not UserRole.query.first():
+        if not Role.query.first():
             # Create default roles
             roles = [
-                UserRole(role_id=1, role='OSOAD'),
-                UserRole(role_id=2, role='Organization'),
-                UserRole(role_id=3, role='Applicant')
+                Role(role_id=1, role_name='OSOAD', role_description='Office of Student Organization and Activities Development'),
+                Role(role_id=2, role_name='Organization', role_description='Student Organization'),
+                Role(role_id=3, role_name='Applicant', role_description='Student Organization Applicant')
             ]
             db.session.add_all(roles)
             db.session.commit()

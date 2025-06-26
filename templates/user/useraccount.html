@@ -8,6 +8,9 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
       border: none;
     }
+    .custom-row {
+       padding: 0 !important;
+    }
     .nav-tabs .nav-link {
       color: #6c757d;
       border: none;
@@ -31,97 +34,95 @@
         <h2 class="org-header text-start">My Account</h2>
         <hr class="divider">
     </header>
-    <main class="flex-grow-1 py-5">
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
-              <div class="card">
-                <div class="card-body p-4 p-md-5">
-                  <ul class="nav nav-tabs border-0 mb-3" id="accountTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                      <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab" aria-controls="personal" aria-selected="true">Personal Information</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                      <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">Change Password</button>
-                    </li>
-                  </ul>
-                  
-                  <div class="tab-content" id="accountTabsContent">
-                    <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
-                      <!-- Personal Information Section -->
-                  <h2 class="card-title mb-4 fs-4 fw-semibold">Personal Information</h2>
-                  <form id="info-form" novalidate>
-                    <div class="mb-4 text-start" style="font-size: 0.800rem;">
-                      <label for="email" class="form-label">Email address</label>
-                      <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" value="john.doe@example.com" required>
-                      <div class="invalid-feedback" id="email-error">
-                        Please enter a valid email address.
-                      </div>
-                    </div>
-                    
-                    <div class="row mb-4">
-                      <div class="col-md-4 mb-3 mb-md-0 text-start" style="font-size: 0.800rem;">
-                        <label for="firstname" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="firstname" name="firstname" placeholder="John" value="John" required>
-                        <div class="invalid-feedback" id="firstname-error">
-                          First name is required.
-                        </div>
-                      </div>
-                      <div class="col-md-4 mb-3 mb-md-0 text-start" style="font-size: 0.800rem;">
-                        <label for="middlename" class="form-label">Middle Name</label>
-                        <input type="text" class="form-control" id="middlename" name="middlename" placeholder="Michael" value="Michael">
-                      </div>
-                      <div class="col-md-4 text-start" style="font-size: 0.800rem;">
-                        <label for="lastname" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Doe" value="Doe" required>
-                        <div class="invalid-feedback" id="lastname-error">
-                          Last name is required.
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Update Personal Info</button>
-                  </form>
-                    </div>
-                    <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
-                      <!-- Change Password Section -->
-                      <h2 class="card-title mb-4 fs-4 fw-semibold">Change Password</h2>
-                  <form id="password-form" novalidate>
-                    <div class="mb-3 text-start" style="font-size: 0.800rem;">
-                      <label for="old-password" class="form-label">Current Password</label>
-                      <input type="password" class="form-control" id="old-password" name="old-password" placeholder="Enter current password" required>
-                      <div class="invalid-feedback" id="old-password-error">
-                        Current password is required.
-                      </div>
-                    </div>
-                    
-                    <div class="row mb-4">
-                      <div class="col-md-6 text-start" style="font-size: 0.800rem;">
-                        <label for="password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter new password">
-                        <div class="invalid-feedback" id="password-error">
-                          Password must be at least 8 characters.
-                        </div>
-                      </div>
-                      
-                      <div class="col-md-6 text-start" style="font-size: 0.800rem;">
-                        <label for="confirm-password" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirm-password" name="confirm-password" placeholder="Confirm new password">
-                        <div class="invalid-feedback" id="confirm-password-error">
-                          Passwords do not match.
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Update Password</button>
-                  </form>
+    <main>
+      <div class="custom-row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body p-4 p-md-5">
+              <ul class="nav nav-tabs border-0 mb-3" id="accountTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab" aria-controls="personal" aria-selected="true">Personal Information</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">Change Password</button>
+                </li>
+              </ul>
+              
+              <div class="tab-content" id="accountTabsContent">
+                <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+                  <!-- Personal Information Section -->
+              <h2 class="card-title mb-4 fs-5 fw-semibold">Personal Information</h2>
+              <form id="info-form" novalidate>
+                <div class="mb-4 text-start" style="font-size: 0.800rem;">
+                  <label for="email" class="form-label">Email address</label>
+                  <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" value="john.doe@example.com" required>
+                  <div class="invalid-feedback" id="email-error">
+                    Please enter a valid email address.
+                  </div>
+                </div>
+                
+                <div class="row mb-4">
+                  <div class="col-md-4 mb-3 mb-md-0 text-start" style="font-size: 0.800rem;">
+                    <label for="firstname" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="firstname" name="firstname" placeholder="John" value="John" required>
+                    <div class="invalid-feedback" id="firstname-error">
+                      First name is required.
                     </div>
                   </div>
+                  <div class="col-md-4 mb-3 mb-md-0 text-start" style="font-size: 0.800rem;">
+                    <label for="middlename" class="form-label">Middle Name</label>
+                    <input type="text" class="form-control" id="middlename" name="middlename" placeholder="Michael" value="Michael">
+                  </div>
+                  <div class="col-md-4 text-start" style="font-size: 0.800rem;">
+                    <label for="lastname" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Doe" value="Doe" required>
+                    <div class="invalid-feedback" id="lastname-error">
+                      Last name is required.
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Update Personal Info</button>
+              </form>
+                </div>
+                <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                  <!-- Change Password Section -->
+                  <h2 class="card-title mb-4 fs-4 fw-semibold">Change Password</h2>
+              <form id="password-form" novalidate>
+                <div class="mb-3 text-start" style="font-size: 0.800rem;">
+                  <label for="old-password" class="form-label">Current Password</label>
+                  <input type="password" class="form-control" id="old-password" name="old-password" placeholder="Enter current password" required>
+                  <div class="invalid-feedback" id="old-password-error">
+                    Current password is required.
+                  </div>
+                </div>
+                
+                <div class="row mb-4">
+                  <div class="col-md-6 text-start" style="font-size: 0.800rem;">
+                    <label for="password" class="form-label">New Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter new password">
+                    <div class="invalid-feedback" id="password-error">
+                      Password must be at least 8 characters.
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6 text-start" style="font-size: 0.800rem;">
+                    <label for="confirm-password" class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-control" id="confirm-password" name="confirm-password" placeholder="Confirm new password">
+                    <div class="invalid-feedback" id="confirm-password-error">
+                      Passwords do not match.
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Update Password</button>
+              </form>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
+    </main>
 </div>
 {% endblock %}

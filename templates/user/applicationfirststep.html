@@ -1,69 +1,99 @@
 {% extends 'user/userbase.html' %}
 
-{% block title %}New Organization First Step{% endblock %}
+{% block title %}New Organization Application{% endblock %}
 
 {% block head_css %}
 <style>
   .form-container {
-    background: #0D3B44;
-    border-radius: 1rem;
-    padding: 2rem 2.5rem;
-    max-width: 600px;
     width: 100%;
-    margin: 2rem auto;
+    background: #fff;
+    padding: 2rem 3rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 0.1);
+    margin: 0 auto;
   }
-  .logo-placeholder {
-    width: 96px;
-    height: 96px;
-    background-color: #e3e3e3;
-    border-radius: 50%;
-    margin-bottom: 0.75rem;
+  .form-content {
+    width: 100%;
   }
-  .btn-upload {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.75rem;
-    background-color: #868686;
-    border: none;
-    color: white;
-    border-radius: 0.375rem;
-  }
-  .btn-upload:hover {
-    background-color: #3a3a3a;
-  }
-  .form-control, .form-select {
-    background-color: #e7e7e7;
-    border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    padding: 0.5rem 0.75rem;
-  }
-  .form-control:focus, .form-select:focus {
-    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.5);
-    border-color: transparent;
-    background-color: #e7e7e7;
-  }
-  .btn-next {
-    font-size: 0.8rem;
-    background-color: #2a4bf7;
-    border: none;
-    padding: 0.3rem 1rem;
+  .logo-preview {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    border: 1px solid #ced4da;
     border-radius: 0.25rem;
-    color: white;
-    float: right;
-    text-decoration: none;
+    background-color: #e9ecef;
   }
-  .btn-next:hover {
-    background-color: #1e38c7;
+  @media (max-width: 768px) {
+    .form-container {
+      padding: 2rem 1.5rem;
+    }
+    .logo-container {
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .logo-upload-section,
+    .logo-description-section {
+      width: 100%;
+      flex: none;
+    }
+    .logo-upload-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .logo-preview {
+      width: 120px;
+      height: 120px;
+    }
   }
-  .label-forms {
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 400;
-    margin-bottom: 0.25rem;
-    text-align: left;
+
+  .form-content .form-label {
+    text-align: left !important;
     display: block;
     width: 100%;
-}
+  }
+
+  .form-container .form-content .form-label {
+    text-align: left !important;
+  }
+
+  /* Set text size for form inputs and selects */
+  input.form-control, 
+  select.form-select,
+  textarea.form-control {
+    font-size: 0.875em;
+  }
+
+  /* Ensure placeholder text matches the size */
+  ::placeholder,
+  ::-webkit-input-placeholder,
+  ::-moz-placeholder,
+  :-ms-input-placeholder,
+  :-moz-placeholder {
+    font-size: 0.875em !important;
+  }
+
+  /* Logo container styles */
+  .logo-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .logo-upload-section {
+    flex: 0 0 160px;
+  }
+
+  .logo-description-section {
+    flex: 1 1 300px;
+  }
+
+  .logo-preview-img {
+    display: block;
+    margin-bottom: 10px;
+  }
 </style>
 {% endblock %}
 
@@ -71,42 +101,271 @@
 <div class="container">
   <h2 class="org-header">New Organization Application</h2>
   <hr class="divider">
-  <main class="d-flex flex-column align-items-center">
-    <h1 class="text-center mt-4">
-        Submitting an application for a new organization?
-    </h1>
-    <p class="text-center fs-5 mt-2 mb-4">
-        Please provide the organization's logo, name, and type.
-    </p>
-    
+  <main>
     <div class="form-container">
-      <div class="d-flex flex-column align-items-center mb-4">
-        <div class="logo-placeholder"></div>
-        <button type="button" class="btn-upload">Upload Logo</button>
-      </div>
-      <form>
-        <div class="mb-3">
-          <label for="orgName" class="label-forms">Organization Name</label>
-          <input type="text" value="Technological Advancement and Innovation Society of Future Engineers" class="form-control" id="orgName" placeholder="Enter your organization's name" />
-        </div>
-        <div class="mb-4">
-          <label for="orgType" class="label-forms">Organization Type</label>
-          <select class="form-select" id="orgType" aria-label="Organization Type">
-            <option selected>Select type</option>
-            <option value="academic">Academic/Professional</option>
-            <option value="cultural">Cultural/International</option>
-            <option value="arts">Arts & Media</option>
-            <option value="service">Community Service</option>
-            <option value="sports">Sports & Recreation</option>
-            <option value="political">Political/Advocacy</option>
-            <option value="religious">Religious/Spiritual</option>
-            <option value="greek">Greek Life</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <a href="/application" type="submit" class="btn-next">Next</a>
-      </form>
+
+      <section class="form-content">
+        <h1 class="h5 fw-semibold mb-3 text-dark text-start">
+          Submitting an application for a new organization?
+        </h1>
+        <p class="text-secondary mb-4 text-start small">
+          Please provide the organization's logo, logo description, name, and type.
+        </p>
+      <hr>
+        <form id="organizationForm" class="mt-4" enctype="multipart/form-data" method="post" action="{{ url_for('main.applicationfirststep') }}" novalidate>
+          <div class="mb-3">
+            <label class="form-label fw-medium small" for="orgName">
+              Organization Name
+            </label>
+            <input class="form-control" id="orgName" name="orgName" required type="text" placeholder="Enter organization name" aria-describedby="orgNameHelp" aria-required="true"/>
+            <div class="invalid-feedback" id="orgNameHelp">
+              Please enter an organization name.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-medium small" for="orgType">
+              Organization Type
+            </label>
+            <select class="form-select" id="orgType" name="orgType" required aria-describedby="orgTypeHelp" aria-required="true">
+              <option disabled selected value="">
+                Select type
+              </option>
+              <option value="non-profit">
+                Non-Profit
+              </option>
+              <option value="educational">
+                Educational
+              </option>
+              <option value="corporate">
+                Corporate
+              </option>
+              <option value="government">
+                Government
+              </option>
+              <option value="community">
+                Community
+              </option>
+              <option value="other">
+                Other
+              </option>
+            </select>
+            <div class="invalid-feedback" id="orgTypeHelp">
+              Please select an organization type.
+            </div>
+          </div>
+          <div class="mb-3 logo-container">
+            <div class="logo-upload-section">
+              <label class="form-label fw-medium small" for="logo">
+                Upload Logo
+              </label>
+              <img alt="Placeholder logo image showing a simple gray square with the text 'Logo' in the center" class="logo-preview logo-preview-img" height="160" id="logoPreview" src="https://storage.googleapis.com/a1aa/image/e8c3bd95-f59a-4248-b78c-8aaba613360b.jpg" width="160"/>
+              <input accept="image/*" class="form-control form-control-sm" id="logo" name="logo" type="file" aria-describedby="logoHelp" required/>
+              <div class="form-text small" id="logoHelp">
+                PNG, JPG, GIF
+              </div>
+              <div class="invalid-feedback">
+                Please upload an organization logo.
+              </div>
+            </div>
+            <div class="logo-description-section">
+              <label class="form-label fw-medium small" for="logoDescription">
+                Logo Description
+              </label>
+              <textarea class="form-control" id="logoDescription" name="logoDescription" rows="9" placeholder="Describe your logo" aria-describedby="logoDescHelp" style="font-size: 0.875em;" required></textarea>
+              <div class="form-text small" id="logoDescHelp">
+                Provide a clear description of your logo for accessibility purposes
+              </div>
+              <div class="invalid-feedback">
+                Please provide a description of your logo.
+              </div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" id="nextButton" class="btn btn-primary w-100 fw-semibold" aria-label="Proceed to next step">
+              <span>Next</span>
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   </main>
 </div>
+
+<script>
+  const logoInput = document.getElementById('logo');
+  const logoPreview = document.getElementById('logoPreview');
+  const nextButton = document.getElementById('nextButton');
+  
+  // Helper function to set button loading state
+  function setButtonLoading(button, isLoading) {
+    const buttonText = button.querySelector('span');
+    if (isLoading) {
+      buttonText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
+      button.classList.add('disabled');
+      button.setAttribute('aria-disabled', 'true');
+    } else {
+      buttonText.textContent = 'Next';
+      button.classList.remove('disabled');
+      button.removeAttribute('aria-disabled');
+    }
+  }
+  const orgNameInput = document.getElementById('orgName');
+  const orgTypeSelect = document.getElementById('orgType');
+
+  // Validate image file size and type
+  function validateImage(file) {
+    // Check if file exists
+    if (!file) return { valid: false, message: 'No file selected' };
+    
+    // Check file size (5MB max)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      return { valid: false, message: 'File size exceeds 5MB limit' };
+    }
+    
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      return { valid: false, message: 'File must be JPG, PNG, or GIF' };
+    }
+    
+    return { valid: true };
+  }
+  
+  // Handle logo preview
+  logoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    
+    if (file) {
+      const fileValidation = validateImage(file);
+      
+      if (fileValidation.valid) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          logoPreview.src = ev.target.result;
+          logoPreview.alt = `Uploaded logo image preview of ${file.name}`;
+          // Clear any previous error
+          logoInput.classList.remove('is-invalid');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Invalid file
+        logoInput.classList.add('is-invalid');
+        // Update error message in the existing invalid-feedback div
+        const errorDiv = logoInput.nextElementSibling.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+          errorDiv.textContent = fileValidation.message;
+        }
+        // Reset preview
+        logoPreview.src = 'https://storage.googleapis.com/a1aa/image/e8c3bd95-f59a-4248-b78c-8aaba613360b.jpg';
+        logoPreview.alt = "Placeholder logo image showing a simple gray square with the text 'Logo' in the center";
+      }
+    } else {
+      // No file selected (cleared input)
+      logoPreview.src = 'https://storage.googleapis.com/a1aa/image/e8c3bd95-f59a-4248-b78c-8aaba613360b.jpg';
+      logoPreview.alt = "Placeholder logo image showing a simple gray square with the text 'Logo' in the center";
+      // Show required validation error
+      logoInput.classList.add('is-invalid');
+    }
+  });
+
+  // Initialize form validation
+  const form = document.getElementById('organizationForm');
+  
+  // Handle form submission
+  form.addEventListener('submit', (e) => {
+    // Validate form
+    form.classList.add('was-validated');
+    let isValid = form.checkValidity();
+    
+    if (!orgNameInput.value.trim()) {
+      orgNameInput.classList.add('is-invalid');
+      isValid = false;
+    } else {
+      orgNameInput.classList.remove('is-invalid');
+      // Still store in localStorage for backup
+      localStorage.setItem('orgName', orgNameInput.value);
+    }
+    
+    if (!orgTypeSelect.value) {
+      orgTypeSelect.classList.add('is-invalid');
+      isValid = false;
+    } else {
+      orgTypeSelect.classList.remove('is-invalid');
+      // Still store in localStorage for backup
+      localStorage.setItem('orgType', orgTypeSelect.value);
+    }
+    
+    // Validate logo
+    const logoFile = logoInput.files[0];
+    if (!logoFile) {
+      logoInput.classList.add('is-invalid');
+      isValid = false;
+    } else {
+      // Validate the file using our validateImage function
+      const fileValidation = validateImage(logoFile);
+      if (!fileValidation.valid) {
+        logoInput.classList.add('is-invalid');
+        // Update the error message
+        const errorDiv = logoInput.nextElementSibling.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+          errorDiv.textContent = fileValidation.message;
+        }
+        isValid = false;
+      } else {
+        logoInput.classList.remove('is-invalid');
+      }
+    }
+    
+    // Validate logo description
+    const logoDescription = document.getElementById('logoDescription');
+    if (!logoDescription.value.trim()) {
+      logoDescription.classList.add('is-invalid');
+      isValid = false;
+    } else {
+      logoDescription.classList.remove('is-invalid');
+      localStorage.setItem('logoDescription', logoDescription.value);
+    }
+    
+    // If form is not valid, prevent submission and scroll to first invalid field
+    if (!isValid) {
+      e.preventDefault();
+      const firstInvalidField = form.querySelector(':invalid');
+      if (firstInvalidField) {
+        firstInvalidField.focus();
+        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else {
+      // Form is valid, show loading state
+      try {
+        setButtonLoading(nextButton, true);
+        // Form will be submitted to the server
+      } catch (error) {
+        console.error('Error preparing form submission:', error);
+        setButtonLoading(nextButton, false);
+        e.preventDefault();
+        alert('An error occurred while preparing your data. Please try again.');
+      }
+    }
+  });
+
+  // Load saved data if available
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedName = localStorage.getItem('orgName');
+    const savedType = localStorage.getItem('orgType');
+    const savedLogoDescription = localStorage.getItem('logoDescription');
+    
+    if (savedName) {
+      orgNameInput.value = savedName;
+    }
+    
+    if (savedType) {
+      orgTypeSelect.value = savedType;
+    }
+    
+    if (savedLogoDescription) {
+      document.getElementById('logoDescription').value = savedLogoDescription;
+    }
+  });
+</script>
 {% endblock %}
