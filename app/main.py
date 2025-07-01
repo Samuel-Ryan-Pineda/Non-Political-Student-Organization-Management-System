@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, send_file, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, abort
 from flask_login import login_required, current_user, logout_user
-from app import db
-from app.models import User, EntryKey, Role
-import os
+from app.models import db, Logo
 import io
+
+def allowed_file(filename, allowed_extensions):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 main_bp = Blueprint('main', __name__)
 
@@ -205,6 +206,96 @@ def get_logo(logo_id):
         as_attachment=False,
         download_name=f'logo_{logo_id}.jpg'
     )
+
+@main_bp.route('/check-organization-name', methods=['POST'])
+@login_required
+def check_organization_name():
+    # Import the service module here to avoid circular imports
+    from app.organization_service import organization_name_exists
+    
+    # Get the organization name from the request
+    org_name = request.json.get('orgName')
+    
+    if not org_name:
+        return jsonify({'valid': False, 'message': 'Organization name is required'})
+    
+    # Check if the organization name exists
+    exists = organization_name_exists(org_name)
+    
+    if exists:
+        return jsonify({'valid': False, 'message': f"Organization name '{org_name}' is already taken. Please choose a different name."})
+    else:
+        return jsonify({'valid': True})
+
+@main_bp.route('/update-organization', methods=['POST'])
+@login_required
+def update_organization():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        flash("You don't have permission to update organization information", "error")
+        return redirect(url_for('main.dashboard'))
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id, organization_name_exists
+    
+    # Get the current organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    
+    if not organization:
+        flash("No organization found for this user", "error")
+        return redirect(url_for('main.application'))
+    
+    # Get form data
+    organization_name = request.form.get('organization_name')
+    org_type = request.form.get('type')
+    logo_description = request.form.get('logo_description')
+    
+    # Check if the organization name exists and it's not the current organization
+    if organization_name != organization.organization_name and organization_name_exists(organization_name):
+        flash(f"Organization name '{organization_name}' is already taken. Please choose a different name.", "error")
+        return redirect(url_for('main.application'))
+    
+    # Update organization information
+    organization.organization_name = organization_name
+    organization.type = org_type
+    
+    # Update logo description if organization has a logo
+    if organization.logo_id:
+        logo = Logo.query.get(organization.logo_id)
+        if logo:
+            logo.description = logo_description
+    
+    # Handle logo upload if provided
+    if 'logo' in request.files and request.files['logo'].filename:
+        logo_file = request.files['logo']
+        
+        # Check if the file is allowed
+        if logo_file and allowed_file(logo_file.filename, ['png', 'jpg', 'jpeg', 'gif']):
+            # Create a new logo or update existing one
+            if organization.logo_id:
+                # Update existing logo
+                logo = Logo.query.get(organization.logo_id)
+                if logo:
+                    logo.logo = logo_file.read()
+            else:
+                # Create new logo
+                logo = Logo(logo=logo_file.read(), description=logo_description)
+                db.session.add(logo)
+                db.session.flush()  # Get the logo ID
+                organization.logo_id = logo.logo_id
+        else:
+            flash("Invalid file format. Please upload a valid image file.", "error")
+            return redirect(url_for('main.application'))
+    
+    # Save changes to database
+    try:
+        db.session.commit()
+        flash("Organization information updated successfully", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"An error occurred: {str(e)}", "error")
+    
+    return redirect(url_for('main.application'))
 
 @main_bp.route('/applicationfirststep', methods=['GET', 'POST'])
 @login_required

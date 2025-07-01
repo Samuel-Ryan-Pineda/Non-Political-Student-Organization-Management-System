@@ -31,11 +31,21 @@ def create_success_response(message, data=None):
         response.update(data)
     return jsonify(response)
 
-def rate_limited(max_calls, timeout_duration):
-    """Decorator for rate limiting endpoints"""
+def rate_limited(max_calls, timeout_duration, count_successful=False):
+    """Decorator for rate limiting endpoints
+    
+    Args:
+        max_calls: Maximum number of calls allowed within timeout_duration
+        timeout_duration: Time window in seconds for rate limiting
+        count_successful: Whether to count successful responses toward the rate limit
+    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            # For GET requests with count_successful=False, don't increment the counter
+            if request.method == 'GET' and not count_successful:
+                return func(*args, **kwargs)
+                
             session_key = f"{func.__name__}_limit"
             current_time = time.time()
             
@@ -60,9 +70,20 @@ def rate_limited(max_calls, timeout_duration):
                     f"Rate limit exceeded. Please try again in {remaining} seconds.", 429
                 )
             
-            # Increment counter and proceed
+            # Increment counter before processing the request
             session[session_key]['count'] += 1
-            return func(*args, **kwargs)
+            
+            # Call the original function
+            response = func(*args, **kwargs)
+            
+            # If configured to not count successful responses and this was successful,
+            # decrement the counter
+            if not count_successful and hasattr(response, 'status_code') and response.status_code < 400:
+                session[session_key]['count'] -= 1
+            elif not count_successful and isinstance(response, tuple) and len(response) > 1 and response[1] < 400:
+                session[session_key]['count'] -= 1
+                
+            return response
         return wrapper
     return decorator
 
@@ -151,7 +172,7 @@ def index():
 
 # ✅ Registration Route
 @auth_bp.route('/register', methods=['GET', 'POST'])
-@rate_limited(max_calls=5, timeout_duration=VERIFICATION_TIMEOUT)
+@rate_limited(max_calls=5, timeout_duration=VERIFICATION_TIMEOUT, count_successful=False)
 def register():
     if request.method == 'POST':
         try:
@@ -232,7 +253,7 @@ def verify_email_page():
 
 # ✅ Resend Verification Code Route
 @auth_bp.route('/resend_verification', methods=['POST'])
-@rate_limited(max_calls=3, timeout_duration=300)  # 5 minutes timeout
+@rate_limited(max_calls=3, timeout_duration=300, count_successful=False)  # 5 minutes timeout
 def resend_verification():
     # Check if there's a pending user session
     if 'pending_user' not in session or 'verification_code' not in session:
@@ -283,7 +304,7 @@ def exit_verification():
 
 # ✅ Email Verification Route
 @auth_bp.route('/verify_email', methods=['POST'])
-@rate_limited(max_calls=10, timeout_duration=300)  # 5 minutes timeout
+@rate_limited(max_calls=10, timeout_duration=300, count_successful=False)  # 5 minutes timeout
 def verify_email():
     verification_code = request.form.get('verification_code')
 
@@ -348,7 +369,7 @@ def verify_email():
         return create_error_response("An error occurred while creating your account. Please try again.", 500)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@rate_limited(max_calls=5, timeout_duration=300)  # 5 minutes timeout
+@rate_limited(max_calls=5, timeout_duration=300, count_successful=False)  # 5 minutes timeout
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))

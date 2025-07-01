@@ -4,6 +4,19 @@ from datetime import datetime
 from flask import flash
 import os
 
+def organization_name_exists(org_name):
+    """
+    Check if an organization with the given name already exists
+    
+    Args:
+        org_name (str): Name of the organization to check
+        
+    Returns:
+        bool: True if organization name exists, False otherwise
+    """
+    return Organization.query.filter(Organization.organization_name.ilike(org_name)).first() is not None
+
+
 def save_organization_application(org_name, org_type, logo_file, logo_description, user_id):
     """
     Save organization application data to the database
@@ -23,6 +36,10 @@ def save_organization_application(org_name, org_type, logo_file, logo_descriptio
         if not org_name or not org_type or not logo_description or not logo_file:
             return False, "All fields are required", None
         
+        # Check if organization name already exists
+        if organization_name_exists(org_name):
+            return False, f"Organization name '{org_name}' is already taken. Please choose a different name.", None
+        
         # Save logo to database
         logo_data = logo_file.read()
         new_logo = Logo(logo=logo_data, description=logo_description)
@@ -35,7 +52,7 @@ def save_organization_application(org_name, org_type, logo_file, logo_descriptio
             user_id=user_id,
             organization_name=org_name,
             type=org_type,
-            status="pending"
+            status="Incomplete"
         )
         db.session.add(new_org)
         db.session.flush()  # Get the organization_id without committing
@@ -45,8 +62,8 @@ def save_organization_application(org_name, org_type, logo_file, logo_descriptio
         academic_year = f"{current_year}-{current_year + 1}"
         new_application = Application(
             organization_id=new_org.organization_id,
-            type="new",
-            status="pending",
+            type="New",
+            status="Incomplete",
             academic_year=academic_year,
             submission_date=datetime.now().date()
         )

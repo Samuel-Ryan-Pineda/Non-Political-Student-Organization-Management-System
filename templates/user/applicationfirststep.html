@@ -211,6 +211,15 @@
   }
   const orgNameInput = document.getElementById('orgName');
   const orgTypeSelect = document.getElementById('orgType');
+  
+  // Add debounce function to limit API calls
+  function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
 
   // Validate image file size and type
   function validateImage(file) {
@@ -269,22 +278,89 @@
     }
   });
 
+  // Check if organization name is already taken
+  let nameCheckInProgress = false;
+  let nameIsValid = true;
+  
+  const checkOrgName = debounce(async (name) => {
+    if (!name.trim()) return;
+    
+    nameCheckInProgress = true;
+    try {
+      const response = await fetch('{{ url_for("main.check_organization_name") }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orgName: name }),
+      });
+      
+      const data = await response.json();
+      
+      // Update validation state
+      if (!data.valid) {
+        orgNameInput.classList.add('is-invalid');
+        const errorDiv = orgNameInput.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+          errorDiv.textContent = data.message;
+        }
+        nameIsValid = false;
+      } else {
+        orgNameInput.classList.remove('is-invalid');
+        nameIsValid = true;
+      }
+    } catch (error) {
+      console.error('Error checking organization name:', error);
+    } finally {
+      nameCheckInProgress = false;
+    }
+  }, 500);
+  
+  // Add event listener to check organization name as user types
+  orgNameInput.addEventListener('input', (e) => {
+    const name = e.target.value.trim();
+    if (name) {
+      checkOrgName(name);
+    }
+  });
+  
   // Initialize form validation
   const form = document.getElementById('organizationForm');
   
   // Handle form submission
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
+    // Prevent default submission to handle validation
+    e.preventDefault();
+    
     // Validate form
     form.classList.add('was-validated');
     let isValid = form.checkValidity();
     
+    // Check organization name
     if (!orgNameInput.value.trim()) {
       orgNameInput.classList.add('is-invalid');
       isValid = false;
     } else {
-      orgNameInput.classList.remove('is-invalid');
-      // Still store in localStorage for backup
-      localStorage.setItem('orgName', orgNameInput.value);
+      // If name check is in progress, wait for it to complete
+      if (nameCheckInProgress) {
+        await new Promise(resolve => {
+          const checkInterval = setInterval(() => {
+            if (!nameCheckInProgress) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+      
+      // After name check is complete, check if name is valid
+      if (!nameIsValid) {
+        isValid = false;
+      } else {
+        orgNameInput.classList.remove('is-invalid');
+        // Still store in localStorage for backup
+        localStorage.setItem('orgName', orgNameInput.value);
+      }
     }
     
     if (!orgTypeSelect.value) {
@@ -329,7 +405,6 @@
     
     // If form is not valid, prevent submission and scroll to first invalid field
     if (!isValid) {
-      e.preventDefault();
       const firstInvalidField = form.querySelector(':invalid');
       if (firstInvalidField) {
         firstInvalidField.focus();
@@ -339,11 +414,11 @@
       // Form is valid, show loading state
       try {
         setButtonLoading(nextButton, true);
-        // Form will be submitted to the server
+        // Submit the form
+        form.submit();
       } catch (error) {
         console.error('Error preparing form submission:', error);
         setButtonLoading(nextButton, false);
-        e.preventDefault();
         alert('An error occurred while preparing your data. Please try again.');
       }
     }

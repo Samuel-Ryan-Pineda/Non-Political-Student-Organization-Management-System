@@ -264,6 +264,7 @@
                 <span class="fw-semibold" style="color: white;">Type:</span>
                 {{ organization.type if organization else 'N/A' }}
               </p>
+              <button type="button" class="btn btn-sm btn-outline-light mt-2" onclick="openUpdateOrgModal()">Update Information</button>
             </div>
           </div>
         </div>
@@ -575,12 +576,72 @@
   </section>
 </div>
 
+<!-- Update Organization Modal -->
+<div id="updateOrgModal" class="global-modal" aria-labelledby="updateOrgModalTitle" aria-modal="true" role="dialog">
+  <div class="modal-container">
+
+    <div class="modal-section">
+      <h2 class="form-title">Update Organization Information</h2>
+      
+      <form id="updateOrgForm" method="post" action="/update-organization" enctype="multipart/form-data" class="mt-4">
+        <!-- Logo Upload -->
+        <div class="mb-3">
+          <label for="orgLogo" class="form-label">Organization Logo</label>
+          <div class="d-flex align-items-center gap-3">
+            <div class="current-logo">
+              {% if organization and organization.logo_id %}
+              <img id="currentLogo" alt="Current Organization Logo" class="rounded-circle" height="80" width="80" src="{{ url_for('main.get_logo', logo_id=organization.logo_id) }}"/>
+              {% else %}
+              <img id="currentLogo" alt="Placeholder profile image" class="rounded-circle" height="80" width="80" src="{{ url_for('static', filename='images/placeholder-logo.png') }}"/>
+              {% endif %}
+            </div>
+            <div class="flex-grow-1">
+              <input type="file" class="form-control" id="orgLogo" name="logo" accept="image/*">
+              <div class="form-text">Upload a new logo (optional)</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Organization Name -->
+        <div class="mb-3">
+          <label for="orgName" class="form-label">Organization Name</label>
+          <input type="text" class="form-control" id="orgName" name="organization_name" value="{{ organization.organization_name if organization else '' }}" required>
+        </div>
+        
+        <!-- Organization Type -->
+        <div class="mb-3">
+          <label for="orgType" class="form-label">Organization Type</label>
+          <select class="form-select" id="orgType" name="type" required>
+            <option value="" disabled>Select organization type</option>
+            <option value="Academic" {% if organization and organization.type == 'Academic' %}selected{% endif %}>Academic</option>
+            <option value="Cultural" {% if organization and organization.type == 'Cultural' %}selected{% endif %}>Cultural</option>
+            <option value="Religious" {% if organization and organization.type == 'Religious' %}selected{% endif %}>Religious</option>
+            <option value="Sports" {% if organization and organization.type == 'Sports' %}selected{% endif %}>Sports</option>
+            <option value="Service" {% if organization and organization.type == 'Service' %}selected{% endif %}>Service</option>
+            <option value="Professional" {% if organization and organization.type == 'Professional' %}selected{% endif %}>Professional</option>
+            <option value="Other" {% if organization and organization.type == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+        
+        <!-- Logo Description -->
+        <div class="mb-3">
+          <label for="logoDescription" class="form-label">Logo Description</label>
+          <textarea class="form-control" id="logoDescription" name="logo_description" rows="4" required>{{ organization.logo.description if organization and organization.logo_id and organization.logo else '' }}</textarea>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-secondary" onclick="closeUpdateOrgModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Reply Modal -->
 <div id="replyModal" class="global-modal" aria-labelledby="replyModalTitle" aria-modal="true" role="dialog">
   <div class="modal-container">
-    <button type="button" class="btn-back" onclick="closeReplyModal()" aria-label="Close">
-      <i class="fas fa-arrow-left"></i> Back
-    </button>
 
     <div class="modal-section">
       <h2 class="form-title">Reply to Feedback</h2>
@@ -647,6 +708,20 @@ function openReplyModal(feedbackDate) {
 
 function closeReplyModal() {
   const modal = document.getElementById('replyModal');
+  modal.classList.remove('show');
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function openUpdateOrgModal() {
+  const modal = document.getElementById('updateOrgModal');
+  modal.classList.add('show');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeUpdateOrgModal() {
+  const modal = document.getElementById('updateOrgModal');
   modal.classList.remove('show');
   modal.style.display = 'none';
   document.body.style.overflow = '';
