@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, abort
 from flask_login import login_required, current_user, logout_user
-from app.models import db, Logo
+from app.models import db, Logo, Application, ApplicationFile
 import io
+from werkzeug.utils import secure_filename
+import os
 
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
@@ -337,3 +339,244 @@ def applicationfirststep():
             return render_template('user/applicationfirststep.html', active_page='application')
     
     return render_template('user/applicationfirststep.html', active_page='application')
+
+@main_bp.route('/upload-application-file', methods=['POST'])
+@login_required
+def upload_application_file():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to upload files"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get application associated with the organization
+    application = get_application_by_organization_id(organization.organization_id)
+    if not application:
+        return jsonify({'success': False, 'message': "No application found for this organization"})
+    
+    # Check if file was uploaded
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': "No file part"})
+    
+    file = request.files['file']
+    file_type = request.form.get('fileType')
+    
+    # If user does not select file, browser also submits an empty part without filename
+    if file.filename == '':
+        return jsonify({'success': False, 'message': "No selected file"})
+    
+    # Check if the file type is allowed (PDF only)
+    if not allowed_file(file.filename, ['pdf']):
+        return jsonify({'success': False, 'message': "File type not allowed. Please upload PDF documents only."})
+    
+    try:
+        # Secure the filename
+        filename = secure_filename(file.filename)
+        
+        # Read the file data
+        file_data = file.read()
+        
+        # Check if a file with this type already exists for this application
+        existing_file = ApplicationFile.query.filter_by(
+            application_id=application.application_id,
+            file_name=file_type
+        ).first()
+        
+        if existing_file:
+            # Update existing file
+            existing_file.file = file_data
+            existing_file.status = "Pending"
+            db.session.commit()
+            return jsonify({
+                'success': True, 
+                'message': f"{file_type} updated successfully",
+                'filename': filename,
+                'fileType': file_type,
+                'status': "Pending"
+            })
+        else:
+            # Create new application file
+            new_file = ApplicationFile(
+                application_id=application.application_id,
+                file_name=file_type,
+                file=file_data,
+                status="Pending"
+            )
+            db.session.add(new_file)
+            db.session.commit()
+            return jsonify({
+                'success': True, 
+                'message': f"{file_type} uploaded successfully",
+                'filename': filename,
+                'fileType': file_type,
+                'status': "Pending"
+            })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"An error occurred: {str(e)}"})
+
+@main_bp.route('/get-application-file/<int:file_id>')
+@login_required
+def get_application_file(file_id):
+    # Get the application file
+    app_file = ApplicationFile.query.get_or_404(file_id)
+    
+    # Check if the user has permission to access this file
+    from app.organization_service import get_organization_by_user_id
+    organization = get_organization_by_user_id(current_user.user_id)
+    
+    # Admin can access any file, organization users can only access their own files
+    if current_user.role_id != 1:  # Not an admin
+        application = Application.query.get(app_file.application_id)
+        if not organization or application.organization_id != organization.organization_id:
+            abort(403)  # Forbidden
+    
+    # Check if file data exists and has content
+    if not app_file.file or len(app_file.file) == 0:
+        return render_template('error.html', message="The file appears to be empty or corrupted."), 500
+    
+    # Check file signatures to determine file type
+    # PDF signature check (%PDF)
+    if app_file.file[:4] == b'%PDF':
+        mimetype = 'application/pdf'
+        file_extension = 'pdf'
+    # DOCX files (PK zip signature)
+    elif len(app_file.file) > 4 and app_file.file[:4] == b'PK\x03\x04':
+        mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        file_extension = 'docx'
+    # DOC files (Compound File Binary Format signature)
+    elif len(app_file.file) > 8 and app_file.file[:8] == b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1':
+        mimetype = 'application/msword'
+        file_extension = 'doc'
+    else:
+        # If we can't determine the type from signature, try to infer from filename
+        if app_file.file_name.lower().endswith('.pdf'):
+            mimetype = 'application/pdf'
+            file_extension = 'pdf'
+        elif app_file.file_name.lower().endswith('.docx'):
+            mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            file_extension = 'docx'
+        elif app_file.file_name.lower().endswith('.doc'):
+            mimetype = 'application/msword'
+            file_extension = 'doc'
+        else:
+            # Default to PDF as a fallback
+            mimetype = 'application/pdf'
+            file_extension = 'pdf'
+    
+    # Create a filename with proper extension for the browser
+    if app_file.file_name.lower() in ['form 1a - application for recognition', 'form 2 - letter of acceptance', 
+                                     'form 3 - list of programs/projects/ activities', 'form 4 - list of members',
+                                     'board of officers', 'constitution and bylaws', 'logo with explanation']:
+        # These are form types, add the extension
+        download_name = f"{app_file.file_name}.{file_extension}"
+    else:
+        # For files that might already have an extension
+        if '.' in app_file.file_name:
+            download_name = app_file.file_name
+        else:
+            download_name = f"{app_file.file_name}.{file_extension}"
+    
+    # Check if download is requested
+    download_requested = request.args.get('download', '').lower() == 'true'
+    
+    # For Word documents, force download regardless of the download parameter
+    force_download = download_requested or mimetype in [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword'
+    ]
+    
+    try:
+        # Create a BytesIO object from the file data
+        file_data = io.BytesIO(app_file.file)
+        
+        # Attempt to send the file
+        return send_file(
+            file_data,
+            mimetype=mimetype,
+            as_attachment=force_download,  # True to download, False to preview in browser
+            download_name=download_name
+        )
+    except Exception as e:
+        # Log the error for debugging
+        import traceback
+        print(f"Error serving file: {str(e)}")
+        print(traceback.format_exc())
+        # Return a user-friendly error
+        return render_template('error.html', message="Something went wrong while trying to open this file. The file may be corrupted or in an unsupported format."), 500
+
+@main_bp.route('/get-application-files')
+@login_required
+def get_application_files():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [1, 2, 3]:  # Admin, Organization, or Applicant
+        return jsonify({'success': False, 'message': "You don't have permission to access files"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization and current_user.role_id != 1:  # Not admin and no organization
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get application associated with the organization
+    application_id = request.args.get('application_id')
+    
+    if application_id:
+        # Admin can specify application_id
+        application = Application.query.get(application_id)
+    else:
+        # Regular users get their own application
+        application = get_application_by_organization_id(organization.organization_id)
+    
+    if not application:
+        return jsonify({'success': False, 'message': "No application found"})
+    
+    # Get all files for this application
+    files = ApplicationFile.query.filter_by(application_id=application.application_id).all()
+    
+    # Format the response
+    file_list = [{
+        'id': f.app_file_id,
+        'name': f.file_name,
+        'status': f.status
+    } for f in files]
+    
+    return jsonify({'success': True, 'files': file_list})
+
+@main_bp.route('/delete-all-application-files')
+@login_required
+def delete_all_application_files():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to delete files"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get application associated with the organization
+    application = get_application_by_organization_id(organization.organization_id)
+    if not application:
+        return jsonify({'success': False, 'message': "No application found for this organization"})
+    
+    try:
+        # Delete all files for this application
+        ApplicationFile.query.filter_by(application_id=application.application_id).delete()
+        db.session.commit()
+        return jsonify({'success': True, 'message': "All application files have been deleted"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"Error deleting files: {str(e)}"})

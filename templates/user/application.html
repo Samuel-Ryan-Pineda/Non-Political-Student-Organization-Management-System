@@ -3,240 +3,7 @@
 {% block title %}Application{% endblock %}
 
 {% block head_css %}
-<style>
-.global-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  z-index: 1000;
-}
-
-.global-modal.show {
-  display: flex;
-}
-
-.modal-container {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  width: 90%;
-  max-width: 500px;
-}
-
-.btn-back {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.btn-send {
-  background: #1d4ed8;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.btn-send:hover {
-  background: #1e40af;
-}
-
-  .card-body, .container, p, span, .dropzone, h1, div {
-    text-align: left !important;
-  }
-  
-  .fw-semibold.fs-6, .fw-semibold.small, .small.fw-semibold {
-    color: #0D3B44;
-    font-size: 0.800rem;
-  }
-  
-  .progress-bar {
-    background-color: #0D3B44 !important;
-  }
-  /* Custom underline with slight curve */
-  .underline-curve {
-    border-bottom: 1px solid #1f2937;
-    border-image: linear-gradient(
-        to right,
-        transparent,
-        #1f2937 50%,
-        transparent
-      ) 1;
-    border-radius: 0 0 100% 100% / 0 0 10px 10px;
-    width: 100%;
-    max-width: 100%;
-    margin-top: 0.25rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .status-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 50rem;
-    margin-left: auto;
-  }
-  
-  .dropzone {
-    border: 1px dashed #475569;
-    border-radius: 0.375rem;
-    padding: 1.5rem;
-    min-height: 90px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #64748b;
-    font-size: 0.875rem;
-  }
-  
-  .document-card {
-    transition: border-color 0.2s;
-    flex: 1 0 0;
-    min-width: 0;
-  }
-  
-  .row.g-3 {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  .row.g-3 > [class*="col-"] {
-    display: flex;
-  }
-  
-  .document-card:hover {
-    border-color: #cbd5e1 !important;
-  }
-  
-  .btn-outline-dark {
-    border-color: #1f2937;
-    color: #1f2937;
-  }
-  
-  .btn-outline-secondary {
-    border-color: #94a3b8;
-    color: #475569;
-  }
-  
-  .btn-primary {
-    background-color: #1d4ed8;
-    border-color: #1d4ed8;
-  }
-  
-  /* Feedback Section Styles */
-  .feedback-history-tabs {
-    display: flex;
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 1rem;
-  }
-  
-  .feedback-tab {
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #6b7280;
-  }
-  
-  .feedback-tab.active {
-    color: #1d4ed8;
-    border-bottom: 2px solid #1d4ed8;
-  }
-  
-  .feedback-count {
-    background-color: #e5e7eb;
-    border-radius: 9999px;
-    padding: 0.125rem 0.5rem;
-    font-size: 0.75rem;
-    margin-left: 0.5rem;
-  }
-  
-  .feedback-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .feedback-card-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-  }
-  
-  .feedback-card-title {
-    font-weight: 600;
-    color: #1f2937;
-  }
-  
-  .feedback-card-date {
-    color: #6b7280;
-    font-size: 0.75rem;
-  }
-  
-  .feedback-card-body {
-    color: #4b5563;
-    margin-bottom: 0.5rem;
-  }
-  
-  .feedback-card-file {
-    font-size: 0.75rem;
-    color: #6b7280;
-  }
-  
-  .feedback-tab-content {
-    display: none;
-  }
-  
-  .feedback-tab-content.active {
-    display: block;
-  }
-  
-  @media (max-width: 767.98px) {
-    .status-badge {
-      font-size: 0.625rem;
-    }
-  }
-  
-  /* Equal height for info and progress cards */
-  .info-progress-row {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  .info-progress-row > [class*="col-"] {
-    display: flex;
-  }
-  
-  .info-progress-row .card {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .info-progress-row .card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Added specific heights for smaller screens */
-  @media (max-width: 767.98px) {
-    .info-progress-row .card {
-      margin-bottom: 1rem;
-    }
-  }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/application.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -247,9 +14,9 @@
   <!-- Changed class from "row" to "row info-progress-row" -->
   <div class="row info-progress-row g-3">
     <div class="col-md-4">
-      <section class="card mb-3" style="background-color: #0D3B44; color: white;">
+      <section class="card mb-3 org-card">
         <div class="card-body p-3 p-md-4">
-          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center gap-3" style="height: 100%;">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center gap-3">
             <div class="mb-3 mb-md-0">
               {% if organization and organization.logo_id %}
               <img alt="Organization Logo" class="rounded-circle" height="80" width="80" src="{{ url_for('main.get_logo', logo_id=organization.logo_id) }}"/>
@@ -258,10 +25,10 @@
               {% endif %}
             </div>
             <div>
-              <p class="fw-semibold mb-1" style="color: white;">ORGANIZATION</p>
-              <p class="mb-2 lh-sm" style="color: white; font-size: 0.8rem;">{{ organization.organization_name if organization else 'No Organization' }}</p>
-              <p class="mb-0" style="color: white;  font-size: 0.800rem;">
-                <span class="fw-semibold" style="color: white;">Type:</span>
+              <p class="fw-semibold mb-1">ORGANIZATION</p>
+              <p class="mb-2 lh-sm small">{{ organization.organization_name if organization else 'No Organization' }}</p>
+              <p class="mb-0 small">
+                <span class="fw-semibold">Type:</span>
                 {{ organization.type if organization else 'N/A' }}
               </p>
               <button type="button" class="btn btn-sm btn-outline-light mt-2" onclick="openUpdateOrgModal()">Update Information</button>
@@ -301,19 +68,19 @@
             </div>
           </div>
           
-          <div class="progress mb-3" style="height: 8px;">
+          <div class="progress mb-3 progress-thin">
             {% if application %}
               {% if application.status == 'pending' %}
-              <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar bg-warning" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
               {% elif application.status == 'approved' %}
-              <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar bg-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
               {% elif application.status == 'rejected' %}
-              <div class="progress-bar bg-danger" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
               {% else %}
-              <div class="progress-bar bg-dark" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar bg-dark" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
               {% endif %}
             {% else %}
-              <div class="progress-bar bg-dark" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar bg-dark" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
             {% endif %}
           </div>
           
@@ -342,19 +109,31 @@
   
   <!-- Document Upload Title -->
   <div class="card mb-3 py-3 px-4">
-    <div class="card-body p-0 fw-semibold">DOCUMENT UPLOAD</div>
+    <div class="card-body p-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">DOCUMENT UPLOAD</div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-danger me-2" onclick="deleteAllFiles()">
+            <i class="fas fa-trash"></i> Delete All Files
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadApplicationFiles()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
   
   <!-- Document Upload Forms -->
-  <div class="row g-3 mb-3" style="display: flex; flex-wrap: wrap;">
+  <div class="row g-3 mb-3 justify-content-left">
     <!-- Form 1 -->
     <div class="col-12 col-md-4">
       <div class="card h-100 document-card border-0 shadow-sm">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
             <span class="small fw-semibold">Form 1A -APPLICATION FOR RECOGNITION</span>
-            <span class="badge bg-success status-badge">
-              <i class="fas fa-check"></i> Verified
+            <span class="badge bg-secondary status-badge">
+              <i class="fas fa-question-circle"></i> No File
             </span>
           </div>
           
@@ -378,8 +157,8 @@
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
             <span class="small fw-semibold">Form 2 - LETTER OF ACCEPTANCE</span>
-            <span class="badge bg-warning text-dark status-badge">
-              <i class="fas fa-exclamation"></i> Needs Revision
+            <span class="badge bg-secondary status-badge">
+              <i class="fas fa-question-circle"></i> No File
             </span>
           </div>
           
@@ -403,8 +182,8 @@
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
             <span class="small fw-semibold">Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES</span>
-            <span class="badge bg-danger status-badge">
-              <i class="fas fa-times"></i> Rejected
+            <span class="badge bg-secondary status-badge">
+              <i class="fas fa-question-circle"></i> No File
             </span>
           </div>
           
@@ -423,15 +202,15 @@
     </div>
   </div>
   
-  <div class="row g-3 mb-3 justify-content-left" style="display: flex; flex-wrap: wrap;">
+  <div class="row g-3 mb-3 justify-content-left">
     <!-- Form 4 -->
     <div class="col-12 col-md-4">
       <div class="card h-100 document-card border-0 shadow-sm">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
             <span class="small fw-semibold">Form 4 - LIST OF MEMBERS</span>
-            <span class="badge bg-primary status-badge">
-              <i class="fas fa-clock"></i> Pending
+            <span class="badge bg-secondary status-badge">
+              <i class="fas fa-question-circle"></i> No File
             </span>
           </div>
           
@@ -455,8 +234,8 @@
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
             <span class="small fw-semibold">BOARD OF OFFICERS</span>
-            <span class="badge bg-primary status-badge">
-              <i class="fas fa-clock"></i> Pending
+            <span class="badge bg-secondary status-badge">
+              <i class="fas fa-question-circle"></i> No File
             </span>
           </div>
           
@@ -480,8 +259,8 @@
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
             <span class="small fw-semibold">CONSTITUTION AND BYLAWS</span>
-            <span class="badge bg-primary status-badge">
-              <i class="fas fa-clock"></i> Pending
+            <span class="badge bg-secondary status-badge">
+              <i class="fas fa-question-circle"></i> No File
             </span>
           </div>
           
@@ -505,8 +284,8 @@
         <div class="card-body p-3 p-md-4">
           <div class="d-flex align-items-center mb-3">
             <span class="small fw-semibold">LOGO WITH EXPLANATION</span>
-            <span class="badge bg-primary status-badge">
-              <i class="fas fa-clock"></i> Pending
+            <span class="badge bg-secondary status-badge">
+              <i class="fas fa-question-circle"></i> No File
             </span>
           </div>
           
@@ -678,72 +457,11 @@
   </div>
 </div>
 
-<script>
-function showTab(tabId) {
-  // Hide all tab contents
-  const tabContents = document.querySelectorAll('.feedback-tab-content');
-  tabContents.forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // Remove active class from all tab buttons
-  const tabButtons = document.querySelectorAll('.feedback-tab');
-  tabButtons.forEach(button => {
-    button.classList.remove('active');
-  });
-  
-  // Show the selected tab content
-  document.getElementById(tabId + '-tab').classList.add('active');
-  
-  // Add active class to the selected tab button
-  document.getElementById(tabId + '-tab-btn').classList.add('active');
-}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/application.js') }}"></script>
+<script src="{{ url_for('static', filename='js/preview.js') }}"></script>
+{% endblock %}
 
-function openReplyModal(feedbackDate) {
-  const modal = document.getElementById('replyModal');
-  modal.classList.add('show');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
 
-function closeReplyModal() {
-  const modal = document.getElementById('replyModal');
-  modal.classList.remove('show');
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function openUpdateOrgModal() {
-  const modal = document.getElementById('updateOrgModal');
-  modal.classList.add('show');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closeUpdateOrgModal() {
-  const modal = document.getElementById('updateOrgModal');
-  modal.classList.remove('show');
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function openFeedbackDetail(tabType, id) {
-  alert('Opening details for ' + tabType + ' feedback #' + id);
-  // Implement detailed view functionality here
-}
-
-document.getElementById('reply-form').addEventListener('submit', function(event) {
-  event.preventDefault();
-  const subject = document.getElementById('reply-subject').value;
-  const message = document.getElementById('reply-message').value;
-  if (!subject || !message) {
-    alert('Please fill in all required fields.');
-    return;
-  }
-  alert('Reply sent successfully!');
-  this.reset();
-  closeReplyModal();
-});
-</script>
 
 {% endblock %}
