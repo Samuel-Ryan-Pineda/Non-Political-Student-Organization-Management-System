@@ -4,6 +4,7 @@ from app.models import db, Logo, Application, ApplicationFile
 import io
 from werkzeug.utils import secure_filename
 import os
+from datetime import datetime
 
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
@@ -392,13 +393,15 @@ def upload_application_file():
             # Update existing file
             existing_file.file = file_data
             existing_file.status = "Pending"
+            existing_file.submission_date = datetime.utcnow()  # Reset submission date on update
             db.session.commit()
             return jsonify({
                 'success': True, 
                 'message': f"{file_type} updated successfully",
                 'filename': filename,
                 'fileType': file_type,
-                'status': "Pending"
+                'status': "Pending",
+                'submission_date': existing_file.submission_date.strftime('%Y-%m-%d %H:%M:%S')
             })
         else:
             # Create new application file
@@ -415,7 +418,8 @@ def upload_application_file():
                 'message': f"{file_type} uploaded successfully",
                 'filename': filename,
                 'fileType': file_type,
-                'status': "Pending"
+                'status': "Pending",
+                'submission_date': new_file.submission_date.strftime('%Y-%m-%d %H:%M:%S')
             })
     
     except Exception as e:
@@ -547,7 +551,8 @@ def get_application_files():
     file_list = [{
         'id': f.app_file_id,
         'name': f.file_name,
-        'status': f.status
+        'status': f.status,
+        'submission_date': f.submission_date.strftime('%Y-%m-%d %H:%M:%S') if f.submission_date else None
     } for f in files]
     
     return jsonify({'success': True, 'files': file_list})

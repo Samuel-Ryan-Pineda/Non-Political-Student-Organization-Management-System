@@ -457,11 +457,27 @@
   </div>
 </div>
 
+<!-- Loading Modal -->
+<div class="global-modal" id="loadingModal" aria-labelledby="loadingModalTitle" aria-modal="true" role="dialog">
+  <div class="modal-content p-4 text-center" style="width: auto; max-width: 300px; margin: 0 auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    <div class="d-flex justify-content-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <p id="loadingMessage">Loading...</p>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="global-modal" id="previewModal" aria-labelledby="previewModalTitle" aria-modal="true" role="dialog">
+  <div id="previewModalContent" class="preview-modal-content">
+    <!-- Content will be dynamically inserted here -->
+  </div>
+</div>
+
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/application.js') }}"></script>
-<script src="{{ url_for('static', filename='js/preview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/application.js') }}?v=2024010201"></script>
 {% endblock %}
-
-
 
 {% endblock %}

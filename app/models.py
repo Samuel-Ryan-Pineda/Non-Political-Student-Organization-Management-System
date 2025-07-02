@@ -164,6 +164,7 @@ class ApplicationFile(db.Model):
     file_name = db.Column(db.String(255), nullable=False)
     file = db.Column(db.LargeBinary)  # LONGBLOB equivalent
     status = db.Column(db.String(50))  # pending, approved, rejected
+    submission_date = db.Column(db.DateTime, default=datetime.utcnow)  # Date and time when the file was submitted
     
     # Note: feedback relationship is defined in the Feedback model
 

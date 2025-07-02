@@ -142,6 +142,7 @@ CREATE TABLE application_files (
     file_name VARCHAR(255) NOT NULL,
     file LONGBLOB,
     status VARCHAR(50),-- ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    submission_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (application_id) REFERENCES applications(application_id)
 );
 
