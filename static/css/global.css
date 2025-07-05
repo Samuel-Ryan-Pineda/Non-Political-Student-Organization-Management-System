@@ -1,4 +1,4 @@
-    :root {
+:root {
         /* Color Scheme - Main */
         --primary-color: #13454f;
         --bg-color: #d3e0eb;
@@ -104,6 +104,8 @@
     position: relative;
     box-shadow: 0 0 6px rgb(0 0 0 / 0.1);
     width: 100%;
+    height: auto;
+    min-height: 200px;
     max-height: 90vh;
     overflow-y: auto;
     text-align: left;

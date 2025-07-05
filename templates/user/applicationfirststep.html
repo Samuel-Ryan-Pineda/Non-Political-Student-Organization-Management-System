@@ -67,7 +67,7 @@
           Please provide the organization's logo, logo description, name, and type.
         </p>
       <hr>
-        <form id="organizationForm" class="mt-4" enctype="multipart/form-data" method="post" action="{{ url_for('main.applicationfirststep') }}" novalidate>
+        <form id="organizationForm" class="mt-4" enctype="multipart/form-data" method="post" action="{{ url_for('user_organization.applicationfirststep') }}" novalidate>
           <div class="mb-3">
             <label class="form-label fw-medium small" for="orgName">
               Organization Name
@@ -232,7 +232,7 @@
     
     nameCheckInProgress = true;
     try {
-      const response = await fetch('{{ url_for("main.check_organization_name") }}', {
+      const response = await fetch('{{ url_for("user_organization.check_organization_name") }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orgName: name })

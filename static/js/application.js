@@ -30,11 +30,13 @@ if (typeof window.ApplicationModule === 'undefined') {
   const BUTTON_STATES = {
     DISABLED: {
       UPLOAD: { disabled: true, addClasses: ['btn-secondary'], removeClasses: ['btn-primary'] },
-      PREVIEW: { disabled: true, addClasses: ['btn-secondary'], removeClasses: ['btn-outline-dark'] }
+      PREVIEW: { disabled: true, addClasses: ['btn-secondary'], removeClasses: ['btn-outline-dark'] },
+      SELECT: { disabled: true, addClasses: ['btn-outline-secondary'], removeClasses: ['btn-primary'] }
     },
     ENABLED: {
       UPLOAD: { disabled: false, addClasses: ['btn-primary'], removeClasses: ['btn-secondary'] },
-      PREVIEW: { disabled: false, addClasses: ['btn-outline-dark'], removeClasses: ['btn-secondary'] }
+      PREVIEW: { disabled: false, addClasses: ['btn-outline-dark'], removeClasses: ['btn-secondary'] },
+      SELECT: { disabled: false, addClasses: ['btn-outline-secondary'], removeClasses: ['btn-primary'] }
     }
   };
 
@@ -155,6 +157,51 @@ if (typeof window.ApplicationModule === 'undefined') {
         closeReplyModal();
       });
     }
+
+    // Set up update organization form submission
+    const updateOrgForm = DOM.getById('updateOrgForm');
+    if (updateOrgForm) {
+      updateOrgForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        
+        showLoadingModal('Updating organization information...');
+        
+        fetch('/organization/update-organization', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.text().then(text => {
+            try {
+              return text ? JSON.parse(text) : {};
+            } catch (e) {
+              // If the response is not JSON, it's likely a redirect
+              window.location.href = response.url;
+              return null;
+            }
+          });
+        })
+        .then(data => {
+          if (data === null) return; // Redirect handled above
+          hideLoadingModal();
+          if (data.success) {
+            closeUpdateOrgModal();
+            window.location.reload();
+          } else {
+            alert(data.message || 'Error updating organization information');
+          }
+        })
+        .catch(error => {
+          hideLoadingModal();
+          console.error('Error:', error);
+          alert('An error occurred while updating organization information. Please try again.');
+        });
+      });
+    }
   });
 
 
@@ -252,7 +299,7 @@ if (typeof window.ApplicationModule === 'undefined') {
                                               'modal-content p-0 preview-modal-content ml-0';
     
     const timestamp = new Date().getTime();
-    const previewUrl = `/get-application-file/${fileId}?t=${timestamp}`;
+    const previewUrl = `/organization/get-application-file/${fileId}?t=${timestamp}`;
     
     fetch(previewUrl, { method: 'HEAD' })
       .then(response => {
@@ -413,6 +460,7 @@ if (typeof window.ApplicationModule === 'undefined') {
       // Initially disable buttons
       setButtonState(uploadBtn, BUTTON_STATES.DISABLED.UPLOAD);
       setButtonState(previewBtn, BUTTON_STATES.DISABLED.PREVIEW);
+      setButtonState(selectBtn, BUTTON_STATES.ENABLED.SELECT);
       
       // Create hidden file input
       const fileInput = document.createElement('input');
@@ -494,11 +542,16 @@ if (typeof window.ApplicationModule === 'undefined') {
   function handleFileSelected(fileInput, dropzone, fileType, uploadBtn) {
     const card = dropzone.closest('.card');
     const previewBtn = card.querySelector('button:nth-child(1)');
+    const selectBtn = card.querySelector('button:nth-child(2)');
     
     // Default state - disable buttons
     const disableButtons = () => {
+      uploadBtn.style.display = '';
+      selectBtn.style.display = '';
+      previewBtn.style.margin = '';
       setButtonState(uploadBtn, BUTTON_STATES.DISABLED.UPLOAD);
       setButtonState(previewBtn, BUTTON_STATES.DISABLED.PREVIEW);
+      setButtonState(selectBtn, BUTTON_STATES.ENABLED.SELECT);
     };
     
     if (fileInput.files.length === 0) {
@@ -527,11 +580,19 @@ if (typeof window.ApplicationModule === 'undefined') {
     // Reset dropzone styles to default selected state
     dropzone.classList.add('selected');
     
+    // Show all buttons and set their states
+    uploadBtn.style.display = '';
+    selectBtn.style.display = '';
+    previewBtn.style.margin = '';
+    
     // Enable upload button when valid file is selected
     setButtonState(uploadBtn, BUTTON_STATES.ENABLED.UPLOAD);
     
     // Keep preview button disabled until file is actually uploaded
     setButtonState(previewBtn, BUTTON_STATES.DISABLED.PREVIEW);
+    
+    // Keep select button in outline style
+    setButtonState(selectBtn, BUTTON_STATES.ENABLED.SELECT);
   }
 
   function uploadFile(file, fileType, card) {
@@ -577,7 +638,7 @@ if (typeof window.ApplicationModule === 'undefined') {
     };
     
     // Send the file to the server
-    fetch('/upload-application-file', {
+    fetch('/organization/upload-application-file', {
       method: 'POST',
       body: formData
     })
@@ -594,6 +655,12 @@ if (typeof window.ApplicationModule === 'undefined') {
         
         // Keep the upload button disabled after successful upload
         setButtonState(uploadBtn, BUTTON_STATES.DISABLED.UPLOAD);
+        
+        // Check if we need to refresh the page to show updated application status
+        // Add a delay to ensure loadApplicationFiles has completed
+        setTimeout(() => {
+          checkIfAllFilesUploaded();
+        }, 500);
       } else {
         handleError(data.message);
       }
@@ -608,7 +675,7 @@ if (typeof window.ApplicationModule === 'undefined') {
     resetAllCards();
     
     // Then load existing files
-    fetch('/get-application-files')
+    fetch('/organization/get-application-files')
       .then(response => response.json())
       .then(data => {
         if (data.success && data.files) {
@@ -638,27 +705,40 @@ if (typeof window.ApplicationModule === 'undefined') {
       // Reset buttons
       const uploadBtn = card.querySelector('button:nth-child(3)');
       const previewBtn = card.querySelector('button:nth-child(1)');
+      const selectBtn = card.querySelector('button:nth-child(2)');
       
-      if (uploadBtn) setButtonState(uploadBtn, BUTTON_STATES.DISABLED.UPLOAD);
-      if (previewBtn) setButtonState(previewBtn, BUTTON_STATES.DISABLED.PREVIEW);
+      // Show all buttons and reset their states
+      if (uploadBtn) {
+        uploadBtn.style.display = '';
+        setButtonState(uploadBtn, BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      if (selectBtn) {
+        selectBtn.style.display = '';
+        setButtonState(selectBtn, BUTTON_STATES.ENABLED.SELECT);
+      }
+      if (previewBtn) {
+        previewBtn.style.margin = '';
+        setButtonState(previewBtn, BUTTON_STATES.DISABLED.PREVIEW);
+      }
       
       // Reset file input to allow selecting the same file again
       const fileInput = card.querySelector('input[type="file"]');
       if (fileInput) {
         fileInput.value = '';
+        fileInput.disabled = false;
       }
       
       // Reset dropzone
       const dropzone = card.querySelector('.dropzone');
       if (dropzone) {
-        // Reset dropzone content
-        dropzone.innerHTML = `
-          <i class="fas fa-arrow-up mb-1"></i>
-          Drag & drop or click to upload
-        `;
-        
-        // Remove all status classes to reset to default style
+        dropzone.style.pointerEvents = '';
+        dropzone.style.opacity = '';
         dropzone.classList.remove('selected', 'loading', 'status-verified', 'status-pending', 'status-needs-revision', 'status-rejected');
+        dropzone.innerHTML = `
+          <i class="fas fa-cloud-upload-alt mb-1"></i>
+          <div>Drag & Drop or Click to Upload</div>
+          <div class="small text-muted">PDF files only</div>
+        `;
       }
     });
   }
@@ -672,7 +752,7 @@ if (typeof window.ApplicationModule === 'undefined') {
     showLoadingModal('Deleting all files...');
     
     // Call the delete endpoint
-    fetch('/delete-all-application-files')
+    fetch('/organization/delete-all-application-files')
       .then(response => response.json())
       .then(data => {
         // Remove loading modal
@@ -681,6 +761,13 @@ if (typeof window.ApplicationModule === 'undefined') {
         if (data.success) {
           // Refresh the file list and update progress
           loadApplicationFiles();
+          
+          // Check if application status needs to be updated and refresh page if needed
+          setTimeout(() => {
+            checkIfAllFilesUploaded();
+          }, 500); // Small delay to ensure files are loaded first
+          
+          console.log('Files deleted, checking application status...');
         } else {
           // Show error
           alert('Error: ' + data.message);
@@ -747,6 +834,7 @@ if (typeof window.ApplicationModule === 'undefined') {
     // Get UI elements
     const statusBadge = targetCard.querySelector('.status-badge');
     const uploadBtn = targetCard.querySelector('button:nth-child(3)');
+    const selectBtn = targetCard.querySelector('button:nth-child(2)');
     const previewBtn = targetCard.querySelector('button:nth-child(1)');
     const dropzone = targetCard.querySelector('.dropzone');
     const fileInput = targetCard.querySelector('input[type="file"]');
@@ -761,9 +849,52 @@ if (typeof window.ApplicationModule === 'undefined') {
     statusBadge.dataset.status = status; // Store status for counting
     statusBadge.dataset.submissionDate = submissionDate; // Store submission date
     
-    // Set button states
-    if (uploadBtn) setButtonState(uploadBtn, BUTTON_STATES.DISABLED.UPLOAD);
-    if (previewBtn) setButtonState(previewBtn, BUTTON_STATES.ENABLED.PREVIEW);
+    // Set button states based on status
+    if (status === 'Verified') {
+      // Hide select and upload buttons, center preview button
+      if (uploadBtn) uploadBtn.style.display = 'none';
+      if (selectBtn) selectBtn.style.display = 'none';
+      if (previewBtn) {
+        setButtonState(previewBtn, BUTTON_STATES.ENABLED.PREVIEW);
+        previewBtn.style.margin = '0 auto';
+      }
+      
+      // Disable dropzone click and drag events
+      if (dropzone) {
+        dropzone.style.pointerEvents = 'none';
+        dropzone.style.opacity = '0.7';
+      }
+      
+      // Disable file input
+      if (fileInput) {
+        fileInput.disabled = true;
+      }
+    } else {
+      // Show all buttons for non-verified files
+      if (uploadBtn) {
+        uploadBtn.style.display = '';
+        setButtonState(uploadBtn, BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      if (selectBtn) {
+        selectBtn.style.display = '';
+        setButtonState(selectBtn, BUTTON_STATES.ENABLED.SELECT);
+      }
+      if (previewBtn) {
+        previewBtn.style.margin = '';
+        setButtonState(previewBtn, BUTTON_STATES.ENABLED.PREVIEW);
+      }
+      
+      // Enable dropzone
+      if (dropzone) {
+        dropzone.style.pointerEvents = '';
+        dropzone.style.opacity = '';
+      }
+      
+      // Enable file input
+      if (fileInput) {
+        fileInput.disabled = false;
+      }
+    }
     
     // Apply status badge configuration
     const config = STATUS_CONFIGS[status] || STATUS_CONFIGS['Pending'];
@@ -777,7 +908,9 @@ if (typeof window.ApplicationModule === 'undefined') {
         <i class="fas fa-file-alt mb-1"></i>
         <div>File Uploaded</div>
         ${submissionDate ? `<div class="small text-muted">Submitted: ${submissionDate}</div>` : ''}
-        <div class="small text-muted">Click to replace</div>
+        ${status === 'Verified' ? 
+          '<div class="small text-muted verified-message">File verified - cannot be changed</div>' : 
+          '<div class="small text-muted">Click to replace</div>'}
       `;
       
       // Remove all status classes first
@@ -847,6 +980,8 @@ if (typeof window.ApplicationModule === 'undefined') {
     
     // Calculate and update progress
     updateProgressBar(STATUS_TYPES['Verified'].count, totalFiles);
+    
+    return totalFiles;
   }
 
   // Helper function to update progress bar
@@ -868,6 +1003,77 @@ if (typeof window.ApplicationModule === 'undefined') {
       progressBar.className = 'progress-bar bg-primary';
     } else {
       progressBar.className = 'progress-bar bg-dark';
+    }
+  }
+  
+  // Function to check if all required files are uploaded and refresh the page if needed
+  function checkIfAllFilesUploaded() {
+    // Define the required files for a complete application
+    const requiredFiles = [
+      'Form 1A -APPLICATION FOR RECOGNITION',
+      'Form 2 - LETTER OF ACCEPTANCE',
+      'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
+      'Form 4 - LIST OF MEMBERS',
+      'BOARD OF OFFICERS',
+      'CONSTITUTION AND BYLAWS',
+      'LOGO WITH EXPLANATION'
+    ];
+    
+    // Get all document cards
+    const cards = DOM.getAll('.document-card');
+    
+    // Check if all required files are uploaded
+    let allFilesUploaded = true;
+    let uploadedFileCount = 0;
+    
+    // Check each required file
+    requiredFiles.forEach(requiredFile => {
+      let fileUploaded = false;
+      
+      // Look for this file in the document cards
+      cards.forEach(card => {
+        const cardTitle = card.querySelector('.fw-semibold').textContent.trim();
+        const statusBadge = card.querySelector('.status-badge');
+        
+        if (cardTitle === requiredFile && statusBadge && statusBadge.dataset.fileId) {
+          fileUploaded = true;
+          uploadedFileCount++;
+        }
+      });
+      
+      if (!fileUploaded) {
+        allFilesUploaded = false;
+      }
+    });
+    
+    console.log(`All files uploaded: ${allFilesUploaded}, Count: ${uploadedFileCount}/${requiredFiles.length}`);
+    
+    // If all files are uploaded, check the application status
+    if (allFilesUploaded && uploadedFileCount === requiredFiles.length) {
+      console.log('All required files are uploaded, checking application status...');
+      // Get the current application status
+      fetch('/organization/get-application-status')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Application status response:', data);
+          if (data.success) {
+            console.log(`Current status: ${data.status}, Previous status: ${data.previousStatus}`);
+            // Check for status changes that require page refresh
+            if ((data.status === 'Pending' && data.previousStatus === 'Incomplete') ||
+                (data.status === 'Verified' && data.previousStatus === 'Pending')) {
+              console.log(`Status changed from ${data.previousStatus} to ${data.status}, refreshing page...`);
+              // Refresh the page after a short delay to show the new status
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            } else {
+              console.log('No relevant status change detected');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error checking application status:', error);
+        });
     }
   }
 }

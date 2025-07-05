@@ -372,7 +372,13 @@ def verify_email():
 @rate_limited(max_calls=5, timeout_duration=300, count_successful=False)  # 5 minutes timeout
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
+        if current_user.role_id == 1:
+            return redirect(url_for('admin_routes.admin_dashboard'))
+        elif current_user.role_id in [2, 3]:
+            return redirect(url_for('user_organization.org_dashboard'))
+        else:
+            flash("Unknown user role", "error")
+            return redirect(url_for('auth.logout'))
         
     if request.method == 'POST':
         try:
@@ -453,8 +459,8 @@ def login():
             
             # Get dashboard URL based on user role
             dashboard_routes = {
-                1: 'main.admin_dashboard',  # OSOAD
-                2: 'main.org_dashboard',    # Organization President
+                1: 'admin_routes.admin_dashboard',  # OSOAD
+                2: 'user_organization.org_dashboard',    # Organization President
                 3: 'main.dashboard'         # Applicant (default)
             }
             

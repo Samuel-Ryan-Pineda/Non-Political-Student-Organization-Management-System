@@ -134,7 +134,7 @@ class Application(db.Model):
     type = db.Column(db.String(100))
     status = db.Column(db.String(100))  # pending, approved, rejected, under_review
     academic_year = db.Column(db.String(20))
-    submission_date = db.Column(db.Date)
+    submission_date = db.Column(db.DateTime)  # Changed from Date to DateTime to include time
     reviewed_by = db.Column(db.String(255))
     review_date = db.Column(db.Date)
     

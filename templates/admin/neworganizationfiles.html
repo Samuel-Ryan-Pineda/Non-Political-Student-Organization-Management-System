@@ -13,17 +13,17 @@
   <section class="bg-white rounded-3 p-4" aria-label="New Organization Application Details">
     <div class="d-flex justify-content-between align-items-start mb-3">
       <h2 class="highlight-title fs-6 fw-semibold mb-0">New Organization Application</h2>
-      <a href="/neworganization" type="button" class="btn btn-light btn-sm d-flex align-items-center gap-1 ">
+      <a href="{{ url_for('admin_new_organization.neworganization') }}" type="button" class="btn btn-light btn-sm d-flex align-items-center gap-1 ">
         <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
     
     <div class="org-info">
       <p class="mb-1">
-        <span class="fw-semibold">Organization:</span> International Association for Technological Advancement and Sustainable Development
+        <span class="fw-semibold">Organization:</span> {{ organization.organization_name }}
       </p>
       <p class="mb-4">
-        <span class="fw-semibold">Date Submitted:</span> July 5, 2025
+        <span class="fw-semibold">Submitted On:</span> {{ application.submission_date.strftime('%B %d, %Y, %I:%M %p') if application.submission_date else 'Not submitted' }}
       </p>
     </div>
 
@@ -33,100 +33,38 @@
           <tr>
             <th scope="col" style="text-align: left;">File Name</th>
             <th scope="col" style="text-align: left;">Submission Date</th>
-            <th scope="col" style="text-align: left;">Form Type</th>
-            <th scope="col">Status</th>
-            <th scope="col">Action</th>
+            <th scope="col" style="text-align: center;">Status</th>
+            <th scope="col" style="text-align: center;">Action</th>
           </tr>
         </thead>
         <tbody>
-          {% set file_data = [
-            {
-              "name": "appforrecog.pdf",
-              "date": "July 5, 2025, 1:00 PM",
-              "type_code": "Form 1A",
-              "type_desc": "APPLICATION FOR RECOGNITION",
-              "status": "Verified",
-              "status_class": "status-verified",
-              "feedback_count": 0
-            },
-            {
-              "name": "lettofacceptance.pdf",
-              "date": "July 5, 2025, 1:01 PM",
-              "type_code": "Form 2",
-              "type_desc": "LETTER OF ACCEPTANCE",
-              "status": "Verified",
-              "status_class": "status-verified",
-              "feedback_count": 0
-            },
-            {
-              "name": "listofactivities.pdf",
-              "date": "July 5, 2025, 1:01 PM",
-              "type_code": "Form 3",
-              "type_desc": "LIST OF PROGRAMS/PROJECTS/ACTIVITIES",
-              "status": "Verified",
-              "status_class": "status-verified",
-              "feedback_count": 0
-            },
-            {
-              "name": "listofmembers.pdf",
-              "date": "July 5, 2025, 1:02 PM",
-              "type_code": "Form 4",
-              "type_desc": "LIST OF MEMBERS",
-              "status": "For Revision",
-              "status_class": "status-revision",
-              "feedback_count": 2
-            },
-            {
-              "name": "boardofofficer.pdf",
-              "date": "July 5, 2025, 1:02 PM",
-              "type_code": "",
-              "type_desc": "BOARD OF OFFICERS",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            },
-            {
-              "name": "constitution.pdf",
-              "date": "July 5, 2025, 1:03 PM",
-              "type_code": "",
-              "type_desc": "CONSTITUTION AND BYLAWS",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            },
-            {
-              "name": "logo_explanation.pdf",
-              "date": "July 5, 2025, 1:03 PM",
-              "type_code": "",
-              "type_desc": "LOGO WITH EXPLANATION",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            }
-          ] %}
-          
-          {% for file in file_data %}
+          {% if application_files %}
+          {% for file in application_files %}
           <tr>
-            <td class="fw-semibold" style="text-align: left;">{{ file.name }}</td>
-            <td style="text-align: left;">{{ file.date }}</td>
-            <td style="text-align: left;">
-              {% if file.type_code %}
-              <span class="fw-semibold text-dark">{{ file.type_code }}</span> - {{ file.type_desc }}
-              {% else %}
-              {{ file.type_desc }}
+            <td class="fw-semibold" style="text-align: left;">{{ file.file_name }}</td>
+            <td style="text-align: left;">{{ file.submission_date.strftime('%B %d, %Y, %I:%M %p') if file.submission_date else 'Not available' }}</td>
+            <td>
+              {% set status_class = '' %}
+              {% if file.status == 'Verified' %}
+                {% set status_class = 'status-verified' %}
+              {% elif file.status == 'Pending' %}
+                {% set status_class = 'status-pending' %}
+              {% elif file.status == 'Needs Revision' %}
+                {% set status_class = 'status-needs-revision' %}
+              {% elif file.status == 'Rejected' %}
+                {% set status_class = 'status-rejected' %}
               {% endif %}
+              <span class="status-badge {{ status_class }}">{{ file.status }}</span>
             </td>
             <td>
-              <span class="status-badge {{ file.status_class }}">{{ file.status }}</span>
-            </td>
-            <td>
-              <div class="action-buttons">
-                <button type="button" class="btn btn-preview btn-sm">Preview</button>
-                <button type="button" class="btn btn-update btn-sm">Update Status</button>
+              <div class="action-buttons d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-preview btn-sm" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')"><i class="fas fa-eye"></i> Preview</button>
+                
+                <button type="button" class="btn btn-update btn-sm" onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}')">Update Status</button>
                 <button type="button" class="btn btn-feedback btn-sm position-relative" 
-                   onclick="openFeedbackModal('{{ file.name }}', '{% if file.type_code %}{{ file.type_code }} - {% endif %}{{ file.type_desc }}', '{{ file.status }}')">
+                   onclick="openFeedbackModal('{{ file.file_name }}', '{% if file.form_code %}{{ file.form_code }} - {% endif %}{{ file.form_type }}', '{{ file.status }}')">
                   Add Feedback
-                  {% if file.feedback_count > 0 %}
+                  {% if file.feedback_count and file.feedback_count > 0 %}
                   <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     {{ file.feedback_count }}
                   </span>
@@ -136,6 +74,15 @@
             </td>
           </tr>
           {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center py-4">
+              <div class="alert alert-info mb-0">
+                No files have been submitted for this application yet.
+              </div>
+            </td>
+          </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
@@ -290,6 +237,60 @@
       </div>
     </div>
   </div>
+  
+  <!-- File Preview Modal -->
+  <div id="filePreviewModal" class="global-modal file-preview-modal" aria-labelledby="filePreviewModalTitle" aria-modal="true" role="dialog">
+    <div class="modal-container modal-lg">
+      <div class="modal-section">
+        <div class="file-preview-header d-flex justify-content-between align-items-center mb-3">
+          <h2 class="form-title mb-0" id="file-preview-title">File Preview</h2>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-download" id="modal-download-btn" onclick="downloadCurrentFile()"><i class="fas fa-download"></i> Download</button>
+            <button type="button" class="btn-close" onclick="closeFilePreviewModal()" aria-label="Close"></button>
+          </div>
+        </div>
+        
+        <div class="file-preview-content">
+          <div id="file-preview-container" class="file-preview-container">
+            <!-- File content will be loaded here -->
+            <div class="text-center p-5" id="file-loading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3">Loading file preview...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Update Modal -->
+  <div id="statusUpdateModal" class="global-modal" aria-labelledby="statusUpdateModalTitle" aria-modal="true" role="dialog">
+    <div class="modal-container">
+      <button type="button" class="btn-back" onclick="closeStatusModal()" aria-label="Close">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+
+      <div class="modal-section">
+        <h2 class="form-title">Update File Status</h2>
+        <form id="status-update-form">
+          <input type="hidden" id="file_id" name="file_id">
+          <div class="mb-4">
+            <label for="status" class="form-label">Select Status</label>
+            <select class="form-control form-select" id="status" name="status" required>
+              <option value="Verified">Verified</option>
+              <option value="Needs Revision">Needs Revision</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn-send">Update Status</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -314,6 +315,130 @@
         tab.classList.add('active');
       }
     });
+  }
+  
+  // Global variable to store current file ID for download from modal
+  let currentFileId = null;
+let currentFileName = null;
+
+// Function to preview application file in modal
+function previewFile(fileId, fileName) {
+    if (!fileId) {
+      alert('File ID is required');
+      return;
+    }
+    
+    currentFileId = fileId;
+    currentFileName = fileName || 'File';
+    
+    // Set the modal title
+    document.getElementById('file-preview-title').textContent = `Preview: ${currentFileName}`;
+    
+    // Show loading indicator
+    document.getElementById('file-loading').style.display = 'block';
+    
+    // Clear previous content
+    const container = document.getElementById('file-preview-container');
+    const existingIframe = container.querySelector('iframe');
+    if (existingIframe) {
+      container.removeChild(existingIframe);
+    }
+    
+    // Create iframe for PDF viewing
+    const iframe = document.createElement('iframe');
+    iframe.src = `{{ url_for('user_organization.get_application_file', file_id=0) }}`.replace('0', fileId);
+    iframe.onload = function() {
+      document.getElementById('file-loading').style.display = 'none';
+    };
+    
+    // Append iframe after loading indicator
+    container.appendChild(iframe);
+    
+    // Open the modal
+    openFilePreviewModal();
+  }
+  
+  // Function to download application file
+  function downloadFile(fileId) {
+    if (!fileId) {
+      alert('File ID is required');
+      return;
+    }
+    
+    // Open the file with download parameter set to true
+    window.open(`{{ url_for('user_organization.get_application_file', file_id=0) }}`.replace('0', fileId) + '?download=true', '_blank');
+  }
+  
+  // Function to download current file from modal
+  function downloadCurrentFile() {
+    if (currentFileId) {
+      downloadFile(currentFileId);
+    } else {
+      alert('No file is currently being previewed');
+    }
+  }
+  
+  // Function to open file preview modal
+  function openFilePreviewModal() {
+    const modal = document.getElementById('filePreviewModal');
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+  }
+  
+  // Status Update Modal Functions
+  function openStatusModal(fileId, currentStatus) {
+    document.getElementById('file_id').value = fileId;
+    document.getElementById('status').value = currentStatus === 'For Revision' ? 'Needs Revision' : currentStatus;
+    document.getElementById('statusUpdateModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeStatusModal() {
+    document.getElementById('statusUpdateModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // Handle status update form submission
+  document.getElementById('status-update-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const fileId = document.getElementById('file_id').value;
+      const status = document.getElementById('status').value;
+  
+      fetch('{{ url_for("admin_new_organization.update_file_status") }}', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              file_id: fileId,
+              status: status
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              location.reload(); // Reload the page to show updated status
+          } else {
+              alert('Failed to update status: ' + data.message);
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while updating the status');
+      });
+  
+      closeStatusModal();
+  });
+
+  // Function to close file preview modal
+  function closeFilePreviewModal() {
+    const modal = document.getElementById('filePreviewModal');
+    modal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    
+    // Reset current file
+    currentFileId = null;
+    currentFileName = null;
   }
 
   // Feedback Modal Functions

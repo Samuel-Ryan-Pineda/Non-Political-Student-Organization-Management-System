@@ -16,13 +16,13 @@
         <p class="custom-title">Main</p>
         <ul>
             <li class="{{ 'active' if active_page == 'organization' }}">
-            <a href="/organization">
+            <a href="{{ url_for('admin_routes.organization') }}">
                 <i class="custom-icon ph-bold ph-buildings"></i>
                 <span class="custom-text">Organizations</span>
             </a>
             </li>
             <li class="{{ 'active' if active_page == 'member' }}">
-            <a href="/member">
+            <a href="{{ url_for('admin_routes.member') }}">
                 <i class="custom-icon ph-bold ph-users"></i>
                 <span class="custom-text">Search Member</span>
             </a>
@@ -34,24 +34,24 @@
             </a>
             <ul class="custom-sub-menu">
                 <li class="{{ 'active' if active_page == 'neworganization' }}">
-                <a href="/neworganization">
+                <a href="{{ url_for('admin_new_organization.neworganization') }}">
                     <span class="custom-text">New Organization</span>
                 </a>
                 </li>
                 <li class="{{ 'active' if active_page == 'renewal' }}">
-                <a href="/renewal">
+                <a href="{{ url_for('admin_routes.renewal') }}">
                     <span class="custom-text">Renewal</span>
                 </a>
                 </li>
                 <li class="{{ 'active' if active_page == 'reports' }}">
-                    <a href="/reports">
+                    <a href="{{ url_for('admin_routes.schedules') }}">
                         <span class="custom-text">Reports</span>
                     </a>
                 </li>
             </ul>
             </li>
             <li class="{{ 'active' if active_page == 'announcement' }}">
-                <a href="/announcement">
+                <a href="{{ url_for('admin_routes.analytics') }}">
                     <i class="custom-icon ph-bold ph-megaphone"></i>
                     <span class="custom-text">Announcements</span>
                 </a>
@@ -67,7 +67,7 @@
         <p class="custom-title">Account</p>
         <ul>
         <li class="{{ 'active' if active_page == 'adminaccount' }}">
-            <a href="/adminaccount">
+            <a href="{{ url_for('admin_routes.adminaccount') }}">
             <i class="custom-icon ph-bold ph-info"></i>
             <span class="custom-text">My Account</span>
             </a>
@@ -84,7 +84,7 @@
             <h2>Logout Confirmation</h2>
             <p>Are you sure you want to log out?</p>
             <div class="custom-logout-buttons">
-                <button class="custom-confirm-btn" onclick="window.location.href='/logout'">Confirm</button>
+                <button class="custom-confirm-btn" onclick="window.location.href='{{ url_for('main.logout') }}'">Confirm</button>
                 <button class="custom-cancel-btn" onclick="document.getElementById('custom-logoutDialog').close()">Cancel</button>
             </div>
         </dialog>

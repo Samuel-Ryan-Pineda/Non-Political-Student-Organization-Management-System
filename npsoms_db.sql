@@ -114,7 +114,7 @@ CREATE TABLE applications (
     type VARCHAR(100),
     status VARCHAR(100), -- ENUM('pending', 'approved', 'rejected', 'under_review') DEFAULT 'pending',
     academic_year VARCHAR(20),
-    submission_date DATE,
+    submission_date DATETIME,
     reviewed_by VARCHAR(255),
     review_date DATE,
     FOREIGN KEY (organization_id) REFERENCES organizations(organization_id)

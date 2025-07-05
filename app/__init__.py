@@ -40,9 +40,17 @@ def create_app():
     # Register blueprints
     from app.auth import auth_bp
     from app.main import main_bp
+    from app.blueprints.admin import init_admin_bp
+    from app.blueprints.user import init_user_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    init_admin_bp(app)
+    init_user_bp(app)
+    
+    # Register user_organization_bp separately to maintain the existing URL structure
+    from app.blueprints.user.organization import user_organization_bp
+    app.register_blueprint(user_organization_bp, url_prefix='/organization')
     
     # Create database tables
     with app.app_context():

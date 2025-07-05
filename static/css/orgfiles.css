@@ -1,4 +1,4 @@
-  .highlight-title {
+.highlight-title {
     background-color: var(--highlight-bg);
     display: inline-block;
     padding: 0.25rem 0.5rem;
@@ -43,9 +43,14 @@
     color: #0f5132;
   }
 
-  .status-revision {
+  .status-needs-revision {
     background-color: #fff3cd;
     color: #856404;
+  }
+
+  .status-rejected {
+    background-color: #f8d7da;
+    color: #842029;
   }
 
   .status-pending {
@@ -75,6 +80,17 @@
   .btn-preview:hover {
     background-color: #f9f9f9;
     color: var(--btn-preview-color);
+  }
+  
+  .btn-download {
+    color: #0d6efd;
+    border: 1px solid #0d6efd;
+    background-color: transparent;
+  }
+
+  .btn-download:hover {
+    background-color: #f9f9f9;
+    color: #0d6efd;
   }
 
   .btn-update {
@@ -137,11 +153,34 @@
   }
 
   #feedback-form input.form-control,
-  #feedback-form textarea.form-control {
+  #feedback-form textarea.form-control,
+  #feedback-form select.form-control {
+    font-size: 0.875rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
     background-color: #e6e6e6;
     border: 1px solid #ced4da;
     color: var(--text-color);
     font-size: 0.800rem;
+  }
+
+  #feedback-form input.form-control:focus,
+  #feedback-form textarea.form-control:focus,
+  #feedback-form select.form-control:focus {
+    outline: none;
+  }
+
+  .form-select {
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .form-select:hover {
+    border-color: var(--btn-preview-color);
   }
 
   #feedback-form input.form-control:focus,
@@ -307,6 +346,29 @@
   /* Feedback Detail Modal */
   .feedback-detail-modal .modal-section {
     max-width: 700px;
+  }
+  
+  .file-preview-modal .modal-container {
+    max-width: 90%;
+    height: 90vh;
+  }
+  
+  .file-preview-container {
+    width: 100%;
+    height: calc(90vh - 120px);
+    overflow: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+  }
+  
+  .file-preview-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+  .modal-lg {
+    max-width: 90%;
   }
 
   .feedback-reply-section {
