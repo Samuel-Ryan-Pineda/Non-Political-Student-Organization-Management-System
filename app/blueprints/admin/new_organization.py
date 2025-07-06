@@ -133,9 +133,22 @@ def update_file_status():
     if current_user.role_id != 1:
         return jsonify({'success': False, 'message': "You don't have permission to update file status"})
     
-    data = request.json
-    file_id = data.get('file_id')
-    new_status = data.get('status')
+    # Log request information for debugging
+    print(f"Request Content-Type: {request.content_type}")
+    print(f"Request method: {request.method}")
+    print(f"Request form data: {request.form}")
+    print(f"Request JSON: {request.get_json(silent=True)}")
+    
+    # Handle both FormData and JSON requests
+    if request.is_json:
+        data = request.json
+        file_id = data.get('file_id')
+        new_status = data.get('status')
+    else:
+        file_id = request.form.get('file_id')
+        new_status = request.form.get('status')
+    
+    print(f"Extracted file_id: {file_id}, new_status: {new_status}")
     
     if not file_id or not new_status:
         return jsonify({'success': False, 'message': 'File ID and status are required'})

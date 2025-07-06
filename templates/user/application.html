@@ -73,13 +73,13 @@
           <div class="progress mb-3 progress-thin">
             {% if application %}
               {% if application.status.lower() == 'pending' %}
-              <div class="progress-bar bg-primary" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar bg-primary" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
               {% elif application.status.lower() == 'approved' %}
               <div class="progress-bar bg-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
               {% elif application.status.lower() == 'rejected' %}
               <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
               {% elif application.status.lower() == 'verified' %}
-              <div class="progress-bar bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar bg-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
               {% else %}
               <div class="progress-bar bg-dark" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
               {% endif %}
@@ -91,19 +91,19 @@
           <div class="d-flex justify-content-between small text-secondary">
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-check-circle text-success"></i>
-              <span>Verified: 1</span>
+              <span>Verified: </span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-clock text-primary"></i>
-              <span>Pending: 4</span>
+              <span>Pending: </span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-exclamation-circle text-warning"></i>
-              <span>Needs Revision: 1</span>
+              <span>Needs Revision: </span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-times-circle text-danger"></i>
-              <span>Rejected: 1</span>
+              <span>Rejected: </span>
             </div>
           </div>
         </div>
@@ -142,6 +142,7 @@
           </div>
           
           <div class="dropzone mb-3">
+            <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
             <i class="fas fa-arrow-up mb-1"></i>
             Drag & drop or click to upload
           </div>
@@ -167,6 +168,7 @@
           </div>
           
           <div class="dropzone mb-3">
+            <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
             <i class="fas fa-arrow-up mb-1"></i>
             Drag & drop or click to upload
           </div>
@@ -192,6 +194,7 @@
           </div>
           
           <div class="dropzone mb-3">
+            <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
             <i class="fas fa-arrow-up mb-1"></i>
             Drag & drop or click to upload
           </div>
@@ -219,6 +222,7 @@
           </div>
           
           <div class="dropzone mb-3">
+            <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
             <i class="fas fa-arrow-up mb-1"></i>
             Drag & drop or click to upload
           </div>
@@ -244,6 +248,7 @@
           </div>
           
           <div class="dropzone mb-3">
+            <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
             <i class="fas fa-arrow-up mb-1"></i>
             Drag & drop or click to upload
           </div>
@@ -269,6 +274,7 @@
           </div>
           
           <div class="dropzone mb-3">
+            <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
             <i class="fas fa-arrow-up mb-1"></i>
             Drag & drop or click to upload
           </div>
@@ -294,6 +300,7 @@
           </div>
           
           <div class="dropzone mb-3">
+            <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
             <i class="fas fa-arrow-up mb-1"></i>
             Drag & drop or click to upload
           </div>
@@ -481,7 +488,12 @@
 </div>
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/application.js') }}?v=2024010201"></script>
+<!-- Common modules -->
+<script src="{{ url_for('static', filename='js/common/dom-utils.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-status.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-preview.js') }}?v={{ cache_version }}"></script>
+<!-- User-specific application script -->
+<script src="{{ url_for('static', filename='js/user/application.js') }}?v={{ cache_version }}"></script>
 {% endblock %}
 
 {% endblock %}

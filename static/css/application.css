@@ -366,51 +366,17 @@
   border-color: var(--bs-secondary);
 }
 
-/* Preview Modal Styles */
-.preview-modal-content {
-  width: 90vw;
-  max-width: 1200px;
-  height: 85vh;
-  max-height: 800px;
-  display: flex;
-  flex-direction: column;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-left: 240px; /* Match sidebar width to prevent overlap */
-  font-size: 0.8em;
-}
+/* Preview Modal Styles moved to global.css */
 
-.preview-modal-content.ml-0 { margin-left: 0; }
-
-.preview-header { flex: 0 0 auto; }
-
-.preview-body {
-  flex: 1 1 auto;
-  overflow: hidden;
-  background-color: #f8f9fa;
-}
-
-.preview-iframe {
-  border: none;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
+/* Preview Modal Styles moved to global.css */
 
 /* Responsive adjustments */
 @media (max-width: 767.98px) {
   .status-badge { font-size: 0.625rem; }
   .info-progress-row .card { margin-bottom: 1rem; }
-  .preview-modal-content {
-    width: 95vw;
-    height: 80vh;
-    margin-left: 0;
-  }
 }
 
-@media (max-width: 992px) {
-  .preview-modal-content { margin-left: 0; }
-}
+/* Preview modal responsive styles moved to global.css */
 
 .info-progress-row .card {
   width: 100%;
@@ -424,47 +390,4 @@
   flex-direction: column;
 }
 
-/* Preview Modal Styles */
-.preview-modal-content {
-  width: 90vw;
-  max-width: 1200px;
-  height: 85vh;
-  max-height: 800px;
-  display: flex;
-  flex-direction: column;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-left: 240px; /* Match sidebar width to prevent overlap */
-}
-
-.preview-modal-content.ml-0 { margin-left: 0; }
-
-.preview-header { flex: 0 0 auto; }
-
-.preview-body {
-  flex: 1 1 auto;
-  overflow: hidden;
-  background-color: #f8f9fa;
-}
-
-.preview-iframe {
-  border: none;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* Responsive adjustments */
-@media (max-width: 767.98px) {
-  .status-badge { font-size: 0.625rem; }
-  .info-progress-row .card { margin-bottom: 1rem; }
-  .preview-modal-content {
-    width: 95vw;
-    height: 80vh;
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 992px) {
-  .preview-modal-content { margin-left: 0; }
-}
+/* All Preview Modal Styles moved to global.css */

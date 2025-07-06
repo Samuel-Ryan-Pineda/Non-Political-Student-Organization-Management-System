@@ -32,7 +32,7 @@
         <thead>
           <tr>
             <th scope="col" style="text-align: left;">File Name</th>
-            <th scope="col" style="text-align: left;">Submission Date</th>
+            <th scope="col" style="text-align: left;">Date and Time</th>
             <th scope="col" style="text-align: center;">Status</th>
             <th scope="col" style="text-align: center;">Action</th>
           </tr>
@@ -58,9 +58,9 @@
             </td>
             <td>
               <div class="action-buttons d-flex justify-content-center gap-2">
-                <button type="button" class="btn btn-preview btn-sm" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')"><i class="fas fa-eye"></i> Preview</button>
+                <button type="button" class="btn admin-preview-btn btn-sm" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')"><i class="fas fa-eye"></i> Preview</button>
                 
-                <button type="button" class="btn btn-update btn-sm" onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}')">Update Status</button>
+                <button type="button" class="btn btn-update btn-sm" onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}', '{{ file.file_name }}', '{{ file.submission_date.strftime('%B %d, %Y, %I:%M %p') if file.submission_date else 'Not available' }}')">Update Status</button>
                 <button type="button" class="btn btn-feedback btn-sm position-relative" 
                    onclick="openFeedbackModal('{{ file.file_name }}', '{% if file.form_code %}{{ file.form_code }} - {% endif %}{{ file.form_type }}', '{{ file.status }}')">
                   Add Feedback
@@ -274,6 +274,10 @@
 
       <div class="modal-section">
         <h2 class="form-title">Update File Status</h2>
+        <div class="form-info mb-3">
+          <p><strong>File:</strong> <span id="status-file-name"></span></p>
+          <p><strong>Submission Date:</strong> <span id="status-submission-date"></span></p>
+        </div>
         <form id="status-update-form">
           <input type="hidden" id="file_id" name="file_id">
           <div class="mb-4">
@@ -293,342 +297,13 @@
   </div>
 </main>
 
-<script>
-  // Toggle between feedback history tabs
-  function showTab(tabId) {
-    // Hide all tab content
-    document.querySelectorAll('.feedback-tab-content').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Remove active class from all tabs
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Show the selected tab content
-    document.getElementById(tabId + '-tab').classList.add('active');
-    
-    // Add active class to the clicked tab
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      if (tab.textContent.toLowerCase().includes(tabId)) {
-        tab.classList.add('active');
-      }
-    });
-  }
-  
-  // Global variable to store current file ID for download from modal
-  let currentFileId = null;
-let currentFileName = null;
-
-// Function to preview application file in modal
-function previewFile(fileId, fileName) {
-    if (!fileId) {
-      alert('File ID is required');
-      return;
-    }
-    
-    currentFileId = fileId;
-    currentFileName = fileName || 'File';
-    
-    // Set the modal title
-    document.getElementById('file-preview-title').textContent = `Preview: ${currentFileName}`;
-    
-    // Show loading indicator
-    document.getElementById('file-loading').style.display = 'block';
-    
-    // Clear previous content
-    const container = document.getElementById('file-preview-container');
-    const existingIframe = container.querySelector('iframe');
-    if (existingIframe) {
-      container.removeChild(existingIframe);
-    }
-    
-    // Create iframe for PDF viewing
-    const iframe = document.createElement('iframe');
-    iframe.src = `{{ url_for('user_organization.get_application_file', file_id=0) }}`.replace('0', fileId);
-    iframe.onload = function() {
-      document.getElementById('file-loading').style.display = 'none';
-    };
-    
-    // Append iframe after loading indicator
-    container.appendChild(iframe);
-    
-    // Open the modal
-    openFilePreviewModal();
-  }
-  
-  // Function to download application file
-  function downloadFile(fileId) {
-    if (!fileId) {
-      alert('File ID is required');
-      return;
-    }
-    
-    // Open the file with download parameter set to true
-    window.open(`{{ url_for('user_organization.get_application_file', file_id=0) }}`.replace('0', fileId) + '?download=true', '_blank');
-  }
-  
-  // Function to download current file from modal
-  function downloadCurrentFile() {
-    if (currentFileId) {
-      downloadFile(currentFileId);
-    } else {
-      alert('No file is currently being previewed');
-    }
-  }
-  
-  // Function to open file preview modal
-  function openFilePreviewModal() {
-    const modal = document.getElementById('filePreviewModal');
-    modal.classList.add('show');
-    document.body.classList.add('modal-open');
-  }
-  
-  // Status Update Modal Functions
-  function openStatusModal(fileId, currentStatus) {
-    document.getElementById('file_id').value = fileId;
-    document.getElementById('status').value = currentStatus === 'For Revision' ? 'Needs Revision' : currentStatus;
-    document.getElementById('statusUpdateModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeStatusModal() {
-    document.getElementById('statusUpdateModal').classList.remove('show');
-    document.body.style.overflow = '';
-  }
-
-  // Handle status update form submission
-  document.getElementById('status-update-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const fileId = document.getElementById('file_id').value;
-      const status = document.getElementById('status').value;
-  
-      fetch('{{ url_for("admin_new_organization.update_file_status") }}', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-              file_id: fileId,
-              status: status
-          })
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.success) {
-              location.reload(); // Reload the page to show updated status
-          } else {
-              alert('Failed to update status: ' + data.message);
-          }
-      })
-      .catch(error => {
-          console.error('Error:', error);
-          alert('An error occurred while updating the status');
-      });
-  
-      closeStatusModal();
-  });
-
-  // Function to close file preview modal
-  function closeFilePreviewModal() {
-    const modal = document.getElementById('filePreviewModal');
-    modal.classList.remove('show');
-    document.body.classList.remove('modal-open');
-    
-    // Reset current file
-    currentFileId = null;
-    currentFileName = null;
-  }
-
-  // Feedback Modal Functions
-  function openFeedbackModal(fileName, formType, formStatus) {
-    // Set the modal content with the file information
-    document.getElementById('file-name').textContent = fileName;
-    document.getElementById('form-type').textContent = formType;
-    document.getElementById('form-status').textContent = formStatus;
-    
-    // Show the modal
-    document.getElementById('feedbackModal').classList.add('show');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-  }
-  
-  function closeFeedbackModal() {
-    document.getElementById('feedbackModal').classList.remove('show');
-    document.body.style.overflow = ''; // Restore scrolling
-  }
-  
-  // Feedback Detail Modal Functions
-function openFeedbackDetail(type, id) {
-  // Sample feedback data - in a real app, this would be fetched from a database
-  const feedbackData = {
-    sent: [
-      {
-        id: 1,
-        title: "Missing Information in Member List",
-        date: "July 10, 2025, 3:45 PM",
-        file: "listofmembers.pdf",
-        formType: "Form 4 - LIST OF MEMBERS",
-        subject: "Missing Information in Member List",
-        message: "The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.\n\nSpecifically, we need the following details for each board member:\n- Full Name\n- Position\n- Student ID\n- Email Address\n- Phone Number\n- Department\n\nPlease ensure all this information is included in your revised submission.",
-        hasReply: true,
-        reply: {
-          subject: "Response to Member List Feedback",
-          message: "We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.\n\nAll requested information has now been included for each board member, including full names, positions, student IDs, email addresses, phone numbers, and departments.\n\nPlease let us know if any further information is required.",
-          date: "July 11, 2025, 9:30 AM"
-        }
-      },
-      {
-        id: 2,
-        title: "Mentor Information Required",
-        date: "July 10, 2025, 4:00 PM",
-        file: "listofmembers.pdf",
-        formType: "Form 4 - LIST OF MEMBERS",
-        subject: "Mentor Information Required",
-        message: "Please include faculty mentor information in the member list document as required by the guidelines. This should include their department, contact information, and years of experience.\n\nAdditionally, please make sure to include the mentor's signature on the document to confirm their commitment to advising the organization.",
-        hasReply: false
-      }
-    ],
-    received: [
-      {
-        id: 1,
-        title: "Response to Member List Feedback",
-        date: "July 11, 2025, 9:30 AM",
-        file: "listofmembers.pdf",
-        formType: "Form 4 - LIST OF MEMBERS",
-        subject: "Response to Member List Feedback",
-        message: "We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.\n\nAll requested information has now been included for each board member, including full names, positions, student IDs, email addresses, phone numbers, and departments.\n\nPlease let us know if any further information is required.",
-        original: {
-          subject: "Missing Information in Member List",
-          message: "The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.\n\nSpecifically, we need the following details for each board member:\n- Full Name\n- Position\n- Student ID\n- Email Address\n- Phone Number\n- Department\n\nPlease ensure all this information is included in your revised submission.",
-          date: "July 10, 2025, 3:45 PM"
-        },
-        hasBeenRepliedTo: false
-      }
-    ]
-  };
-  
-  // Get the feedback data based on type and id
-  const feedback = feedbackData[type].find(item => item.id === id);
-  
-  if (feedback) {
-    // Set up modal title and badge
-    document.getElementById('feedback-detail-title').textContent = feedback.subject;
-    const badge = document.getElementById('feedback-detail-badge');
-    badge.textContent = type === 'sent' ? 'Sent' : 'Received';
-    badge.className = 'feedback-badge ' + type;
-    
-    // Set up metadata
-    document.getElementById('feedback-detail-date').textContent = feedback.date;
-    document.getElementById('feedback-detail-file').textContent = feedback.file;
-    document.getElementById('feedback-detail-form-type').textContent = feedback.formType;
-    
-    // Set up feedback content
-    document.getElementById('feedback-detail-subject').textContent = feedback.subject;
-    document.getElementById('feedback-detail-message').textContent = feedback.message;
-    
-    // Set up reply section if exists
-    const replySection = document.getElementById('feedback-reply-section');
-    const replyButton = document.getElementById('btn-reply-feedback');
-    
-    if (type === 'sent' && feedback.hasReply) {
-      // Show reply for sent feedback
-      replySection.style.display = 'block';
-      document.getElementById('feedback-reply-subject').textContent = feedback.reply.subject;
-      document.getElementById('feedback-reply-message').textContent = feedback.reply.message;
-      document.getElementById('feedback-reply-date').textContent = feedback.reply.date;
-      replyButton.style.display = 'none'; // Hide reply button for sent feedback
-    } else if (type === 'received') {
-      // Show original message for received feedback
-      replySection.style.display = 'block';
-      document.getElementById('feedback-reply-subject').textContent = feedback.original.subject;
-      document.getElementById('feedback-reply-message').textContent = feedback.original.message;
-      document.getElementById('feedback-reply-date').textContent = feedback.original.date;
-      
-      // Only show reply button for received feedback that hasn't been replied to
-      replyButton.style.display = feedback.hasBeenRepliedTo ? 'none' : 'block';
-    } else {
-      // No reply yet for sent feedback
-      replySection.style.display = 'none';
-      replyButton.style.display = 'none'; // Never show reply button for sent feedback
-    }
-    
-    // Show the modal
-    document.getElementById('feedbackDetailModal').classList.add('show');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-  }
-}
-  
-  function closeFeedbackDetailModal() {
-  document.getElementById('feedbackDetailModal').classList.remove('show');
-  document.body.style.overflow = ''; // Restore scrolling
-}
-
-// Form submission handling
-document.getElementById('feedback-form').addEventListener('submit', function(event) {
-  event.preventDefault();
-  
-  // Get form values
-  const subject = document.getElementById('subject').value;
-  const message = document.getElementById('message').value;
-  
-  // Validate form
-  if (!subject || !message) {
-    alert('Please fill in all required fields.');
-    return;
-  }
-  
-  // In a real application, you would send this data to the server
-  console.log('Feedback submitted:', {
-    subject: subject,
-    message: message,
-    file: document.getElementById('file-name').textContent,
-    formType: document.getElementById('form-type').textContent
-  });
-  
-  // Show success message
-  alert('Feedback sent successfully!');
-  
-  // Reset form and close modal
-  this.reset();
-  closeFeedbackModal();
-  
-  // In a real application, you would refresh the feedback history here
-  // For now, we'll just reload the page after a short delay
-  setTimeout(function() {
-    location.reload();
-  }, 500);
-});
-
-// Reply button functionality
-document.getElementById('btn-reply-feedback').addEventListener('click', function() {
-  // In a real application, this would open a reply form
-  // For now, we'll just redirect to the feedback modal
-  closeFeedbackDetailModal();
-  openFeedbackModal('listofmembers.pdf', 'Form 4 - LIST OF MEMBERS', 'For Revision');
-});
-
-// Close modals when clicking outside (optional)
-window.addEventListener('click', function(event) {
-  const feedbackModal = document.getElementById('feedbackModal');
-  const feedbackDetailModal = document.getElementById('feedbackDetailModal');
-  
-  if (event.target === feedbackModal) {
-    closeFeedbackModal();
-  } else if (event.target === feedbackDetailModal) {
-    closeFeedbackDetailModal();
-  }
-});
-
-// Initialize tooltips and popovers if using Bootstrap
-document.addEventListener('DOMContentLoaded', function() {
-  // If using Bootstrap tooltips
-  if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-  }
-});
-</script>
+{% block extra_js %}
+<!-- Common modules -->
+<script src="{{ url_for('static', filename='js/common/dom-utils.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-status.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-preview.js') }}?v={{ cache_version }}"></script>
+<!-- Admin-specific application script -->
+<script src="{{ url_for('static', filename='js/admin/neworganizationfiles.js') }}?v={{ cache_version }}"></script>
 {% endblock %}
+
+{% endblock content %}

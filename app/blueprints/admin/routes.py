@@ -106,3 +106,107 @@ def adminaccount():
         return redirect(url_for('main.dashboard'))
     # current_user is provided by Flask-Login
     return render_template('admin/adminaccount.html', user=current_user, active_page='adminaccount')
+
+@admin_routes_bp.route('/get-application-file')
+@login_required
+def get_application_file():
+    # Ensure user is OSOAD
+    if current_user.role_id != 1:
+        abort(403)  # Forbidden
+    
+    # Get file_id from query parameters
+    file_id = request.args.get('file_id')
+    if not file_id:
+        abort(400)  # Bad Request
+    
+    # Get the application file
+    app_file = ApplicationFile.query.get_or_404(int(file_id))
+    
+    # Check if file data exists and has content
+    if not app_file.file or len(app_file.file) == 0:
+        return render_template('error.html', message="The file appears to be empty or corrupted."), 500
+    
+    # Check file signatures to determine file type
+    # PDF signature check (%PDF)
+    if app_file.file[:4] == b'%PDF':
+        mimetype = 'application/pdf'
+        file_extension = 'pdf'
+    # DOCX files (PK zip signature)
+    elif len(app_file.file) > 4 and app_file.file[:4] == b'PK\x03\x04':
+        mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        file_extension = 'docx'
+    # DOC files (Compound File Binary Format signature)
+    elif len(app_file.file) > 8 and app_file.file[:8] == b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1':
+        mimetype = 'application/msword'
+        file_extension = 'doc'
+    else:
+        # If we can't determine the type from signature, try to infer from filename
+        if app_file.file_name.lower().endswith('.pdf'):
+            mimetype = 'application/pdf'
+            file_extension = 'pdf'
+        elif app_file.file_name.lower().endswith('.docx'):
+            mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            file_extension = 'docx'
+        elif app_file.file_name.lower().endswith('.doc'):
+            mimetype = 'application/msword'
+            file_extension = 'doc'
+        else:
+            # Default to PDF as a fallback
+            mimetype = 'application/pdf'
+            file_extension = 'pdf'
+    
+    # Create a filename with proper extension for the browser
+    if app_file.file_name.lower() in ['form 1a - application for recognition', 'form 2 - letter of acceptance', 
+                                     'form 3 - list of programs/projects/ activities', 'form 4 - list of members',
+                                     'board of officers', 'constitution and bylaws', 'logo with explanation']:
+        # These are form types, add the extension
+        download_name = f"{app_file.file_name}.{file_extension}"
+    else:
+        # For files that might already have an extension
+        if '.' in app_file.file_name:
+            download_name = app_file.file_name
+        else:
+            download_name = f"{app_file.file_name}.{file_extension}"
+    
+    # Check if download is requested
+    download_requested = request.args.get('download', '').lower() == 'true'
+    
+    # For Word documents, force download regardless of the download parameter
+    force_download = download_requested or mimetype in [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword'
+    ]
+    
+    try:
+        # Create a BytesIO object from the file data
+        file_data = io.BytesIO(app_file.file)
+        
+        # Attempt to send the file
+        return send_file(
+            file_data,
+            mimetype=mimetype,
+            as_attachment=force_download,  # True to download, False to preview in browser
+            download_name=download_name
+        )
+    except Exception as e:
+        # Log the error for debugging
+        import traceback
+        print(f"Error serving file: {str(e)}")
+        print(traceback.format_exc())
+        # Return a user-friendly error
+        return render_template('error.html', message="Something went wrong while trying to open this file. The file may be corrupted or in an unsupported format."), 500
+
+@admin_routes_bp.route('/download-application-file')
+@login_required
+def download_application_file():
+    # Ensure user is OSOAD
+    if current_user.role_id != 1:
+        abort(403)  # Forbidden
+    
+    # Get file_id from query parameters
+    file_id = request.args.get('file_id')
+    if not file_id:
+        abort(400)  # Bad Request
+    
+    # Add download=true parameter and redirect to get-application-file
+    return redirect(url_for('admin_routes.get_application_file', file_id=file_id, download=True))
