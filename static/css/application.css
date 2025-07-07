@@ -248,69 +248,7 @@
   flex-wrap: wrap;
 }
 
-/* Feedback section styles */
-.feedback-history-tabs {
-  display: flex;
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 1rem;
-}
-
-.feedback-tab {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #6b7280;
-}
-
-.feedback-tab.active {
-  color: #1d4ed8;
-  border-bottom: 2px solid #1d4ed8;
-}
-
-.feedback-count {
-  background-color: #e5e7eb;
-  border-radius: 9999px;
-  padding: 0.125rem 0.5rem;
-  font-size: 0.75rem;
-  margin-left: 0.5rem;
-}
-
-.feedback-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.feedback-card-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.feedback-card-title {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.feedback-card-date {
-  color: #6b7280;
-  font-size: 0.75rem;
-}
-
-.feedback-card-body {
-  color: #4b5563;
-  margin-bottom: 0.5rem;
-}
-
-.feedback-card-file {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.feedback-tab-content { display: none; }
-.feedback-tab-content.active { display: block; }
+/* Feedback section styles moved to global.css */
 
 /* Equal height for info and progress cards */
 .info-progress-row {

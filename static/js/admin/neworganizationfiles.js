@@ -12,8 +12,8 @@
     // Set up event listeners
     setupEventListeners();
     
-    // Show the first tab by default
-    showTab('sent');
+    // Set up edit feedback form functionality
+    setupEditFeedbackForm();
   });
 
   // Function to initialize tooltips
@@ -29,9 +29,6 @@
   function setupEventListeners() {
     // Set up feedback form submission
     setupFeedbackForm();
-    
-    // Set up reply button
-    setupReplyButton();
     
     // Set up modal close events
     setupModalCloseEvents();
@@ -102,24 +99,7 @@
   }
 
   // Function to set up reply button
-  function setupReplyButton() {
-    const replyButton = document.getElementById('reply-button');
-    if (replyButton) {
-      replyButton.addEventListener('click', function() {
-        // Get feedback ID from the button's data attribute
-        const feedbackId = this.dataset.feedbackId;
-        
-        // In a real application, you would send this data to the server
-        console.log('Reply to feedback ID:', feedbackId);
-        
-        // Show success message
-        alert('Reply functionality would be implemented here.');
-        
-        // Close modal
-        closeFeedbackDetailModal();
-      });
-    }
-  }
+
 
   // Function to set up modal close events
   function setupModalCloseEvents() {
@@ -143,10 +123,10 @@
         closeFeedbackModal();
       }
       
-      // Feedback detail modal
-      const feedbackDetailModal = document.getElementById('feedbackDetailModal');
-      if (feedbackDetailModal && e.target === feedbackDetailModal) {
-        closeFeedbackDetailModal();
+      // Edit feedback modal
+      const editFeedbackModal = document.getElementById('editFeedbackModal');
+      if (editFeedbackModal && e.target === editFeedbackModal) {
+        closeEditFeedbackModal();
       }
     });
   }
@@ -154,13 +134,49 @@
   // Function to set up status update form
   function setupStatusUpdateForm() {
     const statusForm = document.getElementById('status-update-form');
+    const statusSelect = document.getElementById('status');
+    const feedbackField = document.getElementById('feedback-field');
+    
+    // Add event listener to show/hide feedback field based on status selection
+    if (statusSelect) {
+      statusSelect.addEventListener('change', function() {
+        const selectedStatus = this.value;
+        if (selectedStatus === 'Needs Revision' || selectedStatus === 'Rejected') {
+          feedbackField.style.display = 'block';
+          document.getElementById('status-feedback').setAttribute('required', 'required');
+        } else {
+          feedbackField.style.display = 'none';
+          document.getElementById('status-feedback').removeAttribute('required');
+        }
+      });
+    }
+    
     if (statusForm) {
       statusForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // Prevent multiple submissions by disabling the submit button
+        const submitButton = statusForm.querySelector('button[type="submit"]');
+        if (submitButton && submitButton.disabled) {
+          return; // Already submitting
+        }
+        
         // Get form data
         const fileId = document.getElementById('file_id').value;
         const status = document.getElementById('status').value;
+        const feedback = document.getElementById('status-feedback').value;
+        
+        // Validate form
+        if ((status === 'Needs Revision' || status === 'Rejected') && !feedback) {
+          alert('Please provide feedback for why this file needs revision or is being rejected.');
+          return;
+        }
+        
+        // Disable submit button to prevent duplicate submissions
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'Updating...';
+        }
         
         // Show loading modal
         DOMUtils.showLoadingModal('Updating status...');
@@ -169,6 +185,9 @@
         const formData = new FormData();
         formData.append('file_id', fileId);
         formData.append('status', status);
+        if (feedback) {
+          formData.append('feedback', feedback);
+        }
         
         // Send the status update to the server
         fetch('/update-file-status', {
@@ -195,11 +214,21 @@
             // Refresh the page to show updated status
             window.location.reload();
           } else {
+            // Re-enable submit button on error
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = 'Update Status';
+            }
             // Show error message
             alert('Error: ' + data.message);
           }
         })
         .catch(error => {
+          // Re-enable submit button on error
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Update Status';
+          }
           // Hide loading modal and show error
           DOMUtils.hideLoadingModal();
           alert('Error updating status: Network error');
@@ -218,31 +247,7 @@
     alert('Feedback history would be refreshed here.');
   }
 
-  // Function to show tab content
-  function showTab(tabId) {
-    // Hide all tab content
-    document.querySelectorAll('.feedback-tab-content').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Remove active class from all tabs
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Show the selected tab content
-    const tabContent = document.getElementById(tabId + '-tab');
-    if (tabContent) {
-      tabContent.classList.add('active');
-    }
-    
-    // Add active class to the clicked tab
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      if (tab.textContent.toLowerCase().includes(tabId)) {
-        tab.classList.add('active');
-      }
-    });
-  }
+  // Function to show tab content - removed as we no longer have multiple tabs
 
   // Function to preview a file
   function previewFile(fileId, fileName) {
@@ -307,6 +312,7 @@
     const statusSelect = document.getElementById('status');
     const fileNameElement = document.getElementById('status-file-name');
     const submissionDateElement = document.getElementById('status-submission-date');
+    const feedbackField = document.getElementById('feedback-field');
     
     if (statusModal && statusFileId) {
       // Set the file ID
@@ -319,6 +325,16 @@
             statusSelect.selectedIndex = i;
             break;
           }
+        }
+        
+        // Check if feedback field should be shown based on selected status
+        const selectedStatus = statusSelect.value;
+        if (selectedStatus === 'Needs Revision' || selectedStatus === 'Rejected') {
+          feedbackField.style.display = 'block';
+          document.getElementById('status-feedback').setAttribute('required', 'required');
+        } else {
+          feedbackField.style.display = 'none';
+          document.getElementById('status-feedback').removeAttribute('required');
         }
       }
       
@@ -344,6 +360,30 @@
     if (statusModal) {
       statusModal.classList.remove('show');
       document.body.classList.remove('modal-open');
+      
+      // Reset the form
+      const statusForm = document.getElementById('status-update-form');
+      if (statusForm) {
+        statusForm.reset();
+        
+        // Re-enable submit button in case it was disabled
+        const submitButton = statusForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Update Status';
+        }
+      }
+      
+      // Hide the feedback field and remove required attribute
+      const feedbackField = document.getElementById('feedback-field');
+      if (feedbackField) {
+        feedbackField.style.display = 'none';
+        const feedbackTextarea = document.getElementById('status-feedback');
+        if (feedbackTextarea) {
+          feedbackTextarea.removeAttribute('required');
+          feedbackTextarea.value = '';
+        }
+      }
     }
   }
 
@@ -373,80 +413,164 @@
     }
   }
 
-  // Function to open the feedback detail modal
-  function openFeedbackDetail(feedbackId, type) {
-    const feedbackDetailModal = document.getElementById('feedbackDetailModal');
-    if (!feedbackDetailModal) return;
+  // Function to open the edit feedback modal
+  function editFeedback(feedbackId) {
+    const editFeedbackModal = document.getElementById('editFeedbackModal');
+    if (!editFeedbackModal) return;
     
-    // In a real application, you would fetch the feedback details from the server
-    // For now, we'll use sample data
-    let feedbackData;
-    
-    if (type === 'sent') {
-      feedbackData = {
-        subject: 'Sample Sent Feedback',
-        message: 'This is a sample feedback message that was sent to the organization.',
-        date: '2023-01-15',
-        reply: 'This is a sample reply from the organization.',
-        hasReply: true
-      };
-    } else {
-      feedbackData = {
-        subject: 'Sample Received Feedback',
-        message: 'This is a sample feedback message that was received from the organization.',
-        date: '2023-01-10',
-        reply: '',
-        hasReply: false
-      };
-    }
-    
-    // Update the modal content
-    const subjectElement = feedbackDetailModal.querySelector('.feedback-subject');
-    const messageElement = feedbackDetailModal.querySelector('.feedback-message');
-    const dateElement = feedbackDetailModal.querySelector('.feedback-date');
-    const replyElement = feedbackDetailModal.querySelector('.feedback-reply');
-    const replyButton = document.getElementById('reply-button');
-    
-    if (subjectElement) subjectElement.textContent = feedbackData.subject;
-    if (messageElement) messageElement.textContent = feedbackData.message;
-    if (dateElement) dateElement.textContent = feedbackData.date;
-    
-    // Handle reply section
-    if (replyElement) {
-      if (feedbackData.hasReply) {
-        replyElement.textContent = feedbackData.reply;
-        replyElement.parentElement.style.display = 'block';
-      } else {
-        replyElement.parentElement.style.display = 'none';
-      }
-    }
-    
-    // Handle reply button
-    if (replyButton) {
-      if (type === 'received' && !feedbackData.hasReply) {
-        replyButton.style.display = 'block';
-        replyButton.dataset.feedbackId = feedbackId;
-      } else {
-        replyButton.style.display = 'none';
-      }
-    }
-    
-    // Show the modal
-    feedbackDetailModal.classList.add('show');
-    document.body.classList.add('modal-open');
+    // Fetch feedback details from the server
+    fetch(`/get-feedback-detail/${feedbackId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch feedback details');
+        }
+        return response.json();
+      })
+      .then(feedbackData => {
+        // Update the form fields
+        const feedbackIdInput = document.getElementById('edit-feedback-id');
+        const subjectInput = document.getElementById('edit-feedback-subject');
+        const messageInput = document.getElementById('edit-feedback-message');
+        const fileNameElement = document.getElementById('edit-feedback-file-name');
+        
+        if (feedbackIdInput) feedbackIdInput.value = feedbackId;
+        if (subjectInput) subjectInput.value = feedbackData.subject;
+        if (messageInput) messageInput.value = feedbackData.message;
+        if (fileNameElement) fileNameElement.textContent = feedbackData.file_name;
+        
+        // Show the modal
+        editFeedbackModal.classList.add('show');
+        document.body.classList.add('modal-open');
+      })
+      .catch(error => {
+        console.error('Error fetching feedback details:', error);
+        alert('Error loading feedback details. Please try again.');
+      });
   }
 
-  // Function to close the feedback detail modal
-  function closeFeedbackDetailModal() {
-    const feedbackDetailModal = document.getElementById('feedbackDetailModal');
-    if (feedbackDetailModal) {
-      feedbackDetailModal.classList.remove('show');
+  // Function to close the edit feedback modal
+  function closeEditFeedbackModal() {
+    const editFeedbackModal = document.getElementById('editFeedbackModal');
+    if (editFeedbackModal) {
+      editFeedbackModal.classList.remove('show');
       document.body.classList.remove('modal-open');
+      
+      // Reset the form
+      const editForm = document.getElementById('edit-feedback-form');
+      if (editForm) {
+        editForm.reset();
+        
+        // Reset the submit button state
+        const submitButton = editForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Update Feedback';
+        }
+      }
+    }
+  }
+
+  // Function to handle edit feedback form submission
+  function setupEditFeedbackForm() {
+    const editForm = document.getElementById('edit-feedback-form');
+    if (editForm) {
+      editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const feedbackId = document.getElementById('edit-feedback-id').value;
+        const subject = document.getElementById('edit-feedback-subject').value;
+        const message = document.getElementById('edit-feedback-message').value;
+        
+        // Show loading state
+        const submitButton = editForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'Updating...';
+        }
+        
+        // Prepare data for submission
+        const formData = new FormData();
+        formData.append('feedback_id', feedbackId);
+        formData.append('subject', subject);
+        formData.append('message', message);
+        
+        // Send the update to the server
+        fetch('/update-feedback', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            // Close modal
+            closeEditFeedbackModal();
+            
+            // Update the specific feedback card instead of reloading the page
+            updateFeedbackCard(feedbackId, subject, message);
+          } else {
+            // Re-enable submit button on error
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = 'Update Feedback';
+            }
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(error => {
+          // Re-enable submit button on error
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Update Feedback';
+          }
+          alert('Error updating feedback: Network error');
+          console.error('Error updating feedback:', error);
+        });
+      });
+    }
+  }
+  
+  // Function to update a specific feedback card without page reload
+  function updateFeedbackCard(feedbackId, subject, message) {
+    // Find the feedback card with the matching feedback ID
+    const feedbackCards = document.querySelectorAll('.feedback-card.sent');
+    
+    for (const card of feedbackCards) {
+      // Find the edit button which contains the feedback ID
+      const editButton = card.querySelector('.btn-view-feedback');
+      if (editButton && editButton.getAttribute('onclick') === `editFeedback(${feedbackId})`) {
+        // Update the card content
+        const titleElement = card.querySelector('.feedback-card-title');
+        const messageElement = card.querySelector('.feedback-card-body p');
+        
+        if (titleElement) titleElement.textContent = subject;
+        if (messageElement) messageElement.textContent = message;
+        
+        // Update the date to current time
+        const dateElement = card.querySelector('.feedback-card-date');
+        if (dateElement) {
+          const now = new Date();
+          const options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true };
+          dateElement.textContent = now.toLocaleDateString('en-US', options);
+        }
+        
+        // Add a highlight effect to show the card was updated
+        card.style.transition = 'background-color 0.5s';
+        card.style.backgroundColor = '#f0f9ff';
+        setTimeout(() => {
+          card.style.backgroundColor = '';
+        }, 1500);
+        
+        break;
+      }
     }
   }
 
   // Expose public functions
-  window.showTab = showTab;
   window.previewFile = previewFile;
   window.downloadFile = downloadFile;
   window.downloadCurrentFile = downloadCurrentFile;
@@ -456,6 +580,6 @@
   window.closeStatusModal = closeStatusModal;
   window.openFeedbackModal = openFeedbackModal;
   window.closeFeedbackModal = closeFeedbackModal;
-  window.openFeedbackDetail = openFeedbackDetail;
-  window.closeFeedbackDetailModal = closeFeedbackDetailModal;
+  window.editFeedback = editFeedback;
+  window.closeEditFeedbackModal = closeEditFeedbackModal;
 })();

@@ -21,6 +21,11 @@ window.DOMUtils = window.DOMUtils || (function() {
         text: 'Select File',
         icon: '', // Removed icon
         className: 'btn-outline-secondary'
+      },
+      REPLACE: {
+        text: 'Replace File',
+        icon: '', // Removed icon
+        className: 'btn-outline-secondary'
       }
     },
     DISABLED: {
@@ -36,6 +41,11 @@ window.DOMUtils = window.DOMUtils || (function() {
       },
       SELECT: {
         text: 'Select File',
+        icon: '', // Removed icon
+        className: 'btn-outline-secondary'
+      },
+      REPLACE: {
+        text: 'Replace File',
         icon: '', // Removed icon
         className: 'btn-outline-secondary'
       }

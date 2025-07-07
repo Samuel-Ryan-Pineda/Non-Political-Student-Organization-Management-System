@@ -396,8 +396,7 @@
       <h3 class="fw-semibold fs-6 mb-3">FEEDBACK</h3>
       
       <div class="feedback-history-tabs">
-        <div class="feedback-tab active" id="received-tab-btn" onclick="showTab('received')">Received Feedback <span class="feedback-count">1</span></div>
-        <div class="feedback-tab" id="replied-tab-btn" onclick="showTab('replied')">Replied Feedback <span class="feedback-count">1</span></div>
+        <div class="feedback-tab active" id="received-tab-btn">Received Feedback <span class="feedback-count">1</span></div>
       </div>
       
       <div class="feedback-tab-content active" id="received-tab">
@@ -407,33 +406,14 @@
             <div class="feedback-card-title">Missing Information in Member List</div>
             <div class="feedback-card-date">July 10, 2025, 3:45 PM</div>
           </div>
+          <div class="feedback-card-file mb-2">
+            <strong>File:</strong> listofmembers.pdf
+          </div>
           <div class="feedback-card-body">
             <p>The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.</p>
           </div>
-          <div class="feedback-card-file">
-            <strong>File:</strong> listofmembers.pdf
-          </div>
           <div class="d-flex justify-content-end mt-2">
             <button class="btn btn-primary btn-sm" type="button" onclick="openReplyModal('{{ feedback_date }}')">Reply</button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="feedback-tab-content" id="replied-tab">
-        <!-- Replied Feedback Item 1 -->
-        <div class="feedback-card replied">
-          <div class="feedback-card-header">
-            <div class="feedback-card-title">Response to Member List Feedback</div>
-            <div class="feedback-card-date">July 11, 2025, 9:30 AM</div>
-          </div>
-          <div class="feedback-card-body">
-            <p>We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.</p>
-          </div>
-          <div class="feedback-card-file">
-            <strong>File:</strong> listofmembers.pdf
-          </div>
-          <div class="d-flex justify-content-end mt-2">
-            <button class="btn btn-primary btn-sm" type="button" onclick="openFeedbackDetail('replied', 1)">View Details</button>
           </div>
         </div>
       </div>
@@ -484,25 +464,7 @@
 </div>
 
 <script>
-function showTab(tabId) {
-  // Hide all tab contents
-  const tabContents = document.querySelectorAll('.feedback-tab-content');
-  tabContents.forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // Remove active class from all tab buttons
-  const tabButtons = document.querySelectorAll('.feedback-tab');
-  tabButtons.forEach(button => {
-    button.classList.remove('active');
-  });
-  
-  // Show the selected tab content
-  document.getElementById(tabId + '-tab').classList.add('active');
-  
-  // Add active class to the selected tab button
-  document.getElementById(tabId + '-tab-btn').classList.add('active');
-}
+// No need for showTab function since we only have one tab now
 
 function openReplyModal(feedbackDate) {
   const modal = document.getElementById('replyModal');
@@ -518,10 +480,7 @@ function closeReplyModal() {
   document.body.style.overflow = '';
 }
 
-function openFeedbackDetail(tabType, id) {
-  alert('Opening details for ' + tabType + ' feedback #' + id);
-  // Implement detailed view functionality here
-}
+// No longer needed since we removed the replied tab
 
 document.getElementById('reply-form').addEventListener('submit', function(event) {
   event.preventDefault();

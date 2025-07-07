@@ -58,17 +58,12 @@
             </td>
             <td>
               <div class="action-buttons d-flex justify-content-center gap-2">
-                <button type="button" class="btn admin-preview-btn btn-sm" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')"><i class="fas fa-eye"></i> Preview</button>
+                <button type="button" class="btn admin-preview-btn btn-sm" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')">
+                  <i class="fas fa-eye"></i> Preview
+                </button>
                 
-                <button type="button" class="btn btn-update btn-sm" onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}', '{{ file.file_name }}', '{{ file.submission_date.strftime('%B %d, %Y, %I:%M %p') if file.submission_date else 'Not available' }}')">Update Status</button>
-                <button type="button" class="btn btn-feedback btn-sm position-relative" 
-                   onclick="openFeedbackModal('{{ file.file_name }}', '{% if file.form_code %}{{ file.form_code }} - {% endif %}{{ file.form_type }}', '{{ file.status }}')">
-                  Add Feedback
-                  {% if file.feedback_count and file.feedback_count > 0 %}
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {{ file.feedback_count }}
-                  </span>
-                  {% endif %}
+                <button type="button" class="btn btn-update btn-sm" onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}', '{{ file.file_name }}', '{{ file.submission_date.strftime('%B %d, %Y, %I:%M %p') if file.submission_date else 'Not available' }}')">
+                  Update Status
                 </button>
               </div>
             </td>
@@ -90,66 +85,40 @@
 
   <!-- Feedback History Section -->
   <section class="feedback-history-section" aria-label="Feedback History">
+    <h3 class="fw-semibold fs-6 mb-3" style="text-align: left;">FEEDBACK</h3>
     <div class="feedback-history-tabs">
-      <div class="feedback-tab active" onclick="showTab('sent')">Sent Feedback <span class="feedback-count">2</span></div>
-      <div class="feedback-tab" onclick="showTab('received')">Received Feedback <span class="feedback-count">1</span></div>
+      <div class="feedback-tab active">Sent Feedback <span class="feedback-count">{{ sent_feedbacks|length }}</span></div>
     </div>
     
-    <!-- Sent Feedback Tab -->
-    <div class="feedback-tab-content active" id="sent-tab">
-      <!-- Feedback Item 1 -->
-      <div class="feedback-card sent">
-        <div class="feedback-card-header">
-          <div class="feedback-card-title">Missing Information in Member List</div>
-          <div class="feedback-card-date">July 10, 2025, 3:45 PM</div>
+    <!-- Feedback Content -->
+    <div class="feedback-tab-content active">
+      {% if sent_feedbacks %}
+        {% for feedback in sent_feedbacks %}
+        <div class="feedback-card sent">
+          <div class="feedback-card-header">
+            <div class="feedback-card-title">{{ feedback.subject }}</div>
+            <div class="feedback-card-date">{{ feedback.date_sent.strftime('%B %d, %Y, %I:%M %p') if feedback.date_sent else 'Not available' }}</div>
+          </div>
+          <div class="feedback-card-file mb-2">
+            <strong>File:</strong> {{ feedback.application_file.file_name if feedback.application_file else 'Unknown' }}
+          </div>
+          <div class="feedback-card-body">
+            <p>{{ feedback.message }}</p>
+          </div>
+          <div class="d-flex justify-content-end mt-2">
+            <button class="btn btn-view-feedback" onclick="editFeedback({{ feedback.feedback_id }})">Edit Feedback</button>
+          </div>
         </div>
-        <div class="feedback-card-body">
-          <p>The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.</p>
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-4">
+          <div class="text-muted">
+            <i class="fas fa-comment-slash fa-2x mb-2 text-secondary opacity-50"></i>
+            <h6 class="text-secondary mb-1">No Feedback Sent</h6>
+            <small class="text-muted">No feedback has been sent for this application yet.</small>
+          </div>
         </div>
-        <div class="feedback-card-file">
-          <strong>File:</strong> listofmembers.pdf
-        </div>
-        <div class="d-flex justify-content-end mt-2">
-          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('sent', 1)">View Details</button>
-        </div>
-      </div>
-      
-      <!-- Feedback Item 2 -->
-      <div class="feedback-card sent">
-        <div class="feedback-card-header">
-          <div class="feedback-card-title">Mentor Information Required</div>
-          <div class="feedback-card-date">July 10, 2025, 4:00 PM</div>
-        </div>
-        <div class="feedback-card-body">
-          <p>Please include faculty mentor information in the member list document as required by the guidelines. This should include their department, contact information, and years of experience.</p>
-        </div>
-        <div class="feedback-card-file">
-          <strong>File:</strong> listofmembers.pdf
-        </div>
-        <div class="d-flex justify-content-end mt-2">
-          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('sent', 2)">View Details</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Received Feedback Tab -->
-    <div class="feedback-tab-content" id="received-tab">
-      <!-- Received Feedback Item 1 -->
-      <div class="feedback-card received">
-        <div class="feedback-card-header">
-          <div class="feedback-card-title">Response to Member List Feedback</div>
-          <div class="feedback-card-date">July 11, 2025, 9:30 AM</div>
-        </div>
-        <div class="feedback-card-body">
-          <p>We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.</p>
-        </div>
-        <div class="feedback-card-file">
-          <strong>File:</strong> listofmembers.pdf
-        </div>
-        <div class="d-flex justify-content-end mt-2">
-          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('received', 1)">View Details</button>
-        </div>
-      </div>
+      {% endif %}
     </div>
   </section>
 
@@ -198,42 +167,34 @@
     </div>
   </div>
 
-  <!-- Feedback Detail Modal -->
-  <div id="feedbackDetailModal" class="global-modal feedback-detail-modal" aria-labelledby="feedbackDetailModalTitle" aria-modal="true" role="dialog">
+  <!-- Edit Feedback Modal -->
+  <div id="editFeedbackModal" class="global-modal" aria-labelledby="editFeedbackModalTitle" aria-modal="true" role="dialog">
     <div class="modal-container">
-      <button type="button" class="btn-back" onclick="closeFeedbackDetailModal()" aria-label="Close">
+      <button type="button" class="btn-back" onclick="closeEditFeedbackModal()" aria-label="Close">
         <i class="fas fa-arrow-left"></i> Back
       </button>
 
       <div class="modal-section">
-        <div class="feedback-detail-header">
-          <h2 class="form-title mb-0" id="feedback-detail-title">Feedback Detail</h2>
-          <span class="feedback-badge" id="feedback-detail-badge">Sent</span>
+        <h2 class="form-title">Edit Feedback</h2>
+        <div class="form-info mb-3" style="font-size: 0.800rem">
+          <p><strong>File:</strong> <span id="edit-feedback-file-name"></span></p>
         </div>
-        
-        <div class="feedback-metadata">
-          <p><strong>Date:</strong> <span id="feedback-detail-date"></span></p>
-          <p><strong>File:</strong> <span id="feedback-detail-file"></span></p>
-          <p><strong>Form Type:</strong> <span id="feedback-detail-form-type"></span></p>
-        </div>
-        
-        <div class="feedback-content">
-          <h3 class="fs-6 fw-semibold mb-2" id="feedback-detail-subject"></h3>
-          <p id="feedback-detail-message"></p>
-        </div>
-        
-        <div class="feedback-reply-section" id="feedback-reply-section">
-          <h3 class="fs-6 fw-semibold mb-3">Reply</h3>
-          <div class="feedback-content">
-            <h3 class="fs-6 fw-semibold mb-2" id="feedback-reply-subject"></h3>
-            <p id="feedback-reply-message"></p>
-            <div class="text-end text-muted mt-2" id="feedback-reply-date"></div>
+        <hr class="mb-3">
+        <form id="edit-feedback-form">
+          <input type="hidden" id="edit-feedback-id" name="feedback_id">
+          <div class="mb-3">
+            <label for="edit-feedback-subject" class="form-label" style="font-size: 0.800rem; font-weight: 600;">Subject</label>
+            <input type="text" class="form-control" id="edit-feedback-subject" name="subject" required>
           </div>
-        </div>
-        
-        <div class="d-flex justify-content-end mt-3">
-          <button type="button" class="btn btn-feedback" id="btn-reply-feedback">Reply to Feedback</button>
-        </div>
+          <div class="mb-4">
+            <label for="edit-feedback-message" class="form-label" style="font-size: 0.800rem; font-weight: 600;">Message Content</label>
+            <textarea class="form-control" id="edit-feedback-message" name="message" rows="6" required></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" onclick="closeEditFeedbackModal()">Cancel</button>
+            <button type="submit" class="btn-send">Update Feedback</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -278,6 +239,7 @@
           <p><strong>File:</strong> <span id="status-file-name"></span></p>
           <p><strong>Submission Date:</strong> <span id="status-submission-date"></span></p>
         </div>
+        <hr class="mb-3">
         <form id="status-update-form">
           <input type="hidden" id="file_id" name="file_id">
           <div class="mb-4">
@@ -287,6 +249,10 @@
               <option value="Needs Revision">Needs Revision</option>
               <option value="Rejected">Rejected</option>
             </select>
+          </div>
+          <div class="mb-4" id="feedback-field" style="display: none;">
+            <label for="status-feedback" class="form-label">Feedback/Comments</label>
+            <textarea class="form-control" id="status-feedback" name="feedback" rows="4" placeholder="Please provide feedback explaining why this file needs revision or is being rejected"></textarea>
           </div>
           <div class="d-flex justify-content-end">
             <button type="submit" class="btn-send">Update Status</button>

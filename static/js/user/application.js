@@ -330,11 +330,84 @@
           
           // Update progress line and status counts
           updateProgressAndStatusCounts();
+          
+          // Load feedback for the application
+          loadApplicationFeedback();
         }
       })
       .catch(error => {
         console.error('Error loading application files:', error);
       });
+  }
+  
+  // Function to load application feedback
+  function loadApplicationFeedback() {
+    // Fetch feedback from the server
+    fetch('/organization/get-application-feedback')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update the received feedback tab with the feedback data
+          updateReceivedFeedbackTab(data.feedbacks);
+          console.log(`Loaded ${data.feedbacks.length} feedback items`);
+        } else {
+          console.error('Error loading application feedback:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error loading application feedback:', error);
+      });
+  }
+  
+  // Function to update the received feedback tab
+  function updateReceivedFeedbackTab(feedbacks) {
+    const receivedTabContent = document.getElementById('received-tab');
+    const receivedFeedbackCount = document.getElementById('received-feedback-count');
+    
+    if (!receivedTabContent) {
+      console.error('Received tab content element not found');
+      return;
+    }
+    
+    // Update the feedback count
+    if (receivedFeedbackCount) {
+      receivedFeedbackCount.textContent = feedbacks.length;
+    }
+    
+    // Clear existing content
+    receivedTabContent.innerHTML = '';
+    
+    if (feedbacks.length === 0) {
+      // No feedback available
+      receivedTabContent.innerHTML = `
+        <div class="text-center p-4">
+          <p class="text-muted">No feedback available.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Create feedback cards
+    feedbacks.forEach(feedback => {
+      const feedbackCard = document.createElement('div');
+      feedbackCard.className = 'feedback-card received';
+      feedbackCard.innerHTML = `
+        <div class="feedback-card-header">
+          <div class="feedback-card-title">${feedback.subject}</div>
+          <div class="feedback-card-date">${feedback.date_sent}</div>
+        </div>
+        <div class="feedback-card-body">
+          <p>${feedback.message}</p>
+        </div>
+        <div class="feedback-card-file mb-2">
+          <strong>File:</strong> ${feedback.file_name}
+        </div>
+        <div class="d-flex justify-content-end mt-2">
+          <button class="btn btn-primary btn-sm" type="button" onclick="openReplyModal(${feedback.id})">Reply</button>
+        </div>
+      `;
+      receivedTabContent.appendChild(feedbackCard);
+    });
   }
 
   // Helper function to reset all document cards to their initial state
@@ -491,7 +564,12 @@
       }
       if (selectBtn) {
         selectBtn.style.display = '';
-        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+        // Use 'Replace File' button text for files that need revision or are rejected
+        if (status === 'Needs Revision' || status === 'Rejected') {
+          DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.REPLACE);
+        } else {
+          DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+        }
       }
       if (previewBtn) {
         previewBtn.style.margin = '';
@@ -733,28 +811,6 @@
   window.closeUpdateOrgModal = function() {
     DOMUtils.toggleModal('updateOrgModal', false);
   };
-  window.openFeedbackDetail = function() {
-    // Implementation would depend on the feedback detail modal structure
-  };
-  window.showTab = function(tabId) {
-    // Hide all tab content
-    document.querySelectorAll('.feedback-tab-content').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Remove active class from all tabs
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Show the selected tab content
-    document.getElementById(tabId + '-tab').classList.add('active');
-    
-    // Add active class to the clicked tab
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      if (tab.textContent.toLowerCase().includes(tabId)) {
-        tab.classList.add('active');
-      }
-    });
-  };
+  // openFeedbackDetail function removed as it's no longer needed
+  // showTab function removed as we now only have one tab
 })();

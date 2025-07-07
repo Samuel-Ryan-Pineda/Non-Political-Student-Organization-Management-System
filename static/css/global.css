@@ -20,8 +20,8 @@
         --feedback-bg: #f7f7f7;
         
         /* Color Scheme - Forms */
-        --form-bg: #d1d7d8;
-        --form-text: #5f6f70;
+        --form-bg: #f0f3f4;
+        --form-text: #3a4546;
         
         /* Color Scheme - Cards & Common */
         --white: #ffffff;
@@ -198,9 +198,115 @@
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
+}
+
+/* Feedback Styling - Global */
+.feedback-history-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 0.5rem;
+}
+
+.feedback-history-tabs {
+  display: flex;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 1rem;
+}
+
+.feedback-tab {
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.feedback-tab.active {
+  color: var(--btn-preview-color);
+  border-bottom: 3px solid var(--btn-preview-color);
+}
+
+.feedback-tab-content {
+  display: none;
+}
+
+.feedback-tab-content.active {
+  display: block;
+}
+
+.feedback-card {
+  border: 1px solid #e9ecef;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f8f9fa;
+}
+
+.feedback-card-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
-  flex: 0 0 auto;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.feedback-card-title {
+  font-weight: 600;
+  font-size: 0.800rem;
+  color: var(--text-color);
+}
+
+.feedback-card-date {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.feedback-card-body {
+  font-size: 0.800rem;
+  color: var(--text-color);
+  text-align: left;
+}
+
+.feedback-card-file {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
+.feedback-card.sent {
+  border-left: 4px solid var(--btn-feedback-bg);
+}
+
+.feedback-card.received {
+  border-left: 4px solid var(--btn-preview-color);
+}
+
+.btn-view-feedback {
+  color: var(--btn-preview-color);
+  border: 1px solid var(--btn-preview-color);
+  background-color: transparent;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.btn-view-feedback:hover {
+  background-color: #f9f9f9;
+}
+
+.feedback-count {
+  background-color: #e9ecef;
+  border-radius: 50%;
+  color: var(--text-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
 }
 
 .preview-header h3 {
@@ -415,4 +521,31 @@
     height: calc(100vh - 15px);
     margin: 7.5px;
   }
+}
+
+/* Status dropdown font size and label fix */
+.form-control.form-select#status {
+  font-size: 0.800rem !important; /* Increased from default size */
+}
+
+/* Status update modal label styling */
+#statusUpdateModal .form-label {
+  font-size: 0.800rem;
+  font-weight: 600;
+  color: var(--form-text);
+}
+
+/* Status dropdown and feedback field styling */
+.form-control.form-select#status,
+#status-feedback {
+  background-color: var(--form-bg);
+  color: var(--form-text);
+  border: 1px solid #e2e6e9;
+  font-size: 0.800rem !important;
+}
+
+.form-control.form-select#status:focus,
+#status-feedback:focus {
+  box-shadow: 0 0 0 0.25rem rgba(19, 69, 79, 0.15);
+  border-color: #a8c5cc;
 }

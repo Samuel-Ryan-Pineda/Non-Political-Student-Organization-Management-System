@@ -567,3 +567,43 @@ def get_logo(logo_id):
         as_attachment=False,
         download_name=f'logo_{logo_id}.jpg'
     )
+
+@user_organization_bp.route('/get-application-feedback')
+@login_required
+def get_application_feedback():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to access feedback"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
+    from app.models import Feedback
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get application associated with the organization
+    application = get_application_by_organization_id(organization.organization_id)
+    if not application:
+        return jsonify({'success': False, 'message': "No application found for this organization"})
+    
+    # Get all files for this application
+    application_files = ApplicationFile.query.filter_by(application_id=application.application_id).all()
+    
+    # Get all feedback for files in this application
+    file_ids = [file.app_file_id for file in application_files]
+    feedbacks = Feedback.query.filter(Feedback.app_file_id.in_(file_ids)).order_by(Feedback.date_sent.desc()).all() if file_ids else []
+    
+    # Format the response
+    feedback_list = [{
+        'id': f.feedback_id,
+        'file_id': f.app_file_id,
+        'file_name': f.application_file.file_name if f.application_file else 'Unknown',
+        'subject': f.subject,
+        'message': f.message,
+        'date_sent': f.date_sent.strftime('%Y-%m-%d %H:%M:%S') if f.date_sent else None
+    } for f in feedbacks]
+    
+    return jsonify({'success': True, 'feedbacks': feedback_list})

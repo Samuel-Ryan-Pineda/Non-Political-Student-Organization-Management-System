@@ -119,12 +119,20 @@ def neworganizationfiles():
     application_files = ApplicationFile.query.filter_by(application_id=application_id).all()
     application_files.sort(key=lambda x: get_file_order(x.file_name))
     
+    # Get feedback data for this application
+    from app.models import Feedback
+    
+    # Get all feedback for files in this application
+    file_ids = [file.app_file_id for file in application_files]
+    sent_feedbacks = Feedback.query.filter(Feedback.app_file_id.in_(file_ids)).order_by(Feedback.date_sent.desc()).all() if file_ids else []
+    
     return render_template('admin/neworganizationfiles.html', 
                            user=current_user, 
                            active_page='neworganization',
                            application=application,
                            organization=organization,
-                           application_files=application_files)
+                           application_files=application_files,
+                           sent_feedbacks=sent_feedbacks)
 
 @admin_new_organization_bp.route('/update-file-status', methods=['POST'])
 @login_required
@@ -144,14 +152,20 @@ def update_file_status():
         data = request.json
         file_id = data.get('file_id')
         new_status = data.get('status')
+        feedback = data.get('feedback')
     else:
         file_id = request.form.get('file_id')
         new_status = request.form.get('status')
+        feedback = request.form.get('feedback')
     
-    print(f"Extracted file_id: {file_id}, new_status: {new_status}")
+    print(f"Extracted file_id: {file_id}, new_status: {new_status}, feedback: {feedback}")
     
     if not file_id or not new_status:
         return jsonify({'success': False, 'message': 'File ID and status are required'})
+    
+    # For 'Needs Revision' or 'Rejected' status, feedback should be required
+    if (new_status == 'Needs Revision' or new_status == 'Rejected') and not feedback:
+        return jsonify({'success': False, 'message': 'Feedback is required for Needs Revision or Rejected status'})
     
     try:
         # Get the application file
@@ -161,6 +175,19 @@ def update_file_status():
         
         # Update the status
         app_file.status = new_status
+        
+        # Store feedback if provided
+        if feedback:
+            # Import the feedback model and create a new feedback entry
+            from app.models import Feedback
+            new_feedback = Feedback(
+                app_file_id=file_id,
+                subject=f"Status Update: {new_status}",
+                message=feedback,
+                date_sent=datetime.now()
+            )
+            db.session.add(new_feedback)
+        
         db.session.commit()
         
         # Check and update application status
@@ -177,3 +204,69 @@ def update_file_status():
             'success': False,
             'message': f'Error updating file status: {str(e)}'
         })
+
+@admin_new_organization_bp.route('/get-feedback-detail/<int:feedback_id>')
+@login_required
+def get_feedback_detail(feedback_id):
+    # Ensure user is OSOAD
+    if current_user.role_id != 1:
+        return jsonify({'error': "You don't have permission to access this data"}), 403
+    
+    try:
+        # Import the feedback model
+        from app.models import Feedback
+        
+        # Get the feedback record
+        feedback = Feedback.query.get(feedback_id)
+        if not feedback:
+            return jsonify({'error': 'Feedback not found'}), 404
+        
+        # Return feedback details
+        return jsonify({
+            'subject': feedback.subject,
+            'message': feedback.message,
+            'date': feedback.date_sent.strftime('%B %d, %Y, %I:%M %p') if feedback.date_sent else 'Not available',
+            'file_name': feedback.application_file.file_name if feedback.application_file else 'Unknown'
+        })
+    except Exception as e:
+        return jsonify({'error': f'Error fetching feedback details: {str(e)}'}), 500
+
+@admin_new_organization_bp.route('/update-feedback', methods=['POST'])
+@login_required
+def update_feedback():
+    """Update feedback content"""
+    try:
+        # Ensure user is OSOAD
+        if current_user.role_id != 1:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # Get form data
+        feedback_id = request.form.get('feedback_id')
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+        
+        # Validate input
+        if not feedback_id or not subject or not message:
+            return jsonify({'success': False, 'message': 'Missing required fields'})
+        
+        # Import the feedback model
+        from app.models import Feedback
+        
+        # Get feedback from database
+        feedback = Feedback.query.get(feedback_id)
+        if not feedback:
+            return jsonify({'success': False, 'message': 'Feedback not found'})
+        
+        # Update feedback
+        feedback.subject = subject
+        feedback.message = message
+        feedback.date_sent = datetime.now()
+        
+        # Save to database
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Feedback updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
