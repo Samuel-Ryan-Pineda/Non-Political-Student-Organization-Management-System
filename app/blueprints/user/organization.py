@@ -603,7 +603,55 @@ def get_application_feedback():
         'file_name': f.application_file.file_name if f.application_file else 'Unknown',
         'subject': f.subject,
         'message': f.message,
-        'date_sent': f.date_sent.strftime('%Y-%m-%d %H:%M:%S') if f.date_sent else None
+        'date_sent': f.date_sent.strftime('%Y-%m-%d %H:%M:%S') if f.date_sent else None,
+        'is_read': f.is_read
     } for f in feedbacks]
     
     return jsonify({'success': True, 'feedbacks': feedback_list})
+
+@user_organization_bp.route('/mark-feedback-read', methods=['POST'])
+@login_required
+def mark_feedback_read():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to update feedback"})
+    
+    # Get feedback ID from request
+    feedback_id = request.json.get('feedback_id')
+    if not feedback_id:
+        return jsonify({'success': False, 'message': "Feedback ID is required"})
+    
+    # Import the Feedback model
+    from app.models import Feedback
+    
+    # Find the feedback
+    feedback = Feedback.query.get(feedback_id)
+    if not feedback:
+        return jsonify({'success': False, 'message': "Feedback not found"})
+    
+    # Check if user has permission to access this feedback
+    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get application associated with the organization
+    application = get_application_by_organization_id(organization.organization_id)
+    if not application:
+        return jsonify({'success': False, 'message': "No application found for this organization"})
+    
+    # Check if the feedback belongs to a file in this application
+    if not feedback.application_file or feedback.application_file.application_id != application.application_id:
+        return jsonify({'success': False, 'message': "You don't have permission to access this feedback"})
+    
+    # Mark feedback as read
+    feedback.is_read = True
+    
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': "Feedback marked as read"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"Error updating feedback: {str(e)}"})

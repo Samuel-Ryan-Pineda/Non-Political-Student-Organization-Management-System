@@ -173,6 +173,7 @@ CREATE TABLE feedback (
     subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     date_sent DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (app_file_id) REFERENCES application_files(app_file_id)
 );
 

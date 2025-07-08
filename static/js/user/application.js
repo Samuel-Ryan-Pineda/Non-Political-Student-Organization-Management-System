@@ -37,7 +37,16 @@
   function initializeFileUploads() {
     setupDropzoneEvents();
     setupButtonEvents();
+    setupFeedbackEvents();
   }
+
+  // Feedback events for cards have been removed
+  function setupFeedbackEvents() {
+    // This function is kept for compatibility but no longer sets up feedback events for cards
+    // as the feedback dropdown functionality has been removed
+  }
+
+  // Feedback history functionality has been removed
 
   // Function to set up dropzone events
   function setupDropzoneEvents() {
@@ -318,14 +327,33 @@
     // Reset all cards to "No File" state first
     resetAllCards();
     
-    // Then load existing files
-    fetch('/organization/get-application-files')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.files) {
-          // Update each file card with the file data
-          data.files.forEach(file => {
-            updateFileCard(file.name, file.id, file.status, file.submission_date);
+    // Load both files and feedback data
+    Promise.all([
+      fetch('/organization/get-application-files').then(res => res.json()),
+      fetch('/organization/get-application-feedback').then(res => res.json())
+    ])
+      .then(([filesData, feedbackData]) => {
+        if (filesData.success && filesData.files) {
+          // Create a map of latest feedback by file ID
+          const feedbackMap = new Map();
+          if (feedbackData.success) {
+            // Sort feedbacks by date (newest first) for each file
+            const sortedFeedbacks = [...feedbackData.feedbacks].sort((a, b) => {
+              return new Date(b.date_sent) - new Date(a.date_sent);
+            });
+            
+            // Map the latest feedback to each file ID
+            sortedFeedbacks.forEach(feedback => {
+              if (!feedbackMap.has(feedback.file_id)) {
+                feedbackMap.set(feedback.file_id, feedback);
+              }
+            });
+          }
+
+          // Update each file card with file data and feedback
+          filesData.files.forEach(file => {
+            const feedback = feedbackMap.get(file.id);
+            updateFileCard(file.name, file.id, file.status, file.submission_date, feedback);
           });
           
           // Update progress line and status counts
@@ -359,7 +387,10 @@
       });
   }
   
-  // Function to update the received feedback tab
+  /**
+   * Updates the received feedback tab with the provided feedback data
+   * @param {Array} feedbacks - Array of feedback objects containing subject, message, date_sent, file_name, and is_read
+   */
   function updateReceivedFeedbackTab(feedbacks) {
     const receivedTabContent = document.getElementById('received-tab');
     const receivedFeedbackCount = document.getElementById('received-feedback-count');
@@ -390,27 +421,141 @@
     // Create feedback cards
     feedbacks.forEach(feedback => {
       const feedbackCard = document.createElement('div');
-      feedbackCard.className = 'feedback-card received';
+      // Add 'unread' class if feedback is not read
+      feedbackCard.className = `feedback-card received ${feedback.is_read ? '' : 'unread'}`;
+      feedbackCard.dataset.feedbackId = feedback.id;
+      
       feedbackCard.innerHTML = `
         <div class="feedback-card-header">
           <div class="feedback-card-title">${feedback.subject}</div>
-          <div class="feedback-card-date">${feedback.date_sent}</div>
+          <div class="feedback-card-date">${formatDateTime(feedback.date_sent)}</div>
         </div>
         <div class="feedback-card-body">
           <p>${feedback.message}</p>
         </div>
-        <div class="feedback-card-file mb-2">
+        <div class="feedback-card-file">
           <strong>File:</strong> ${feedback.file_name}
         </div>
-        <div class="d-flex justify-content-end mt-2">
-          <button class="btn btn-primary btn-sm" type="button" onclick="openReplyModal(${feedback.id})">Reply</button>
-        </div>
       `;
+      
+      // Add click event to mark feedback as read when clicked
+      if (!feedback.is_read) {
+        feedbackCard.addEventListener('click', function() {
+          markFeedbackAsRead(feedback.id, feedbackCard);
+        });
+      }
+      
       receivedTabContent.appendChild(feedbackCard);
     });
   }
+  
+  /**
+   * Marks a feedback as read and updates the UI
+   * @param {number} feedbackId - The ID of the feedback to mark as read
+   * @param {HTMLElement} feedbackCard - The feedback card element to update (can be null)
+   * @param {HTMLElement} feedbackToggle - The feedback toggle button to update (can be null)
+   */
+  function markFeedbackAsRead(feedbackId, feedbackCard, feedbackToggle) {
+    // Call the API to mark feedback as read
+    fetch('/organization/mark-feedback-read', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ feedback_id: feedbackId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update the feedback card if provided
+        if (feedbackCard) {
+          // Update the UI to show feedback as read
+          feedbackCard.classList.remove('unread');
+          // Remove the click event listener since it's now read
+          feedbackCard.replaceWith(feedbackCard.cloneNode(true));
+        }
+        
+        // Update the feedback toggle if provided
+        if (feedbackToggle) {
+          feedbackToggle.classList.remove('unread');
+        }
+        
+        // Also update any other elements with the same feedback ID
+        if (feedbackCard && !feedbackToggle) {
+          // Find and update any toggle buttons with the same feedback ID
+          const relatedToggles = document.querySelectorAll(`.inline-feedback-toggle[data-feedback-id="${feedbackId}"]`);
+          relatedToggles.forEach(toggle => toggle.classList.remove('unread'));
+        }
+        
+        if (feedbackToggle && !feedbackCard) {
+          // Find and update any feedback cards with the same feedback ID
+          const relatedCards = document.querySelectorAll(`.feedback-card[data-feedback-id="${feedbackId}"]`);
+          relatedCards.forEach(card => {
+            card.classList.remove('unread');
+            card.replaceWith(card.cloneNode(true));
+          });
+        }
+      } else {
+        console.error('Error marking feedback as read:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error marking feedback as read:', error);
+    });
+  }
 
-  // Helper function to reset all document cards to their initial state
+  /**
+ * Formats a date string or Date object into Month day, year format with AM/PM time
+ * @param {string|Date} dateInput - Date string or Date object to format
+ * @return {string} Formatted date and time string in "Month day, year, hour:minutes AM/PM" format
+ */
+  function formatDateTime(dateInput) {
+    if (!dateInput) {
+      return 'N/A';
+    }
+    
+    try {
+      const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date input:', dateInput);
+        return 'Invalid date';
+      }
+      
+      // Array of month names
+      const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      // Format date as Month day, year
+      const year = date.getFullYear();
+      const month = months[date.getMonth()];
+      const day = date.getDate();
+      const dateStr = `${month} ${day}, ${year}`;
+      
+      // Format time in 12-hour format with AM/PM (without seconds)
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      
+      // Convert hours to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      
+      const timeStr = `${hours}:${minutes} ${ampm}`;
+      
+      return `${dateStr}, ${timeStr}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Error formatting date';
+    }
+  }
+  
+  /**
+   * Resets all document cards to their initial state
+   */
   function resetAllCards() {
     DOMUtils.getAll('.document-card').forEach(card => {
       // Reset status badge
@@ -462,6 +607,25 @@
           <div class="small text-muted">PDF files only</div>
         `;
       }
+      
+      // Reset inline feedback elements
+      const feedbackToggle = card.querySelector('.inline-feedback-toggle');
+      const feedbackContainer = card.querySelector('.inline-feedback-container');
+      
+      if (feedbackToggle) {
+        feedbackToggle.style.display = 'none';
+      }
+      
+      if (feedbackContainer) {
+        feedbackContainer.classList.remove('active');
+        const feedbackTitle = feedbackContainer.querySelector('.inline-feedback-title');
+        const feedbackDate = feedbackContainer.querySelector('.inline-feedback-date');
+        const feedbackBody = feedbackContainer.querySelector('.inline-feedback-body');
+        
+        if (feedbackTitle) feedbackTitle.textContent = '';
+        if (feedbackDate) feedbackDate.textContent = '';
+        if (feedbackBody) feedbackBody.textContent = '';
+      }
     });
   }
 
@@ -503,8 +667,15 @@
       });
   }
 
-  // Function to update file card
-  function updateFileCard(fileType, fileId, status, submissionDate) {
+  /**
+   * Updates a file card with the provided data and feedback
+   * @param {string} fileType - The type of file (document title)
+   * @param {number} fileId - The ID of the file
+   * @param {string} status - The status of the file (Verified, Pending, Needs Revision, Rejected)
+   * @param {string} submissionDate - The date the file was submitted
+   * @param {Object} feedback - Optional feedback object containing subject, message, and date_sent
+   */
+  function updateFileCard(fileType, fileId, status, submissionDate, feedback = null) {
     // Find the card for this file type
     const targetCard = Array.from(DOMUtils.getAll('.document-card')).find(card => {
       const cardTitle = card.querySelector('.fw-semibold').textContent.trim();
@@ -531,6 +702,71 @@
     statusBadge.dataset.fileId = fileId;
     statusBadge.dataset.status = status; // Store status for counting
     statusBadge.dataset.submissionDate = submissionDate; // Store submission date
+
+    // Handle inline feedback
+    const feedbackToggle = targetCard.querySelector('.inline-feedback-toggle');
+    const feedbackContainer = targetCard.querySelector('.inline-feedback-container');
+    const feedbackTitle = feedbackContainer.querySelector('.inline-feedback-title');
+    const feedbackDate = feedbackContainer.querySelector('.inline-feedback-date');
+    const feedbackBody = feedbackContainer.querySelector('.inline-feedback-body');
+    
+    // Reset feedback elements
+    feedbackToggle.style.display = 'none';
+    feedbackContainer.classList.remove('active');
+    
+    // Show feedback toggle only for files with feedback and status 'Needs Revision' or 'Rejected'
+    if (feedback && 
+        (status === 'Needs Revision' || 
+         status === 'Rejected')) {
+      // Generate unique ID for this feedback container
+      const feedbackId = `feedback-container-${fileId}`;
+      feedbackContainer.id = feedbackId;
+      feedbackToggle.setAttribute('aria-controls', feedbackId);
+      feedbackToggle.dataset.feedbackId = feedback.id;
+      
+      // Update feedback content
+      feedbackTitle.textContent = feedback.subject || 'Feedback';
+      feedbackDate.textContent = formatDateTime(feedback.date_sent);
+      feedbackBody.textContent = feedback.message || 'No message provided.';
+      
+      // Show feedback toggle
+      feedbackToggle.style.display = 'flex';
+      
+      // Apply unread styling if feedback is not read
+      if (!feedback.is_read) {
+        feedbackToggle.classList.add('unread');
+      } else {
+        feedbackToggle.classList.remove('unread');
+      }
+      
+      // Setup toggle click event
+      feedbackToggle.onclick = function() {
+        const isExpanded = feedbackContainer.classList.contains('active');
+        feedbackContainer.classList.toggle('active');
+        feedbackToggle.setAttribute('aria-expanded', !isExpanded);
+        
+        // Mark feedback as read when opened
+        if (!feedback.is_read && isExpanded === false) {
+          markFeedbackAsRead(feedback.id, null, feedbackToggle);
+          feedback.is_read = true; // Update local state
+        }
+      };
+      
+      // Add keyboard support for accessibility
+      feedbackToggle.onkeydown = function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.click();
+        }
+      };
+      
+      // Setup close button
+      const closeButton = feedbackContainer.querySelector('.inline-feedback-close button');
+      closeButton.onclick = function() {
+        feedbackContainer.classList.remove('active');
+        feedbackToggle.setAttribute('aria-expanded', 'false');
+      };
+    }
     
     // Set button states based on status
     if (status === 'Verified') {
@@ -597,7 +833,7 @@
       dropzone.innerHTML = `
         <i class="fas fa-file-alt mb-1"></i>
         <div>File Uploaded</div>
-        ${submissionDate ? `<div class="small text-muted">Submitted: ${submissionDate}</div>` : ''}
+        ${submissionDate ? `<div class="small text-muted">Submitted: ${formatDateTime(submissionDate)}</div>` : ''}
         ${status === 'Verified' ? 
           '<div class="small text-muted verified-message">File verified - cannot be changed</div>' : 
           '<div class="small text-muted">Click to replace</div>'}
@@ -713,36 +949,6 @@
 
   // Function to set up form submissions
   function setupFormSubmissions() {
-    // Reply form submission
-    const replyForm = document.getElementById('reply-form');
-    if (replyForm) {
-      replyForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Get form data
-        const subject = document.getElementById('reply-subject').value;
-        const message = document.getElementById('reply-message').value;
-        
-        // Validate form
-        if (!subject || !message) {
-          alert('Please fill in all required fields.');
-          return;
-        }
-        
-        // In a real application, you would send this data to the server
-        console.log('Reply submitted:', {
-          subject: subject,
-          message: message
-        });
-        
-        // Show success message
-        alert('Reply sent successfully!');
-        
-        // Reset form and close modal
-        this.reset();
-        DOMUtils.toggleModal('replyModal', false);
-      });
-    }
     
     // Update organization form submission
     const updateOrgForm = document.getElementById('updateOrgForm');
@@ -799,12 +1005,7 @@
   };
   window.deleteAllFiles = deleteAllFiles;
   window.loadApplicationFiles = loadApplicationFiles;
-  window.openReplyModal = function() {
-    DOMUtils.toggleModal('replyModal', true);
-  };
-  window.closeReplyModal = function() {
-    DOMUtils.toggleModal('replyModal', false);
-  };
+
   window.openUpdateOrgModal = function() {
     DOMUtils.toggleModal('updateOrgModal', true);
   };

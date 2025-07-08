@@ -197,6 +197,7 @@ class Feedback(db.Model):
     subject = db.Column(db.String(255), nullable=False)
     message = db.Column(db.Text, nullable=False)
     date_sent = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)  # Track whether feedback has been read
     
     # Relationship
     application_file = db.relationship('ApplicationFile', backref='feedback', lazy=True)
