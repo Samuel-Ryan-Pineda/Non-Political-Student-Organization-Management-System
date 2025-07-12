@@ -182,12 +182,18 @@ def get_application_file():
         file_data = io.BytesIO(app_file.file)
         
         # Attempt to send the file
-        return send_file(
+        response = send_file(
             file_data,
             mimetype=mimetype,
             as_attachment=force_download,  # True to download, False to preview in browser
             download_name=download_name
         )
+        
+        # Add Content-Disposition header to ensure proper preview
+        if not force_download:
+            response.headers['Content-Disposition'] = f'inline; filename="{download_name}"'
+        
+        return response
     except Exception as e:
         # Log the error for debugging
         import traceback

@@ -14,7 +14,8 @@ def organization_name_exists(org_name):
     Returns:
         bool: True if organization name exists, False otherwise
     """
-    return Organization.query.filter(Organization.organization_name.ilike(org_name)).first() is not None
+    # Use exists() instead of first() for better performance when we only need to check existence
+    return db.session.query(db.exists().where(Organization.organization_name.ilike(org_name))).scalar()
 
 
 def save_organization_application(org_name, org_type, logo_file, logo_description, user_id):
@@ -89,7 +90,8 @@ def get_organization_by_user_id(user_id):
     Returns:
         Organization: Organization object or None
     """
-    return Organization.query.filter_by(user_id=user_id).first()
+    # Use filter_by for exact matches and add options to optimize query
+    return Organization.query.filter_by(user_id=user_id).options(db.joinedload(Organization.logo)).first()
 
 
 def user_has_organization(user_id):
@@ -157,6 +159,67 @@ def get_organization_by_id(organization_id):
     """
     return Organization.query.get(organization_id)
 
+
+def get_adviser_by_organization_id(organization_id):
+    """
+    Get adviser information for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        
+    Returns:
+        dict: Dictionary containing adviser information or None
+    """
+    from app.models import Advisory, Adviser
+    
+    # Get the active advisory for the organization
+    advisory = Advisory.query.filter_by(
+        organization_id=organization_id,
+        status='active'
+    ).first()
+    
+    if not advisory:
+        return None
+    
+    # Get the adviser information
+    adviser = Adviser.query.get(advisory.adviser_id)
+    
+    if not adviser:
+        return None
+    
+    # Return adviser information
+    return {
+        'adviser_id': adviser.adviser_id,
+        'first_name': adviser.first_name,
+        'middle_name': adviser.middle_name,
+        'last_name': adviser.last_name,
+        'full_name': f"{adviser.first_name} {adviser.middle_name + ' ' if adviser.middle_name else ''}{adviser.last_name}"
+    }
+
+def get_social_media_by_organization_id(organization_id):
+    """
+    Get social media links for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        
+    Returns:
+        list: List of dictionaries containing social media information
+    """
+    from app.models import SocialMedia
+    
+    # Get all social media links for the organization
+    social_media = SocialMedia.query.filter_by(organization_id=organization_id).all()
+    
+    result = []
+    for sm in social_media:
+        result.append({
+            'social_media_id': sm.social_media_id,
+            'platform': sm.platform,
+            'link': sm.link
+        })
+    
+    return result
 
 def get_pending_applications():
     """

@@ -3,14 +3,14 @@
 {% block title %}Login{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}?v={{ cache_version }}">
 {% endblock %}
 
 {% block content %}
     <div class="rectangle">
         <div class="column">
             <div class="header-container">
-                <img src="{{ url_for('static', filename='images/NEUST_logo.png') }}" alt="NEUST Logo" class="neust-logo">
+                <img src="{{ url_for('static', filename='images/NEUST_logo.png') }}?v={{ cache_version }}" alt="NEUST Logo" class="neust-logo">
                 <div class="university-info">
                     <p>Republic of the Philippines</p>
                     <p><b>Nueva Ecija University of Science and Technology</b></p>
@@ -18,7 +18,7 @@
                 </div>
             </div>
             <div class="system-title-container">
-                <img src="{{ url_for('static', filename='images/OSOAD_logo.png') }}" alt="OSOAD Logo" class="logo">
+                <img src="{{ url_for('static', filename='images/OSOAD_logo.png') }}?v={{ cache_version }}" alt="OSOAD Logo" class="logo">
                 <p class="system-title">Non-Political Organization</p>
                 <p class="system-title">Management System</p>
             </div>
@@ -47,5 +47,5 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/login.js') }}?v={{ cache_version }}"></script>
 {% endblock %}

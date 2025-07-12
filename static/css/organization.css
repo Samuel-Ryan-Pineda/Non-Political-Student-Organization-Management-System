@@ -1,5 +1,5 @@
 
-  /* Search component styles */
+/* Search component styles */
   .search-wrapper {
     position: relative;
     width: 100%;
@@ -99,4 +99,23 @@
     .row-eq-height .card-custom {
       flex: 1;
     }
+  }
+
+  /* Section highlighting styles for organization modal */
+  .section-organization.section-highlighted,
+  .section-type.section-highlighted,
+  .section-tagline.section-highlighted,
+  .section-description.section-highlighted {
+    background-color: #F4F7F9 !important;
+    border: 2px solid #2196f3 !important;
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.3) !important;
+    transition: all 0.3s ease !important;
+    transform: scale(1.02) !important;
+  }
+
+  .section-organization,
+  .section-type,
+  .section-tagline,
+  .section-description {
+    transition: all 0.3s ease;
   }

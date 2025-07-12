@@ -26,6 +26,18 @@ A web-based system for managing non-political organizations, memberships, and ac
    ```
 
 4. Start the application:
+
+   For development (with Flask's built-in server):
+   ```bash
+   python run_dev.py
+   ```
+
+   For production (with Waitress server):
+   ```bash
+   python run_prod.py
+   ```
+
+   Or use the original script which selects server based on environment variable:
    ```bash
    python run.py
    ```
@@ -62,3 +74,4 @@ All required packages are listed in `requirements.txt` and will be automatically
 - Python-dotenv
 - PyMySQL
 - Cryptography
+- Waitress

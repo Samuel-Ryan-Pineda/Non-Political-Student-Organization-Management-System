@@ -86,10 +86,10 @@
     background-color: rgba(0, 0, 0, 0.5);
     display: none;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Align to the top */
     z-index: 1050;
     overflow-y: auto;
-    padding: 1.5rem;
+    padding: 20px 0; /* Add vertical padding */
   }
   
   .global-modal.show {
@@ -97,7 +97,7 @@
   }
   
   .modal-container {
-    max-width: 900px;
+    max-width: 600px;
     background: #fff;
     border-radius: 1rem;
     padding: 2rem 2.5rem;
@@ -106,9 +106,10 @@
     width: 100%;
     height: auto;
     min-height: 200px;
-    max-height: 90vh;
     overflow-y: auto;
     text-align: left;
+    margin-top: 1vh; /* Add some margin from the top */
+    margin-bottom: 1vh; /* Add margin at the bottom */
   }
   
   .btn-back {
@@ -198,6 +199,7 @@
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 /* Feedback Styling - Global */
@@ -490,6 +492,7 @@
 .file-preview-modal .modal-container {
   max-width: 90%;
   height: 90vh;
+  margin-bottom: 5vh; /* Add margin at the bottom */
 }
 
 .file-preview-container {

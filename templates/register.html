@@ -3,7 +3,7 @@
 {% block title %}Register{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}?v={{ cache_version }}">
 {% endblock %}
 
 {% block content %}
@@ -60,6 +60,6 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/register.js') }}"></script>
+<script src="{{ url_for('static', filename='js/register.js') }}?v={{ cache_version }}"></script>
 
 {% endblock %}

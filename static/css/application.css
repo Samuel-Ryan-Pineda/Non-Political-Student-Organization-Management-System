@@ -9,9 +9,9 @@
   display: none;
   z-index: 1050;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Changed from center to flex-start */
   overflow-y: auto;
-  padding: 20px;
+  padding: 20px 0; /* Changed from 20px to 20px 0 */
 }
 
 /* Unread feedback styles */
@@ -48,14 +48,13 @@
 .global-modal.show { display: flex !important; }
 
 .modal-container {
-  position: fixed;
-  top: 20px;
-  left: 20px;
   background: white;
   padding: 2rem;
   border-radius: 0.5rem;
   width: 90%;
   max-width: 500px;
+  margin-top: 1vh;
+  margin-bottom: 1vh; /* Added margin at the bottom */
 }
 
 /* Button styles */

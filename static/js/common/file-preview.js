@@ -140,6 +140,7 @@ window.FilePreview = window.FilePreview || (function() {
     // Create iframe for file preview
     const iframe = document.createElement('iframe');
     iframe.className = 'preview-iframe';
+    iframe.loading = 'lazy'; // Add lazy loading for better performance
     iframe.onload = function() {
       clearTimeout(timeoutId);
       const previewLoading = modalContent.querySelector('.preview-loading');

@@ -13,10 +13,10 @@ body {
 
 .custom-sidebar-container {
   display: flex;
+  flex-direction: column;
   width: 100%;
   min-height: 100vh;
   position: relative; /* Create positioning context */
-  
   background-color: #d3e0eb;
 }
 
@@ -35,16 +35,26 @@ body {
   z-index: 1030; /* Above Bootstrap's default z-index */
 }
 
+.additional-content {
+  margin-left: 240px; /* Match sidebar width */
+  color: #919191;
+  background-color: #d3e0eb;
+  text-align: center;
+  overflow-y: auto; /* Make only the content scrollable */
+  transition: margin-left 0.3s; /* Smooth transition when sidebar collapses */
+  width: calc(100% - 240px); /* Full width minus sidebar */
+}
+
 .custom-content {
-  flex: 1;
   margin-left: 240px; /* Match sidebar width */
   padding: 1.5% 3% 3% 3%;
   color: #919191;
   background-color: #d3e0eb;
   text-align: center;
-  height: 100vh;
+  min-height: calc(100vh - 240px); /* Adjust height to fill remaining space */
   overflow-y: auto; /* Make only the content scrollable */
   transition: margin-left 0.3s; /* Smooth transition when sidebar collapses */
+  width: calc(100% - 240px); /* Full width minus sidebar */
 }
 
 .custom-sidebar .custom-head {
@@ -110,7 +120,7 @@ body {
 
 .custom-sub-menu li.active > a {
   background-color: #1a5865;
-  color: #1a5865 !important;
+  color: #000 !important;
 }
 
 .custom-menu ul li a {

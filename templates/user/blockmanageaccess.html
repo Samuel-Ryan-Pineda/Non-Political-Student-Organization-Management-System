@@ -44,17 +44,19 @@
 
 {% block content %}
 <div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 80vh;">
-  <main class="text-center w-100" style="max-width: 350px;">
-    <a href="/manageorganization" class="lock-icon-container mx-auto" style="cursor: pointer;">
+  <main class="text-center w-100" style="max-width: 650px;">
+    <a class="lock-icon-container mx-auto" style="cursor: pointer;">
      <i class="fas fa-lock"></i>
     </a>
     <h1 class="mb-1">
-     You can't manage your organization page until your application is approved
+     You can't manage your organization page until your application is verified
     </h1>
     <p class="mb-4">
-     Please check back later or wait for email updates.
+     Your application is currently being reviewed. Please check back later or wait for email updates.
+     <br>
+     <strong>Note:</strong> You will be able to access this page once your application is verified by the administrators.
     </p>
-    <a href="/application" class="btn-request" type="button">
+    <a href="{{ url_for('user_organization.application') }}" class="btn-request" type="button">
      View Application Progress
     </a>
    </main>

@@ -19,7 +19,11 @@
             </a>
             </li>
             <li class="{{ 'active' if active_page == 'manageorganization' }}">
+                {% if application and application.status == 'Verified' %}
+                <a href="{{ url_for('user_routes.manageorganization') }}">
+                {% else %}
                 <a href="{{ url_for('user_routes.blockmanageaccess') }}">
+                {% endif %}
                     <i class="custom-icon ph-bold ph-buildings"></i>
                     <span class="custom-text">Manage Organization</span>
                 </a>

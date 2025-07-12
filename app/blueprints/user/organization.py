@@ -107,24 +107,40 @@ def update_organization():
     # Get form data
     organization_name = request.form.get('organization_name')
     org_type = request.form.get('type')
+    tagline = request.form.get('tagline')
+    description = request.form.get('description')
     logo_description = request.form.get('logo_description')
     
-    # Check if the organization name exists and it's not the current organization
-    if organization_name != organization.organization_name and organization_name_exists(organization_name):
+    # Only check for name conflicts if organization_name is provided and has changed
+    if organization_name and organization_name != organization.organization_name and organization_name_exists(organization_name):
         return jsonify({
             'success': False,
             'message': f"Organization name '{organization_name}' is already taken. Please choose a different name."
         })
     
-    # Update organization information
-    organization.organization_name = organization_name
-    organization.type = org_type
+    # Track if any changes were made
+    changes_made = False
     
-    # Update logo description if organization has a logo
-    if organization.logo_id:
+    # Update organization information only if the corresponding field is provided
+    if organization_name and organization_name != organization.organization_name:
+        organization.organization_name = organization_name
+        changes_made = True
+    if org_type and org_type != organization.type:
+        organization.type = org_type
+        changes_made = True
+    if tagline is not None and tagline != organization.tagline:  # Allow empty string
+        organization.tagline = tagline
+        changes_made = True
+    if description is not None and description != organization.description:  # Allow empty string
+        organization.description = description
+        changes_made = True
+    
+    # Update logo description if organization has a logo and logo_description is provided
+    if organization.logo_id and logo_description is not None:
         logo = Logo.query.get(organization.logo_id)
-        if logo:
+        if logo and logo.description != logo_description:
             logo.description = logo_description
+            changes_made = True
     
     # Handle logo upload if provided
     if 'logo' in request.files and request.files['logo'].filename:
@@ -138,30 +154,39 @@ def update_organization():
                 logo = Logo.query.get(organization.logo_id)
                 if logo:
                     logo.logo = logo_file.read()
+                    changes_made = True
             else:
                 # Create new logo
                 logo = Logo(logo=logo_file.read(), description=logo_description)
                 db.session.add(logo)
                 db.session.flush()  # Get the logo ID
                 organization.logo_id = logo.logo_id
+                changes_made = True
         else:
             return jsonify({
                 'success': False,
                 'message': "Invalid file format. Please upload a valid image file."
             })
     
-    # Save changes to database
-    try:
-        db.session.commit()
+    # Save changes to database only if changes were made
+    if changes_made:
+        try:
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': "Organization information updated successfully"
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'message': f"An error occurred: {str(e)}"
+            })
+    else:
+        # No changes were made, but still return success
         return jsonify({
             'success': True,
-            'message': "Organization information updated successfully"
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': f"An error occurred: {str(e)}"
+            'message': "No changes were made to organization information"
         })
 
 @user_organization_bp.route('/applicationfirststep', methods=['GET', 'POST'])
@@ -427,12 +452,18 @@ def get_application_file(file_id):
         file_data = io.BytesIO(app_file.file)
         
         # Attempt to send the file
-        return send_file(
+        response = send_file(
             file_data,
             mimetype=mimetype,
             as_attachment=force_download,  # True to download, False to preview in browser
             download_name=download_name
         )
+        
+        # Add Content-Disposition header to ensure proper preview
+        if not force_download:
+            response.headers['Content-Disposition'] = f'inline; filename="{download_name}"'
+        
+        return response
     except Exception as e:
         # Log the error for debugging
         import traceback
@@ -514,43 +545,7 @@ def get_application_files():
     
     return jsonify({'success': True, 'files': file_list})
 
-@user_organization_bp.route('/delete-all-application-files')
-@login_required
-def delete_all_application_files():
-    # Ensure user is Organization President or Applicant
-    if current_user.role_id not in [2, 3]:
-        return jsonify({'success': False, 'message': "You don't have permission to delete files"})
-    
-    # Import the service module here to avoid circular imports
-    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
-    
-    # Get user's organization
-    organization = get_organization_by_user_id(current_user.user_id)
-    if not organization:
-        return jsonify({'success': False, 'message': "No organization found for this user"})
-    
-    # Get application associated with the organization
-    application = get_application_by_organization_id(organization.organization_id)
-    if not application:
-        return jsonify({'success': False, 'message': "No application found for this organization"})
-    
-    try:
-        # Delete all files for this application
-        ApplicationFile.query.filter_by(application_id=application.application_id).delete()
-        
-        # Update application status to 'Incomplete' since all files are deleted
-        application.status = 'Incomplete'
-        # Reset the submission_date since the application is now incomplete
-        application.submission_date = None
-        # Update the session variable to reflect the status change
-        session['previous_application_status'] = 'Incomplete'
-        print(f"Application status updated to Incomplete after deleting all files")
-            
-        db.session.commit()
-        return jsonify({'success': True, 'message': "All application files have been deleted"})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': f"Error deleting files: {str(e)}"})
+# Endpoint for delete-all-application-files removed as it was only used for testing
 
 @user_organization_bp.route('/logo/<int:logo_id>')
 def get_logo(logo_id):

@@ -3,7 +3,7 @@
 {% block title %}Organization Renewals{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/orgfiles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orgfiles.css') }}?v={{ cache_version }}">
 {% endblock %}
 
 {% block content %}

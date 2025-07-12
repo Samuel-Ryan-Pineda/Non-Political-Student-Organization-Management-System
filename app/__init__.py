@@ -52,6 +52,10 @@ def create_app():
     from app.blueprints.user.organization import user_organization_bp
     app.register_blueprint(user_organization_bp, url_prefix='/organization')
     
+    # Register context processors
+    from app.context_processors import inject_cache_version
+    app.context_processor(inject_cache_version)
+    
     # Create database tables
     with app.app_context():
         from app.models import Role

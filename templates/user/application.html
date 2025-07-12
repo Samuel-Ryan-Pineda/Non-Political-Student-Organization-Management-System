@@ -3,7 +3,7 @@
 {% block title %}Application{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/application.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/application.css') }}?v={{ cache_version }}">
 {% endblock %}
 
 {% block content %}
@@ -21,7 +21,7 @@
               {% if organization and organization.logo_id %}
               <img alt="Organization Logo" class="rounded-circle" height="80" width="80" src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}"/>
               {% else %}
-              <img alt="Placeholder profile image" class="rounded-circle" height="80" width="80" src="{{ url_for('static', filename='images/placeholder-logo.png') }}"/>
+              <img alt="Placeholder profile image" class="rounded-circle" height="80" width="80" src="{{ url_for('static', filename='images/placeholder-logo.png') }}?v={{ cache_version }}"/>
               {% endif %}
             </div>
             <div>
@@ -31,7 +31,9 @@
                 <span class="fw-semibold">Type:</span>
                 {{ organization.type if organization else 'N/A' }}
               </p>
+              {% if not application or application.status.lower() != 'verified' %}
               <button type="button" class="btn btn-sm btn-outline-light mt-2" onclick="openUpdateOrgModal()">Update Information</button>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -116,14 +118,6 @@
     <div class="card-body p-0">
       <div class="d-flex justify-content-between align-items-center">
         <div class="fw-semibold">DOCUMENT UPLOAD</div>
-        <div>
-          <button type="button" class="btn btn-sm btn-outline-danger me-2" onclick="deleteAllFiles()">
-            <i class="fas fa-trash"></i> Delete All Files
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadApplicationFiles()">
-            <i class="fas fa-sync-alt"></i> Refresh
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -145,7 +139,7 @@
           Drag & drop or click to upload
         </div>
         
-        <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+        <div class="d-flex justify-content-between align-items-center gap-2">
           <button class="btn btn-outline-dark btn-sm" type="button">Preview</button>
           <button class="btn btn-outline-secondary btn-sm" type="button">Select File</button>
           <button class="btn btn-primary btn-sm" type="button">Upload</button>
@@ -235,7 +229,7 @@
               {% if organization and organization.logo_id %}
               <img id="currentLogo" alt="Current Organization Logo" class="rounded-circle" height="80" width="80" src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}"/>
               {% else %}
-              <img id="currentLogo" alt="Placeholder profile image" class="rounded-circle" height="80" width="80" src="{{ url_for('static', filename='images/placeholder-logo.png') }}"/>
+              <img id="currentLogo" alt="Placeholder profile image" class="rounded-circle" height="80" width="80" src="{{ url_for('static', filename='images/placeholder-logo.png') }}?v={{ cache_version }}"/>
               {% endif %}
             </div>
             <div class="flex-grow-1">

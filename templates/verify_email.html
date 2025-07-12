@@ -3,7 +3,7 @@
 {% block title %}Verify Email{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/verify_email.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/verify_email.css') }}?v={{ cache_version }}">
 {% endblock %}
 
 {% block content %}
@@ -30,5 +30,5 @@
     <div class="loading-spinner"></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/verify_email.js') }}"></script>
+<script src="{{ url_for('static', filename='js/verify_email.js') }}?v={{ cache_version }}"></script>
 {% endblock %}

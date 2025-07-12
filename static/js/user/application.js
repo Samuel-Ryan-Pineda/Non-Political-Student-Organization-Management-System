@@ -213,7 +213,7 @@
               </div>
             </div>
             <div class="preview-body">
-              <iframe src="${e.target.result}" class="preview-iframe"></iframe>
+              <iframe src="${e.target.result}" class="preview-iframe" loading="lazy"></iframe>
             </div>
           `;
           
@@ -630,42 +630,7 @@
   }
 
   // Function to delete all files
-  function deleteAllFiles() {
-    if (!confirm('Are you sure you want to delete all application files? This action cannot be undone.')) {
-      return;
-    }
-    
-    // Show loading modal
-    DOMUtils.showLoadingModal('Deleting all files...');
-    
-    // Call the delete endpoint
-    fetch('/organization/delete-all-application-files')
-      .then(response => response.json())
-      .then(data => {
-        // Remove loading modal
-        DOMUtils.hideLoadingModal();
-        
-        if (data.success) {
-          // Refresh the file list and update progress
-          loadApplicationFiles();
-          
-          // Check if application status needs to be updated and refresh page if needed
-          setTimeout(() => {
-            checkIfAllFilesUploaded();
-          }, 500); // Small delay to ensure files are loaded first
-          
-          console.log('Files deleted, checking application status...');
-        } else {
-          // Show error
-          alert('Error: ' + data.message);
-        }
-      })
-      .catch(error => {
-        // Remove loading modal and show error
-        DOMUtils.hideLoadingModal();
-        alert('Error deleting files: Network error');
-      });
-  }
+  // Function deleteAllFiles removed as it was only used for testing
 
   /**
    * Updates a file card with the provided data and feedback
@@ -1003,7 +968,7 @@
       return `/organization/get-application-file/${fileId}`;
     });
   };
-  window.deleteAllFiles = deleteAllFiles;
+  // window.deleteAllFiles export removed as it was only used for testing
   window.loadApplicationFiles = loadApplicationFiles;
 
   window.openUpdateOrgModal = function() {

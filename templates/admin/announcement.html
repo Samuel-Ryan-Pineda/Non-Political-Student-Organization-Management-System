@@ -3,7 +3,7 @@
 {% block title %}Student Organization Announcement{% endblock %}
 
 {% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/announcement.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/announcement.css') }}?v={{ cache_version }}">
 {% endblock %}
 
 {% block content %}
