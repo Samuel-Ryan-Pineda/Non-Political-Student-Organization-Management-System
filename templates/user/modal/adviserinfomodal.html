@@ -1,0 +1,76 @@
+<div id="adviserInfoModal" class="global-modal">
+    <div class="modal-container">
+        <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+            <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;">Organization Adviser</h4>
+            <button class="btn-back" onclick="hideAdviserInfoModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+       <hr style="margin-bottom: 1.5rem;">
+        <div class="container-short"> 
+            <main> 
+                <section class="bg-white rounded-2xl border border-gray-100 mt-3 p-3 section-adviser"> 
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="adviser-name-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Adviser</label> 
+                        {% if adviser.first_name or adviser.middle_name or adviser.last_name %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditAdviserNameForm()"> 
+                            Edit
+                        </button>
+                        {% else %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditAdviserNameForm()"> 
+                            Add
+                        </button>
+                        {% endif %} 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <div id="adviser-name-display">
+                            {% if adviser.first_name or adviser.middle_name or adviser.last_name %}
+                                <div><strong>Name:</strong> {{ adviser.first_name }} {{ adviser.middle_name }} {{ adviser.last_name }}</div>
+                                <div><strong>Type:</strong> {{ adviser.type if adviser.type else 'Adviser' }}</div>
+                                <div><strong>Status:</strong> {{ adviser.status if adviser.status else 'Active' }}</div>
+                            {% endif %}
+                        </div>
+                        <div id="edit-adviser-name" style="display: none;">
+                            <div class="row mb-2">
+                                <div class="col-4">
+                                    <label for="adviser-first-name" class="form-label" style="font-size: 0.75rem;">First Name</label>
+                                    <input type="text" id="adviser-first-name" class="form-control form-control-sm" style="font-size: 0.75rem;" value="{% if adviser.first_name %}{{ adviser.first_name }}{% endif %}">
+                                </div>
+                                <div class="col-4">
+                                    <label for="adviser-middle-name" class="form-label" style="font-size: 0.75rem;">Middle Name</label>
+                                    <input type="text" id="adviser-middle-name" class="form-control form-control-sm" style="font-size: 0.75rem;" value="{% if adviser.middle_name %}{{ adviser.middle_name }}{% endif %}">
+                                </div>
+                                <div class="col-4">
+                                    <label for="adviser-last-name" class="form-label" style="font-size: 0.75rem;">Last Name</label>
+                                    <input type="text" id="adviser-last-name" class="form-control form-control-sm" style="font-size: 0.75rem;" value="{% if adviser.last_name %}{{ adviser.last_name }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="adviser-type" class="form-label" style="font-size: 0.75rem;">Advisory Type</label>
+                                    <div class="input-group">
+                                        <select id="adviser-type" class="form-control form-control-sm" style="font-size: 0.75rem;">
+                                            <option value="Adviser" {% if adviser.type == 'Academic' %}selected{% endif %}>Adviser</option>
+                                            <option value="Co-Adviser" {% if adviser.type == 'Professional' %}selected{% endif %}>Co-Adviser</option>
+                                        </select>
+                                        <span class="input-group-text" style="font-size: 0.75rem;"><i class="fas fa-chevron-down"></i></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="adviser-status" class="form-label" style="font-size: 0.75rem;">Status</label>
+                                    <div class="input-group">
+                                        <select id="adviser-status" class="form-control form-control-sm" style="font-size: 0.75rem;">
+                                            <option value="active" {% if adviser.status == 'active' %}selected{% endif %}>Active</option>
+                                            <option value="inactive" {% if adviser.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                        </select>
+                                        <span class="input-group-text" style="font-size: 0.75rem;"><i class="fas fa-chevron-down"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                </section> 
+            </main> 
+        </div>
+    </div>
+</div>

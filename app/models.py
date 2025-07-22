@@ -185,7 +185,6 @@ class Advisory(db.Model):
     advisory_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     adviser_id = db.Column(db.Integer, db.ForeignKey('advisers.adviser_id'), nullable=False)
     organization_id = db.Column(db.Integer, db.ForeignKey('organizations.organization_id'), nullable=False)
-    date_started = db.Column(db.Date)
     type = db.Column(db.String(100))
     status = db.Column(db.String(100))  # active, inactive
 

@@ -6,6 +6,9 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/organizationdetails.css') }}?v={{ cache_version }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/organization.css') }}?v={{ cache_version }}">
 <script src="{{ url_for('static', filename='js/manageorganization.js') }}?v={{ cache_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/user/modal/editOrganizationModal.js') }}?v={{ cache_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/user/modal/adviserInfoModal.js') }}?v={{ cache_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/user/modal/socialMediaModal.js') }}?v={{ cache_version }}" defer></script>
 <style>
   table th:nth-last-child(1),
   table td:nth-last-child(1) {
@@ -40,8 +43,7 @@
   /* Optimize textarea height handling with CSS */
   textarea.field-display {
     overflow: hidden;
-    resize: none;
-    min-height: 1.625rem;
+    min-height: 0.8rem;
     height: auto;
     box-sizing: border-box;
     width: 100%;
@@ -85,13 +87,16 @@
 {% endblock %}
 
 {% block additional_content %}
+    <!-- Hidden organization ID field for JavaScript use -->
+    <input type="hidden" id="organization-id" value="{{ organization.organization_id }}">
+    
     <section class="organization-header">
         <div class="d-flex justify-content-center align-items-center">
             <div class="d-flex flex-column flex-sm-row gap-5 align-items-center justify-content-center">
                 {% if organization.logo_id %}
-                <img src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}" alt="{{ organization.organization_name }} logo" class="org-logo">
+                <img src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}" alt="{{ organization.organization_name }} logo" title="{% if organization.logo.description %}{{ organization.logo.description }}{% else %}{{ organization.organization_name }} - {{ organization.type if organization.type else 'Organization' }} Logo{% endif %}" class="org-logo">
                 {% else %}
-                <img src="https://placehold.co/120x120/png/ffffff/000000?text=Logo" alt="Organization logo" class="org-logo">
+                <img src="https://placehold.co/120x120/png/ffffff/000000?text=Logo" alt="Organization logo" title="Organization Logo - Click Edit Organization to upload a custom logo" class="org-logo">
                 {% endif %}
                 <div class="flex-grow-1 text-start">
                     <h2 class="org-title">{{ organization.organization_name }}</h2>
@@ -105,7 +110,7 @@
                     <p class="org-description">{{ organization.description }}</p>
                     {% endif %}
                     {% if adviser %}
-                    <p class="org-adviser">Adviser: {{ adviser.full_name }}</p>
+                    <p class="org-adviser">{{ adviser.type if adviser.type else 'Adviser' }}: {{ adviser.full_name }}</p>
                     {% endif %}
                     {% if social_media %}
                     <p class="org-social">
@@ -118,7 +123,7 @@
                     
                     <!-- Organization Management Buttons -->
                     <div class="mt-3 align-self-right">
-                        <button type="button" class="btn btn-primary me-2 mb-2" style="font-size: 0.8rem;" onclick="showEditOrganizationModal()">
+                        <button type="button" class="btn btn-primary me-2 mb-2" style="font-size: 0.8rem;" onclick="showEditOrganizationProfileModal()">
                             Edit Organization
                         </button>
                         <button type="button" class="btn btn-secondary me-2 mb-2" style="font-size: 0.8rem;" onclick="showAdviserInfoModal()">
@@ -344,124 +349,8 @@
 </div>
 
 
-<!-- New Edit Organization Modal -->
-<div id="editOrganizationModal" class="global-modal">
-    <div class="modal-container">
-        <button class="btn-back" onclick="hideEditOrganizationModal()" style="font-size: 0.75rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; padding: 0;">
-            <i class="fas fa-times"></i>
-        </button>
-        
-        <div class="container-short"> 
-            <main> 
-                <!-- Logo Upload Section --> 
-                <section class="bg-light rounded-2xl p-3 d-flex flex-column flex-sm-row align-items-center gap-3"> 
-                    {% if organization.logo_id %}
-                    <img id="previewLogo" src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}" alt="{{ organization.organization_name }} logo" class="rounded-circle" style="width:96px; height:96px; object-fit: cover;" />
-                    {% else %}
-                    <img id="previewLogo" src="https://placehold.co/120x120/png/ffffff/000000?text=Logo" alt="Organization logo" class="rounded-circle" style="width:96px; height:96px; object-fit: cover;" />
-                    {% endif %} 
-                    <div class="d-flex flex-column gap-1"> 
-                        <input type="file" id="logoFileInput" style="display: none;" accept="image/*" onchange="handleLogoFileSelect(event)">
-                        <div id="logoUploadButtons">
-                            <button type="button" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="uploadNewLogo()">Upload New Logo</button>
-                        </div>
-                        <div id="logoSaveButtons" style="display: none;">
-                            <button type="button" class="btn btn-success" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; margin-right: 0.5rem;" onclick="saveLogo()">Save</button>
-                            <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="cancelLogoUpload()">Cancel</button>
-                        </div>
-                        <p class="text-gray-500 mb-0" style="max-width: 260px; font-size: 0.75rem;"> 
-                            At least <strong>800×800 px</strong> recommended.<br />JPG or PNG is allowed 
-                        </p> 
-                    </div> 
-                </section> 
-         
-                <!-- Organization Info Section --> 
-                <section class="bg-white rounded-2xl border border-gray-100 mt-4 p-3 section-organization"> 
-                    <div class="d-flex justify-content-between align-items-center mb-3"> 
-                        <label for="org-name-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Organization</label> 
-                        {% if organization.organization_name %}
-                        <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationNameForm()"> 
-                            <i class="fas fa-pen" style="font-size: 0.75rem;"></i> 
-                            Edit
-                        </button>
-                        {% else %}
-                        <button type="button" class="btn btn-primary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationNameForm()"> 
-                            <i class="fas fa-plus" style="font-size: 0.75rem;"></i> 
-                            Add
-                        </button>
-                        {% endif %} 
-                    </div> 
-                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
-                        <textarea id="org-name-field" class="field-display" readonly>{% if organization.organization_name %}{{ organization.organization_name }}{% endif %}</textarea> 
-                    </div> 
-                </section> 
-         
-                <!-- Type Section --> 
-                <section class="bg-white rounded-2xl border border-gray-100 mt-4 p-3 section-type"> 
-                    <div class="d-flex justify-content-between align-items-center mb-3"> 
-                        <label for="org-type-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Type</label> 
-                        {% if organization.type %}
-                        <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationTypeForm()"> 
-                            <i class="fas fa-pen" style="font-size: 0.75rem;"></i> 
-                            Edit
-                        </button>
-                        {% else %}
-                        <button type="button" class="btn btn-primary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationTypeForm()"> 
-                            <i class="fas fa-plus" style="font-size: 0.75rem;"></i> 
-                            Add
-                        </button>
-                        {% endif %} 
-                    </div> 
-                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
-                        <textarea id="org-type-field" class="field-display" readonly>{% if organization.type %}{{ organization.type }}{% endif %}</textarea> 
-                    </div> 
-                </section> 
-         
-                <!-- Tagline Section --> 
-                <section class="bg-white rounded-2xl border border-gray-100 mt-4 p-3 section-tagline"> 
-                    <div class="d-flex justify-content-between align-items-center mb-3"> 
-                        <label for="org-tagline-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Tagline</label> 
-                        {% if organization.tagline %}
-                        <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditTaglineForm()"> 
-                            <i class="fas fa-pen" style="font-size: 0.75rem;"></i> 
-                            Edit
-                        </button>
-                        {% else %}
-                        <button type="button" class="btn btn-primary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditTaglineForm()"> 
-                            <i class="fas fa-plus" style="font-size: 0.75rem;"></i> 
-                            Add
-                        </button>
-                        {% endif %} 
-                    </div> 
-                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
-                        <textarea id="org-tagline-field" class="field-display" readonly>{% if organization.tagline %}{{ organization.tagline }}{% endif %}</textarea> 
-                    </div> 
-                </section> 
-         
-                <!-- Description Section --> 
-                <section class="bg-white rounded-2xl border border-gray-100 mt-4 p-3 section-description"> 
-                    <div class="d-flex justify-content-between align-items-center mb-3"> 
-                        <label for="org-description-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Description</label> 
-                        {% if organization.description %}
-                        <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditDescriptionForm()"> 
-                            <i class="fas fa-pen" style="font-size: 0.75rem;"></i> 
-                            Edit
-                        </button>
-                        {% else %}
-                        <button type="button" class="btn btn-primary d-flex align-items-center gap-1" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showEditDescriptionForm()"> 
-                            <i class="fas fa-plus" style="font-size: 0.75rem;"></i> 
-                            Add
-                        </button>
-                        {% endif %} 
-                    </div> 
-                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
-                        <textarea id="org-description-field" class="field-display" readonly>{% if organization.description %}{{ organization.description }}{% endif %}</textarea> 
-                    </div> 
-                </section>
-                
-                <!-- No global save button as each section has its own save functionality -->
-            </main> 
-        </div>
-    </div>
-</div>
+<!-- Include Organization Profile Editor -->
+{% include 'user/modal/editOrganizationModal.html' %}
+{% include 'user/modal/adviserInfoModal.html' %}
+{% include 'user/modal/socialmedialinks.html' %}
 {% endblock %}

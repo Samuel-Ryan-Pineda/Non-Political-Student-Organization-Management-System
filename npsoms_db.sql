@@ -159,7 +159,6 @@ CREATE TABLE advisories (
     advisory_id INT PRIMARY KEY AUTO_INCREMENT,
     adviser_id INT NOT NULL,
     organization_id INT NOT NULL,
-    date_started DATE,
     type VARCHAR(100),
     status VARCHAR(100), -- ENUM('active', 'inactive') DEFAULT 'active',
     FOREIGN KEY (adviser_id) REFERENCES advisers(adviser_id),

@@ -1,0 +1,115 @@
+<!-- Organization Profile Editor -->
+<div id="editOrganizationProfileModal" class="global-modal">
+    <div class="modal-container">
+        <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+            <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;">Organization Profile</h4>
+            <button class="btn-back" onclick="hideEditOrganizationProfileModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+       <hr style="margin-bottom: 1.5rem;">
+        <div class="container-short"> 
+            <main> 
+                <!-- Logo Upload Section --> 
+                <section class="rounded-2xl p-3 d-flex flex-column flex-sm-row align-items-center gap-3" style="background: #F0F0F0;"> 
+                    {% if organization.logo_id %}
+                    <img id="previewLogo" src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}" alt="{{ organization.organization_name }} logo" title="{% if organization.logo.description %}{{ organization.logo.description }}{% else %}{{ organization.organization_name }} - {{ organization.type if organization.type else 'Organization' }} Logo{% endif %}" class="rounded-circle" style="width:96px; height:96px; object-fit: cover;" />
+                    {% else %}
+                    <img id="previewLogo" src="https://placehold.co/120x120/png/ffffff/000000?text=Logo" alt="Organization logo" title="Organization Logo - Click 'Upload New Logo' to add a custom logo" class="rounded-circle" style="width:96px; height:96px; object-fit: cover;" />
+                    {% endif %} 
+                    <div class="d-flex flex-column gap-1"> 
+                        <input type="file" id="logoFileInput" style="display: none;" accept="image/*" onchange="handleLogoFileSelect(event)">
+                        <div id="logoUploadButtons">
+                            <button type="button" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="uploadNewLogo()">Upload New Logo</button>
+                        </div>
+                        <div id="logoSaveButtons" style="display: none;">
+                            <button type="button" class="btn btn-success" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; margin-right: 0.5rem;" onclick="saveLogo()">Save</button>
+                            <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="cancelLogoUpload()">Cancel</button>
+                        </div>
+                        <p class="text-gray-500 mb-0" style="max-width: 260px; font-size: 0.75rem;"> 
+                            At least <strong>800×800 px</strong> recommended.<br />JPG or PNG is allowed 
+                        </p> 
+                    </div> 
+                </section> 
+         
+                <!-- Organization Info Section --> 
+                <section class="bg-white rounded-2xl border border-gray-100 mt-3 p-3 section-organization"> 
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="org-name-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Organization</label> 
+                        {% if organization.organization_name %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationNameForm()"> 
+                            Edit
+                        </button>
+                        {% else %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationNameForm()"> 
+                            Add
+                        </button>
+                        {% endif %} 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <textarea id="org-name-field" rows="1" class="field-display" readonly>{% if organization.organization_name %}{{ organization.organization_name }}{% endif %}</textarea> 
+                    </div> 
+                </section> 
+         
+                <!-- Type Section --> 
+                <section class="bg-white rounded-2xl border border-gray-100 mt-3 p-3 section-type"> 
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="org-type-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Type</label> 
+                        {% if organization.type %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationTypeForm()"> 
+                            Edit
+                        </button>
+                        {% else %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditOrganizationTypeForm()"> 
+                            Add
+                        </button>
+                        {% endif %} 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <textarea id="org-type-field" rows="1" class="field-display" readonly>{% if organization.type %}{{ organization.type }}{% endif %}</textarea> 
+                    </div> 
+                </section> 
+         
+                <!-- Tagline Section --> 
+                <section class="bg-white rounded-2xl border border-gray-100 mt-3 p-3 section-tagline"> 
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="org-tagline-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Tagline</label> 
+                        {% if organization.tagline %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditTaglineForm()"> 
+                            Edit
+                        </button>
+                        {% else %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditTaglineForm()"> 
+                            Add
+                        </button>
+                        {% endif %} 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <textarea id="org-tagline-field" rows="1" class="field-display" readonly>{% if organization.tagline %}{{ organization.tagline }}{% endif %}</textarea> 
+                    </div> 
+                </section> 
+         
+                <!-- Description Section --> 
+                <section class="bg-white rounded-2xl border border-gray-100 mt-3 p-3 section-description"> 
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="org-description-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Description</label> 
+                        {% if organization.description %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditDescriptionForm()"> 
+                            Edit
+                        </button>
+                        {% else %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditDescriptionForm()"> 
+                            Add
+                        </button>
+                        {% endif %} 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <textarea id="org-description-field" rows="1" class="field-display" readonly>{% if organization.description %}{{ organization.description }}{% endif %}</textarea> 
+                    </div> 
+                </section>
+                
+                <!-- No global save button as each section has its own save functionality -->
+            </main> 
+        </div>
+    </div>
+</div>

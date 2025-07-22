@@ -5,7 +5,7 @@
     <div class="custom-head">
         <div class="custom-user-details">
         <p class="custom-title">Organization</p>
-        <p class="custom-name">Technological Advancement and Innovation Society of Future Engineers</p>
+        <p class="custom-name">{% if organization and organization.organization_name %}{{ organization.organization_name }}{% else %}No Organization{% endif %}</p>
         </div>
     </div>
     <div class="custom-nav">

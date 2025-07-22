@@ -189,6 +189,209 @@ def update_organization():
             'message': "No changes were made to organization information"
         })
 
+
+@user_organization_bp.route('/get_social_media_by_organization_id', methods=['GET'])
+@login_required
+def get_social_media_by_organization_id():
+    """
+    Get social media links for an organization
+    
+    Returns:
+        JSON response with social media links
+    """
+    from app.organization_service import get_social_media_by_organization_id
+    
+    organization_id = request.args.get('organization_id')
+    if not organization_id:
+        return jsonify({'success': False, 'message': 'Organization ID is required'}), 400
+    
+    try:
+        social_media = get_social_media_by_organization_id(organization_id)
+        return jsonify({'success': True, 'social_media': social_media})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@user_organization_bp.route('/save_social_media', methods=['POST'])
+@login_required
+def save_social_media():
+    """
+    Save social media link for an organization
+    
+    Returns:
+        JSON response with success status
+    """
+    from app.organization_service import save_social_media
+    
+    data = request.get_json()
+    if not data or 'organization_id' not in data or 'platform' not in data or 'link' not in data:
+        return jsonify({'success': False, 'message': 'Organization ID, platform and link are required'}), 400
+    
+    try:
+        result = save_social_media(data['organization_id'], data['platform'], data['link'])
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@user_organization_bp.route('/update_social_media', methods=['POST'])
+@login_required
+def update_social_media():
+    """
+    Update social media link for an organization
+    
+    Returns:
+        JSON response with success status
+    """
+    from app.organization_service import update_social_media
+    
+    data = request.get_json()
+    if not data or 'organization_id' not in data or 'platform' not in data or 'link' not in data:
+        return jsonify({'success': False, 'message': 'Organization ID, platform and link are required'}), 400
+    
+    try:
+        result = update_social_media(data['organization_id'], data['platform'], data['link'])
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@user_organization_bp.route('/get_organization_header', methods=['GET'])
+@login_required
+def get_organization_header():
+    """
+    Get organization header information including social media links
+    
+    Returns:
+        JSON response with organization header information
+    """
+    from app.organization_service import get_organization_by_id, get_social_media_by_organization_id, get_adviser_by_organization_id
+    
+    organization_id = request.args.get('organization_id')
+    if not organization_id:
+        return jsonify({'success': False, 'message': 'Organization ID is required'}), 400
+    
+    try:
+        # Get organization data
+        organization = get_organization_by_id(organization_id)
+        if not organization:
+            return jsonify({'success': False, 'message': 'Organization not found'}), 404
+        
+        # Get social media links
+        social_media = get_social_media_by_organization_id(organization_id)
+        
+        # Get adviser information
+        adviser = get_adviser_by_organization_id(organization_id)
+        
+        # Prepare response data
+        response_data = {
+            'success': True,
+            'organization': {
+                'organization_id': organization.organization_id,
+                'organization_name': organization.organization_name,
+                'type': organization.type,
+                'tagline': organization.tagline,
+                'description': organization.description,
+                'logo_id': organization.logo_id
+            },
+            'social_media': social_media,
+            'adviser': adviser
+        }
+        
+        return jsonify(response_data)
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@user_organization_bp.route('/delete_social_media', methods=['POST'])
+@login_required
+def delete_social_media():
+    """
+    Delete social media link for an organization
+    
+    Returns:
+        JSON response with success status
+    """
+    from app.organization_service import delete_social_media
+    
+    data = request.get_json()
+    if not data or 'organization_id' not in data or 'platform' not in data:
+        return jsonify({'success': False, 'message': 'Organization ID and platform are required'}), 400
+    
+    try:
+        result = delete_social_media(data['organization_id'], data['platform'])
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@user_organization_bp.route('/save-adviser-info', methods=['POST'])
+@login_required
+def save_adviser_info():
+    """
+    Save adviser information for an organization
+    
+    Returns:
+        JSON response with success status and message
+    """
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({
+            'success': False,
+            'message': "You don't have permission to update adviser information"
+        })
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id, save_adviser_info
+    
+    # Get the current organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    
+    if not organization:
+        return jsonify({
+            'success': False,
+            'message': "No organization found for this user"
+        })
+    
+    # Get form data
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': "Invalid request data"
+            })
+        
+        # Log received data for debugging
+        print(f"Received adviser data: {data}")
+    except Exception as e:
+        print(f"Error parsing JSON data: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': "Invalid request data format"
+        })
+    
+    first_name = data.get('first_name')
+    middle_name = data.get('middle_name')
+    last_name = data.get('last_name')
+    adviser_type = data.get('type')
+    status = data.get('status')
+    
+    # Validate required fields
+    if not first_name or not last_name or not adviser_type or not status:
+        return jsonify({
+            'success': False,
+            'message': "First name, last name, adviser type and status are required"
+        })
+    
+    # Call the service function
+    result = save_adviser_info(
+        organization_id=organization.organization_id,
+        first_name=first_name,
+        middle_name=middle_name,
+        last_name=last_name,
+        adviser_type=adviser_type,
+        status=status
+    )
+    
+    return jsonify(result)
+
+
 @user_organization_bp.route('/applicationfirststep', methods=['GET', 'POST'])
 @login_required
 def applicationfirststep():

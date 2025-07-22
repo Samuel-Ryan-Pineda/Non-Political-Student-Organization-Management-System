@@ -1,0 +1,77 @@
+<div id="socialMediaModal" class="global-modal">
+    <div class="modal-container">
+        <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+            <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;">Social Media Links</h4>
+            <button class="btn-back" onclick="hideSocialMediaModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <hr style="margin-bottom: 1rem;">
+        
+        <!-- Existing Social Media Links Section -->
+        <div id="existing-social-links" class="mb-3">
+            <!-- Links will be populated here by JavaScript -->
+        </div>
+        
+        <!-- Add Social Media button moved below header -->
+        <div class="mb-3"> 
+            <button id="add-social-media-btn" type="button" class="btn btn-primary w-100" style="font-size: 0.75rem;" onclick="showSocialMediaOptions()"> 
+                <i class="fas fa-plus me-2"></i>Add Social Media
+            </button>
+        </div>
+        
+        <!-- Social media options panel -->
+        <div id="social-media-options" style="display: none; padding: 0 1rem;">
+            <div class="row">
+                <div class="col-6 mb-2">
+                    <button class="btn btn-outline-primary w-100" style="font-size: 0.75rem;" onclick="addSocialLink('facebook')">
+                        <i class="fab fa-facebook-f me-2"></i> Facebook
+                    </button>
+                </div>
+                <div class="col-6 mb-2">
+                    <button class="btn btn-outline-info w-100" style="font-size: 0.75rem;" onclick="addSocialLink('twitter')">
+                        <i class="fab fa-twitter me-2"></i> Twitter
+                    </button>
+                </div>
+                <div class="col-6 mb-2">
+                    <button class="btn btn-outline-danger w-100" style="font-size: 0.75rem;" onclick="addSocialLink('instagram')">
+                        <i class="fab fa-instagram me-2"></i> Instagram
+                    </button>
+                </div>
+                <div class="col-6 mb-2">
+                    <button class="btn btn-outline-primary w-100" style="font-size: 0.75rem;" onclick="addSocialLink('linkedin')">
+                        <i class="fab fa-linkedin-in me-2"></i> LinkedIn
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container-short"> 
+            <main> 
+                <!-- Form section - only appears after selection -->
+                <div id="social-media-form" style="display: none;" class="mt-3 p-3 border rounded bg-white">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <label id="platform-label" class="form-label mb-0" style="font-size: 0.75rem;">Platform URL</label>
+                        <div>
+                            <button class="btn btn-success me-2" style="font-size: 0.75rem;" onclick="saveSocialMediaLink()">Save</button>
+                            <button class="btn btn-secondary" style="font-size: 0.75rem;" onclick="cancelSocialMediaForm()">Cancel</button>
+                        </div>
+                    </div>
+                    <input type="url" id="platform-url" class="form-control" style="font-size: 0.75rem;" placeholder="Enter URL">
+                </div>
+                
+                <!-- Edit form section for existing links -->
+                <div id="social-media-edit-form" style="display: none;" class="mt-3 p-3 border rounded bg-white">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <label id="edit-platform-label" class="form-label mb-0" style="font-size: 0.75rem;">Platform URL</label>
+                        <div>
+                            <button class="btn btn-success me-2" style="font-size: 0.75rem;" onclick="saveEditSocialMediaLink()">Save</button>
+                            <button class="btn btn-secondary" style="font-size: 0.75rem;" onclick="cancelEditSocialMediaLink()">Cancel</button>
+                        </div>
+                    </div>
+                    <input type="url" id="edit-platform-url" class="form-control" style="font-size: 0.75rem;" placeholder="Enter URL">
+                </div>
+            </main> 
+        </div>
+    </div>
+</div>

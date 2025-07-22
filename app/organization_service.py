@@ -196,6 +196,78 @@ def get_adviser_by_organization_id(organization_id):
         'full_name': f"{adviser.first_name} {adviser.middle_name + ' ' if adviser.middle_name else ''}{adviser.last_name}"
     }
 
+def save_adviser_info(organization_id, first_name, middle_name, last_name, adviser_type, status):
+    """
+    Save or update adviser information for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        first_name (str): Adviser's first name
+        middle_name (str): Adviser's middle name
+        last_name (str): Adviser's last name
+        adviser_type (str): Type of adviser (Academic/Professional/Community)
+        status (str): Status of adviser (active/inactive)
+        
+    Returns:
+        dict: {'success': bool, 'message': str}
+    """
+    from app.models import Advisory, Adviser
+    
+    # Validate required fields
+    if not first_name or not last_name or not adviser_type or not status:
+        return {'success': False, 'message': 'First name, last name, adviser type and status are required'}
+    
+    try:
+        # Get or create adviser record first
+        advisory = Advisory.query.filter_by(
+            organization_id=organization_id,
+            status='active'
+        ).first()
+        
+        adviser = None
+        if advisory and advisory.adviser_id:
+            adviser = Adviser.query.get(advisory.adviser_id)
+        
+        if not adviser:
+            # Create new adviser
+            adviser = Adviser(
+                first_name=first_name,
+                middle_name=middle_name,
+                last_name=last_name
+            )
+            db.session.add(adviser)
+            db.session.flush()
+            
+            # Create advisory relationship if it doesn't exist
+            if not advisory:
+                advisory = Advisory(
+                    organization_id=organization_id,
+                    adviser_id=adviser.adviser_id,
+                    type=adviser_type,
+                    status='active'
+                )
+                db.session.add(advisory)
+            else:
+                # Update existing advisory with adviser_id
+                advisory.adviser_id = adviser.adviser_id
+        else:
+            # Update existing adviser
+            adviser.first_name = first_name
+            adviser.middle_name = middle_name
+            adviser.last_name = last_name
+            # Update advisory type and status if advisory exists
+            if advisory:
+                advisory.type = adviser_type
+                advisory.status = status
+        
+        db.session.commit()
+        return {'success': True, 'message': 'Adviser information saved successfully'}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Error saving adviser info: {str(e)}'}
+
+
 def get_social_media_by_organization_id(organization_id):
     """
     Get social media links for an organization
@@ -220,6 +292,136 @@ def get_social_media_by_organization_id(organization_id):
         })
     
     return result
+
+def save_social_media(organization_id, platform, link):
+    """
+    Save social media link for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        platform (str): Social media platform name
+        link (str): URL of the social media profile
+        
+    Returns:
+        dict: Dictionary with success status and message
+    """
+    from app.models import SocialMedia
+    
+    try:
+        # Check if this platform already exists for this organization
+        existing = SocialMedia.query.filter_by(
+            organization_id=organization_id,
+            platform=platform
+        ).first()
+        
+        if existing:
+            return {
+                'success': False,
+                'message': f'{platform.capitalize()} link already exists for this organization'
+            }
+        
+        # Create new social media link
+        new_social_media = SocialMedia(
+            organization_id=organization_id,
+            platform=platform,
+            link=link
+        )
+        db.session.add(new_social_media)
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'message': 'Social media link saved successfully'
+        }
+    except Exception as e:
+        db.session.rollback()
+        return {
+            'success': False,
+            'message': f'Error saving social media link: {str(e)}'
+        }
+
+def update_social_media(organization_id, platform, link):
+    """
+    Update existing social media link for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        platform (str): Social media platform name
+        link (str): URL of the social media profile
+        
+    Returns:
+        dict: Dictionary with success status and message
+    """
+    from app.models import SocialMedia
+    
+    try:
+        # Find the social media record to update
+        social_media = SocialMedia.query.filter_by(
+            organization_id=organization_id,
+            platform=platform
+        ).first()
+        
+        if not social_media:
+            return {
+                'success': False,
+                'message': f'{platform.capitalize()} link not found for this organization'
+            }
+        
+        # Update the link
+        social_media.link = link
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'message': 'Social media link updated successfully'
+        }
+    except Exception as e:
+        db.session.rollback()
+        return {
+            'success': False,
+            'message': f'Error updating social media link: {str(e)}'
+        }
+
+def delete_social_media(organization_id, platform):
+    """
+    Delete social media link for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        platform (str): Social media platform name
+        
+    Returns:
+        dict: Dictionary with success status and message
+    """
+    from app.models import SocialMedia
+    
+    try:
+        # Find the social media record to delete
+        social_media = SocialMedia.query.filter_by(
+            organization_id=organization_id,
+            platform=platform
+        ).first()
+        
+        if not social_media:
+            return {
+                'success': False,
+                'message': f'{platform.capitalize()} link not found for this organization'
+            }
+        
+        # Delete the record
+        db.session.delete(social_media)
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'message': 'Social media link deleted successfully'
+        }
+    except Exception as e:
+        db.session.rollback()
+        return {
+            'success': False,
+            'message': f'Error deleting social media link: {str(e)}'
+        }
 
 def get_pending_applications():
     """
