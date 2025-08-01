@@ -29,10 +29,11 @@
                 <div id="error-container" class="error-message"></div>
                 <div id="warning-container" class="warning-message"></div>
                 <form id="login-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label for="email">Email</label>
-                    <input type="email" id="register-email" name="email" placeholder="Enter your email">
+                    <input type="email" id="register-email" name="email" placeholder="Enter your email" autocomplete="username">
                     <label for="password">Password</label>
-                    <input type="password" id="register-password" name="entrykey" placeholder="Password" >
+                    <input type="password" id="register-password" name="entrykey" placeholder="Password" autocomplete="current-password">
                     <div class="check-forgot-container">
                         <div class="remember-me">
                             <input type="checkbox" id="remember" name="remember">

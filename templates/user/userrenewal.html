@@ -1,108 +1,43 @@
 {% extends "user/userbase.html" %}
 
-{% block title %}Application{% endblock %}
+{% block title %}Renewal{% endblock %}
 
 {% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/application.css') }}?v={{ cache_version }}">
 <style>
-.global-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  z-index: 1000;
-}
-
-.global-modal.show {
-  display: flex;
-}
-
-.modal-container {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  width: 90%;
-  max-width: 500px;
-}
-
-.btn-back {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.btn-send {
-  background: #1d4ed8;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.btn-send:hover {
-  background: #1e40af;
-}
-
-  .card-body, .container, p, span, .dropzone, h1, div {
-    text-align: left !important;
+  /* Additional styles specific to renewal page */
+  .card-body, .container, p, span, h1, div:not(.dropzone div) { text-align: left !important; }
+  
+  .dropzone, .dropzone div { text-align: center !important; }
+  
+  /* Ensure dropzone content is centered */
+  .dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
   
   .fw-semibold.fs-6, .fw-semibold.small, .small.fw-semibold {
     color: #0D3B44;
-    font-size: 0.800rem;
+    font-size: 0.75em;
   }
   
-  .progress-bar {
-    background-color: #0D3B44 !important;
-  }
-  /* Custom underline with slight curve */
-  .underline-curve {
-    border-bottom: 1px solid #1f2937;
-    border-image: linear-gradient(
-        to right,
-        transparent,
-        #1f2937 50%,
-        transparent
-      ) 1;
-    border-radius: 0 0 100% 100% / 0 0 10px 10px;
-    width: 100%;
-    max-width: 100%;
-    margin-top: 0.25rem;
-    margin-bottom: 1.5rem;
-  }
+  /* Progress and UI elements */
+  .progress-bar { background-color: #0D3B44 !important; }
   
-  .status-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 50rem;
-    margin-left: auto;
-  }
+  .progress-thin { height: 8px; }
   
-  .dropzone {
-    border: 1px dashed #475569;
-    border-radius: 0.375rem;
-    padding: 1.5rem;
-    min-height: 90px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #64748b;
-    font-size: 0.875rem;
-  }
-  
+  /* Document card styles */
   .document-card {
-    transition: border-color 0.2s;
+    transition: all 0.3s ease;
     flex: 1 0 0;
     min-width: 0;
+  }
+  
+  /* Removed hover effect that made cards rise up */
+  .document-card:hover {
+    /* No transform or box-shadow */
   }
   
   .row.g-3 {
@@ -112,25 +47,6 @@
   
   .row.g-3 > [class*="col-"] {
     display: flex;
-  }
-  
-  .document-card:hover {
-    border-color: #cbd5e1 !important;
-  }
-  
-  .btn-outline-dark {
-    border-color: #1f2937;
-    color: #1f2937;
-  }
-  
-  .btn-outline-secondary {
-    border-color: #94a3b8;
-    color: #475569;
-  }
-  
-  .btn-primary {
-    background-color: #1d4ed8;
-    border-color: #1d4ed8;
   }
   
   /* Feedback Section Styles */
@@ -143,22 +59,25 @@
   .feedback-tab {
     padding: 0.5rem 1rem;
     cursor: pointer;
-    font-size: 0.875rem;
+    border-bottom: 2px solid transparent;
     font-weight: 500;
     color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   
   .feedback-tab.active {
     color: #1d4ed8;
-    border-bottom: 2px solid #1d4ed8;
+    border-bottom-color: #1d4ed8;
   }
   
   .feedback-count {
     background-color: #e5e7eb;
-    border-radius: 9999px;
-    padding: 0.125rem 0.5rem;
+    color: #4b5563;
     font-size: 0.75rem;
-    margin-left: 0.5rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
   }
   
   .feedback-card {
@@ -166,6 +85,34 @@
     border-radius: 0.5rem;
     padding: 1rem;
     margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+  
+  .feedback-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .feedback-card.unread {
+    border-left: 4px solid #1d4ed8;
+    background-color: rgba(29, 78, 216, 0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .feedback-card.unread .feedback-card-header {
+    font-weight: bold;
+  }
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .feedback-card.unread {
+    border-left: 4px solid #1d4ed8;
+    background-color: rgba(29, 78, 216, 0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .feedback-card.unread .feedback-card-header {
+    font-weight: bold;
   }
   
   .feedback-card-header {
@@ -192,6 +139,9 @@
   .feedback-card-file {
     font-size: 0.75rem;
     color: #6b7280;
+    background-color: #f3f4f6;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
   }
   
   .feedback-tab-content {
@@ -236,6 +186,32 @@
       margin-bottom: 1rem;
     }
   }
+  
+  /* Modal styles to match application.html */
+  .modal-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 500px;
+    margin-top: 1vh;
+    margin-bottom: 1vh;
+  }
+  
+  .global-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 1050;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 20px 0;
+  }
 </style>
 {% endblock %}
 
@@ -247,18 +223,23 @@
   <!-- Changed class from "row" to "row info-progress-row" -->
   <div class="row info-progress-row g-3">
     <div class="col-md-4">
-      <section class="card mb-3" style="background-color: #0D3B44; color: white;">
-        <div class="card-body p-3 p-md-4">
-          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center gap-3" style="height: 100%;">
+      <section class="card mb-3 org-card">
+        <div class="card-body p-3 p-md-4 position-relative">
+          <!-- Edit functionality removed as per requirements -->
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center gap-3">
             <div class="mb-3 mb-md-0">
-              <img alt="Placeholder profile image circle with light gray background and darker gray center" class="rounded-circle" height="80" src="https://storage.googleapis.com/a1aa/image/2f3d1049-2fbc-4ccb-22f7-9a9600e01427.jpg" width="80"/>
+              {% if organization and organization.logo_id %}
+              <img alt="Organization Logo" class="rounded-circle" height="80" width="80" src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}" title="{% if organization.logo and organization.logo.description %}{{ organization.logo.description }}{% else %}{{ organization.organization_name }} Logo{% endif %}"/>
+              {% else %}
+              <img alt="Placeholder profile image" class="rounded-circle" height="80" width="80" src="{{ url_for('static', filename='images/placeholder-logo.png') }}?v={{ cache_version }}" title="Organization Logo"/>
+              {% endif %}
             </div>
             <div>
-              <p class="fw-semibold mb-1" style="color: white;">ORGANIZATION</p>
-              <p class="mb-2 lh-sm" style="color: white; font-size: 0.8rem;">Technological Advancement and Innovation Society of Future Engineers</p>
-              <p class="mb-0" style="color: white;  font-size: 0.800rem;">
-                <span class="fw-semibold" style="color: white;">Type:</span>
-                Academic
+              <p class="fw-semibold mb-1" style="font-size: 0.875rem;">ORGANIZATION</p>
+              <p class="mb-2 lh-sm small">{{ organization.organization_name if organization else 'No Organization' }}</p>
+              <p class="mb-0 small">
+                <span class="fw-semibold">Type:</span>
+                {{ organization.type if organization else 'N/A' }}
               </p>
             </div>
           </div>
@@ -267,39 +248,38 @@
     </div>
     <div class="col-md-8">
       <!-- Application Progress -->
-      <section class="card mb-3">
+      <section class="card mb-3 status-incomplete">
         <div class="card-body p-3 p-md-4">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
-              <p class="fw-semibold fs-6 mb-0">APPLICATION PROGRESS</p>
-              <p class="small text-secondary mb-1">1 of 9 documents verified</p>
-              <p class="fw-semibold small mb-0">11% Complete</p>
+              <p class="fw-semibold mb-0" style="font-size: 0.875rem;">APPLICATION PROGRESS</p>
+              <p class="small text-secondary mb-1">No renewal data available</p>
             </div>
             <div>
-              <span class="badge bg-secondary">In Progress</span>
+              <span class="badge bg-secondary">No Data</span>
             </div>
           </div>
           
-          <div class="progress mb-3" style="height: 8px;">
-            <div class="progress-bar bg-dark" role="progressbar" style="width: 14%;" aria-valuenow="14" aria-valuemin="0" aria-valuemax="100"></div>
+          <div class="progress mb-3 progress-thin">
+            <div class="progress-bar bg-dark" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
           </div>
           
           <div class="d-flex justify-content-between small text-secondary">
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-check-circle text-success"></i>
-              <span>Verified: 1</span>
+              <span>Verified: 0</span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-clock text-primary"></i>
-              <span>Pending: 6</span>
+              <span>Pending: 0</span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-exclamation-circle text-warning"></i>
-              <span>Needs Revision: 1</span>
+              <span>Needs Revision: 0</span>
             </div>
             <div class="d-flex align-items-center gap-1">
               <i class="fas fa-times-circle text-danger"></i>
-              <span>Rejected: 1</span>
+              <span>Rejected: 0</span>
             </div>
           </div>
         </div>
@@ -309,7 +289,11 @@
   
   <!-- Document Upload Title -->
   <div class="card mb-3 py-3 px-4">
-    <div class="card-body p-0 fw-semibold">DOCUMENT UPLOAD</div>
+    <div class="card-body p-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="fw-semibold">DOCUMENT UPLOAD</div>
+      </div>
+    </div>
   </div>
   
   {% macro document_card(title, status='No File', status_class='bg-secondary', status_icon='fa-question-circle') %}
@@ -324,7 +308,8 @@
         </div>
         
         <div class="dropzone mb-3">
-          <i class="fas fa-arrow-up mb-1"></i>
+          <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
+          <i class="fas fa-cloud-upload-alt mb-1"></i>
           Drag & drop or click to upload
         </div>
         
@@ -333,41 +318,60 @@
           <button class="btn btn-outline-secondary btn-sm" type="button">Select File</button>
           <button class="btn btn-primary btn-sm" type="button">Upload</button>
         </div>
+        
+        <!-- Inline feedback toggle button -->
+        <div class="inline-feedback-toggle" title="Click to view feedback details" role="button" aria-expanded="false" aria-controls="feedback-container" tabindex="0">
+          <i class="fas fa-comment-alt" aria-hidden="true"></i> View Feedback
+        </div>
+        
+        <!-- Inline feedback container -->
+        <div class="inline-feedback-container" id="feedback-container" aria-live="polite">
+          <div class="inline-feedback-card" role="region" aria-label="Feedback details">
+            <div class="inline-feedback-header">
+              <div class="inline-feedback-title" aria-label="Feedback subject"></div>
+              <div class="inline-feedback-date" aria-label="Feedback date"></div>
+            </div>
+            <div class="inline-feedback-body"></div>
+          </div>
+          <div class="inline-feedback-close">
+            <button type="button" aria-label="Close feedback">Close</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   {% endmacro %}
   
   <!-- Document Upload Forms -->
-  <div class="row g-3 mb-3" style="display: flex; flex-wrap: wrap;">
+  <div class="row g-3 mb-3 justify-content-left">
     <!-- Form 1 -->
-    {{ document_card('Form 1B - APPLICATION FOR RENEWAL OF RECOGNITION', 'Verified', 'bg-success', 'fa-check') }}
+    {{ document_card('Form 1B - APPLICATION FOR RENEWAL OF RECOGNITION', 'No File', 'bg-secondary', 'fa-question-circle') }}
     
     <!-- Form 2 -->
-    {{ document_card('Form 2 - LETTER OF ACCEPTANCE', 'Needs Revision', 'bg-warning text-dark', 'fa-exclamation') }}
+    {{ document_card('Form 2 - LETTER OF ACCEPTANCE', 'No File', 'bg-secondary', 'fa-question-circle') }}
     
     <!-- Form 3 -->
-    {{ document_card('Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES', 'Rejected', 'bg-danger', 'fa-times') }}
+    {{ document_card('Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES', 'No File', 'bg-secondary', 'fa-question-circle') }}
   </div>
   
-  <div class="row g-3 mb-3 justify-content-left" style="display: flex; flex-wrap: wrap;">
+  <div class="row g-3 mb-3 justify-content-left">
     <!-- Form 4 -->
-    {{ document_card('Form 4 - LIST OF MEMBERS', 'Pending', 'bg-primary', 'fa-clock') }}
+    {{ document_card('Form 4 - LIST OF MEMBERS', 'No File', 'bg-secondary', 'fa-question-circle') }}
     
     <!-- Board of Officers -->
-    {{ document_card('BOARD OF OFFICERS', 'Pending', 'bg-primary', 'fa-clock') }}
+    {{ document_card('BOARD OF OFFICERS', 'No File', 'bg-secondary', 'fa-question-circle') }}
     
     <!-- Updated Constitution and Bylaws -->
-    {{ document_card('UPDATED CONSTITUTION AND BYLAWS', 'Pending', 'bg-primary', 'fa-clock') }}
+    {{ document_card('UPDATED CONSTITUTION AND BYLAWS', 'No File', 'bg-secondary', 'fa-question-circle') }}
     
     <!-- Accomplishment Report -->
-    {{ document_card('ACCOMPLISHMENT REPORT AND DOCUMENTATION', 'Pending', 'bg-primary', 'fa-clock') }}
+    {{ document_card('ACCOMPLISHMENT REPORT AND DOCUMENTATION', 'No File', 'bg-secondary', 'fa-question-circle') }}
     
     <!-- Financial Statement -->
-    {{ document_card('FINANCIAL STATEMENT OF THE PREVIOUS ACADEMIC YEAR', 'Pending', 'bg-primary', 'fa-clock') }}
+    {{ document_card('FINANCIAL STATEMENT OF THE PREVIOUS ACADEMIC YEAR', 'No File', 'bg-secondary', 'fa-question-circle') }}
     
     <!-- Logo with Explanation -->
-    {{ document_card('LOGO WITH EXPLANATION', 'Pending', 'bg-primary', 'fa-clock') }}
+    {{ document_card('LOGO WITH EXPLANATION', 'No File', 'bg-secondary', 'fa-question-circle') }}
   </div>
 
   <!-- Feedback Section -->
@@ -376,145 +380,48 @@
       <h3 class="fw-semibold fs-6 mb-3">FEEDBACK</h3>
       
       <div class="feedback-history-tabs">
-        <div class="feedback-tab active" id="received-tab-btn" onclick="showTab('received')">Received Feedback <span class="feedback-count">1</span></div>
-        <div class="feedback-tab" id="replied-tab-btn" onclick="showTab('replied')">Replied Feedback <span class="feedback-count">1</span></div>
+        <div class="feedback-tab active" id="received-tab-btn">Received Feedback <span class="feedback-count" id="received-feedback-count">0</span></div>
       </div>
       
       <div class="feedback-tab-content active" id="received-tab">
-        <!-- Feedback Item 1 -->
-        <div class="feedback-card received">
-          <div class="feedback-card-header">
-            <div class="feedback-card-title">Missing Information in Member List</div>
-            <div class="feedback-card-date">July 10, 2025, 3:45 PM</div>
-          </div>
-          <div class="feedback-card-body">
-            <p>The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.</p>
-          </div>
-          <div class="feedback-card-file">
-            <strong>File:</strong> listofmembers.pdf
-          </div>
-          <div class="d-flex justify-content-end mt-2">
-            <button class="btn btn-primary btn-sm" type="button" onclick="openReplyModal('{{ feedback_date }}')">Reply</button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="feedback-tab-content" id="replied-tab">
-        <!-- Replied Feedback Item 1 -->
-        <div class="feedback-card replied">
-          <div class="feedback-card-header">
-            <div class="feedback-card-title">Response to Member List Feedback</div>
-            <div class="feedback-card-date">July 11, 2025, 9:30 AM</div>
-          </div>
-          <div class="feedback-card-body">
-            <p>We have updated the member list with contact information for all executive board members as requested. The revised document has been uploaded for your review.</p>
-          </div>
-          <div class="feedback-card-file">
-            <strong>File:</strong> listofmembers.pdf
-          </div>
-          <div class="d-flex justify-content-end mt-2">
-            <button class="btn btn-primary btn-sm" type="button" onclick="openFeedbackDetail('replied', 1)">View Details</button>
-          </div>
+        <!-- Empty feedback state -->
+        <div class="text-center p-4">
+          <p class="text-muted">No feedback available.</p>
         </div>
       </div>
     </div>
   </section>
 </div>
 
-<!-- Reply Modal -->
-<div id="replyModal" class="global-modal" aria-labelledby="replyModalTitle" aria-modal="true" role="dialog">
-  <div class="modal-container">
-    <button type="button" class="btn-back" onclick="closeReplyModal()" aria-label="Close">
-      <i class="fas fa-arrow-left"></i> Back
-    </button>
-
-    <div class="modal-section">
-      <h2 class="form-title">Reply to Feedback</h2>
-      
-
-      <div class="feedback-content mb-4">
-        <h3 class="fw-semibold fs-6 mb-2">Admin's Message</h3>
-        <div class="feedback-message p-3 bg-light rounded">
-          <p>The submitted list of members is missing contact information for the executive board members. Please revise and resubmit with complete information.</p>
-        </div>
+<!-- Loading Modal -->
+<div class="global-modal" id="loadingModal" aria-labelledby="loadingModalTitle" aria-modal="true" role="dialog">
+  <div class="modal-content p-4 text-center" style="width: auto; max-width: 300px; margin: 0 auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    <div class="d-flex justify-content-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
-
-      <div class="file-reference mb-4">
-        <h3 class="fw-semibold fs-6 mb-2">Related File</h3>
-        <div class="file-info p-3 bg-light rounded">
-          <p><strong>File:</strong> listofmembers.pdf</p>
-        </div>
-      </div>
-
-      <form id="reply-form">
-        <div class="mb-3">
-          <label for="reply-subject" class="form-label">Subject</label>
-          <input type="text" class="form-control" id="reply-subject" name="subject" autocomplete="off" />
-        </div>
-        <div class="mb-4">
-          <label for="reply-message" class="form-label">Message Content</label>
-          <textarea class="form-control" id="reply-message" name="message" rows="8"></textarea>
-        </div>
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn-send">Send Reply</button>
-        </div>
-      </form>
     </div>
+    <p id="loadingMessage">Loading...</p>
   </div>
 </div>
 
-<script>
-function showTab(tabId) {
-  // Hide all tab contents
-  const tabContents = document.querySelectorAll('.feedback-tab-content');
-  tabContents.forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // Remove active class from all tab buttons
-  const tabButtons = document.querySelectorAll('.feedback-tab');
-  tabButtons.forEach(button => {
-    button.classList.remove('active');
-  });
-  
-  // Show the selected tab content
-  document.getElementById(tabId + '-tab').classList.add('active');
-  
-  // Add active class to the selected tab button
-  document.getElementById(tabId + '-tab-btn').classList.add('active');
-}
+<!-- Preview Modal -->
+<div class="global-modal" id="previewModal" aria-labelledby="previewModalTitle" aria-modal="true" role="dialog">
+  <div id="previewModalContent" class="preview-modal-content">
+    <!-- Content will be dynamically inserted here -->
+  </div>
+</div>
 
-function openReplyModal(feedbackDate) {
-  const modal = document.getElementById('replyModal');
-  modal.classList.add('show');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
+{% include 'user/modal/excelUploadModal.html' %}
 
-function closeReplyModal() {
-  const modal = document.getElementById('replyModal');
-  modal.classList.remove('show');
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
+{% block extra_js %}
+<!-- Common modules -->
+<script src="{{ url_for('static', filename='js/common/dom-utils.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-status.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-preview.js') }}?v={{ cache_version }}"></script>
+<!-- User-specific renewal script with disabled functionality -->
+<script src="{{ url_for('static', filename='js/user/renewal.js') }}?v={{ cache_version }}"></script>
+{% endblock %}
 
-function openFeedbackDetail(tabType, id) {
-  alert('Opening details for ' + tabType + ' feedback #' + id);
-  // Implement detailed view functionality here
-}
-
-document.getElementById('reply-form').addEventListener('submit', function(event) {
-  event.preventDefault();
-  const subject = document.getElementById('reply-subject').value;
-  const message = document.getElementById('reply-message').value;
-  if (!subject || !message) {
-    alert('Please fill in all required fields.');
-    return;
-  }
-  alert('Reply sent successfully!');
-  this.reset();
-  closeReplyModal();
-});
-</script>
-
+<!-- Organization update functionality removed from renewal page -->
 {% endblock %}

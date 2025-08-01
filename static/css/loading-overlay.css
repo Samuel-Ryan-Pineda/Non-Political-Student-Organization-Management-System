@@ -1,0 +1,65 @@
+/* Loading overlay styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 240px; /* Match sidebar width */
+  width: calc(100% - 240px); /* Full width minus sidebar */
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1025; /* Below sidebar z-index (1030) but above other content */
+  transition: opacity 0.3s ease-out;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #1d4ed8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.loading-text {
+  font-size: 18px;
+  color: #1d4ed8;
+  font-weight: bold;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Hide document cards until loaded */
+.document-cards-container {
+  opacity: 0;
+  transition: opacity 0.5s ease-in;
+}
+
+.document-cards-container.loaded {
+  opacity: 1;
+}
+
+/* Responsive behavior for loading overlay */
+@media (max-width: 768px) {
+  .loading-overlay {
+    left: 0;
+    width: 100%;
+  }
+}
+
+/* When sidebar has mobile-active class (collapsed on mobile) */
+.custom-sidebar-container .mobile-active ~ .loading-overlay {
+  left: 0;
+  width: 100%;
+}

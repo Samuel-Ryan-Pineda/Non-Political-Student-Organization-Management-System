@@ -1,0 +1,92 @@
+/* Update Organization Modal Styles */
+
+/* Section styling */
+.section-logo-description,
+.section-organization,
+.section-type {
+    border-radius: 1rem;
+    transition: all 0.2s ease-in-out;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Section highlighting */
+.section-logo-description.section-highlighted,
+.section-organization.section-highlighted,
+.section-type.section-highlighted {
+    background-color: #F4F7F9 !important;
+    border: 2px solid #2196f3 !important;
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.3) !important;
+    transition: all 0.3s ease !important;
+    transform: scale(1.02) !important;
+}
+
+/* Field display styling */
+textarea.field-display {
+    overflow: auto;
+    resize: none;
+    height: auto;
+    max-height: 200px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+    font-size: 0.75rem;
+    transition: height 0.2s ease;
+    color: #919191;
+}
+
+/* Section header styling */
+.section-logo-description .fw-semibold,
+.section-organization .fw-semibold,
+.section-type .fw-semibold {
+    color: #111827;
+}
+
+/* Field container styling */
+.field-container {
+    width: 100%;
+    position: relative;
+}
+
+/* Editing field styling */
+#edit-logo-description,
+#edit-update-org-name,
+#edit-update-org-type {
+    width: 100%;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Logo preview styling */
+#updatePreviewLogo {
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Button styling */
+.btn-save,
+.btn-cancel {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.25rem;
+}
+
+.btn-save {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}

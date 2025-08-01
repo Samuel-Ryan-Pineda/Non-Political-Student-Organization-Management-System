@@ -48,13 +48,8 @@
                             <div class="row">
                                 <div class="col-6">
                                     <label for="adviser-type" class="form-label" style="font-size: 0.75rem;">Advisory Type</label>
-                                    <div class="input-group">
-                                        <select id="adviser-type" class="form-control form-control-sm" style="font-size: 0.75rem;">
-                                            <option value="Adviser" {% if adviser.type == 'Academic' %}selected{% endif %}>Adviser</option>
-                                            <option value="Co-Adviser" {% if adviser.type == 'Professional' %}selected{% endif %}>Co-Adviser</option>
-                                        </select>
-                                        <span class="input-group-text" style="font-size: 0.75rem;"><i class="fas fa-chevron-down"></i></span>
-                                    </div>
+                                    <input type="hidden" id="adviser-type" value="Adviser">
+                                    <div class="form-control form-control-sm" style="font-size: 0.75rem; background-color: #f8f9fa;">Adviser</div>
                                 </div>
                                 <div class="col-6">
                                     <label for="adviser-status" class="form-label" style="font-size: 0.75rem;">Status</label>
@@ -62,6 +57,62 @@
                                         <select id="adviser-status" class="form-control form-control-sm" style="font-size: 0.75rem;">
                                             <option value="active" {% if adviser.status == 'active' %}selected{% endif %}>Active</option>
                                             <option value="inactive" {% if adviser.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                        </select>
+                                        <span class="input-group-text" style="font-size: 0.75rem;"><i class="fas fa-chevron-down"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                </section> 
+                <section class="bg-white rounded-2xl border border-gray-100 mt-3 p-3 section-coadviser"> 
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="coadviser-name-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Co-Adviser</label> 
+                        {% if coadviser.first_name or coadviser.middle_name or coadviser.last_name %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditCoAdviserNameForm()"> 
+                            Edit
+                        </button>
+                        {% else %}
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditCoAdviserNameForm()"> 
+                            Add
+                        </button>
+                        {% endif %} 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <div id="coadviser-name-display">
+                            {% if coadviser.first_name or coadviser.middle_name or coadviser.last_name %}
+                                <div><strong>Name:</strong> {{ coadviser.first_name }} {{ coadviser.middle_name }} {{ coadviser.last_name }}</div>
+                                <div><strong>Type:</strong> {{ coadviser.type if coadviser.type else 'Co-Adviser' }}</div>
+                                <div><strong>Status:</strong> {{ coadviser.status if coadviser.status else 'Active' }}</div>
+                            {% endif %}
+                        </div>
+                        <div id="edit-coadviser-name" style="display: none;">
+                            <div class="row mb-2">
+                                <div class="col-4">
+                                    <label for="coadviser-first-name" class="form-label" style="font-size: 0.75rem;">First Name</label>
+                                    <input type="text" id="coadviser-first-name" class="form-control form-control-sm" style="font-size: 0.75rem;" value="{% if coadviser.first_name %}{{ coadviser.first_name }}{% endif %}">
+                                </div>
+                                <div class="col-4">
+                                    <label for="coadviser-middle-name" class="form-label" style="font-size: 0.75rem;">Middle Name</label>
+                                    <input type="text" id="coadviser-middle-name" class="form-control form-control-sm" style="font-size: 0.75rem;" value="{% if coadviser.middle_name %}{{ coadviser.middle_name }}{% endif %}">
+                                </div>
+                                <div class="col-4">
+                                    <label for="coadviser-last-name" class="form-label" style="font-size: 0.75rem;">Last Name</label>
+                                    <input type="text" id="coadviser-last-name" class="form-control form-control-sm" style="font-size: 0.75rem;" value="{% if coadviser.last_name %}{{ coadviser.last_name }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="coadviser-type" class="form-label" style="font-size: 0.75rem;">Advisory Type</label>
+                                    <input type="hidden" id="coadviser-type" value="Co-Adviser">
+                                    <div class="form-control form-control-sm" style="font-size: 0.75rem; background-color: #f8f9fa;">Co-Adviser</div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="coadviser-status" class="form-label" style="font-size: 0.75rem;">Status</label>
+                                    <div class="input-group">
+                                        <select id="coadviser-status" class="form-control form-control-sm" style="font-size: 0.75rem;">
+                                            <option value="active" {% if coadviser.status == 'active' %}selected{% endif %}>Active</option>
+                                            <option value="inactive" {% if coadviser.status == 'inactive' %}selected{% endif %}>Inactive</option>
                                         </select>
                                         <span class="input-group-text" style="font-size: 0.75rem;"><i class="fas fa-chevron-down"></i></span>
                                     </div>

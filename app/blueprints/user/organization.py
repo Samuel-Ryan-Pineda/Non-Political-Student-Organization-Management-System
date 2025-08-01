@@ -1,11 +1,504 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, send_file, abort, session
 from flask_login import login_required, current_user
-from app.models import db, Logo, Application, ApplicationFile
+from app.models import db, Logo, Application, ApplicationFile, Organization
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import io
+import os
 
 user_organization_bp = Blueprint('user_organization', __name__)
+
+@user_organization_bp.route('/download-excel-template')
+@login_required
+def download_excel_template():
+    # Get template type from query parameter (officers, members, volunteers, or plans)
+    template_type = request.args.get('type', 'officers')
+    
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        flash("You don't have permission to access this resource", "error")
+        return redirect(url_for('main.index'))
+    
+    # Set file name based on template type
+    if template_type == 'officers':
+        template_filename = 'board_of_officers_template.xlsx'
+        download_name = 'board_of_officers_template.xlsx'
+    elif template_type == 'volunteers':
+        template_filename = 'volunteers_template.xlsx'
+        download_name = 'volunteers_template.xlsx'
+    elif template_type == 'plans':
+        template_filename = 'plans_template.xlsx'
+        download_name = 'plans_template.xlsx'
+    else:  # members
+        template_filename = 'members_template.xlsx'
+        download_name = 'members_template.xlsx'
+    
+    # Path to the template file
+    template_path = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))), 
+                               'static', 'templates', template_filename)
+    
+    # Check if file exists
+    if not os.path.exists(template_path):
+        # If template doesn't exist, create a new one with pandas
+        try:
+            import pandas as pd
+            from app.models import Program
+            
+            # Get valid program codes for the example
+            program_codes = [p.program_code for p in Program.query.all()[:5]]
+            if not program_codes:  # Fallback if no programs in database
+                program_codes = ['BSIT', 'BSDS', 'BSCE', 'BSEE', 'BSME']
+            
+            # Create sample data based on template type
+            if template_type == 'officers':
+                sample_data = [
+                    {'Position': 'President', 'Student Number': '20210001', 'First Name': 'Juan', 'Middle Name': 'Dela', 'Last Name': 'Cruz', 'Program': program_codes[0]},
+                    {'Position': 'Vice President', 'Student Number': '20210002', 'First Name': 'Maria', 'Middle Name': 'Santos', 'Last Name': 'Reyes', 'Program': program_codes[0]},
+                    {'Position': 'Secretary', 'Student Number': '20210003-A', 'First Name': 'Pedro', 'Middle Name': 'Gomez', 'Last Name': 'Lim', 'Program': program_codes[1]},
+                    {'Position': 'Treasurer', 'Student Number': '20210004', 'First Name': 'Ana', 'Middle Name': 'Marie', 'Last Name': 'Garcia', 'Program': program_codes[1]},
+                    {'Position': 'Auditor', 'Student Number': 'SUM2022-00005', 'First Name': 'Jose', 'Middle Name': 'Manuel', 'Last Name': 'Santos', 'Program': program_codes[2]},
+                ]
+                sheet_name = 'Officers'
+                instructions_title = 'Instructions for filling out the Officers template:'
+            elif template_type == 'volunteers':
+                sample_data = [
+                    {'Student Number': '20210011', 'First Name': 'Miguel', 'Middle Name': 'Angel', 'Last Name': 'Rodriguez', 'Program': program_codes[0]},
+                    {'Student Number': '20210012', 'First Name': 'Carmen', 'Middle Name': 'Rosa', 'Last Name': 'Fernandez', 'Program': program_codes[1]},
+                    {'Student Number': '20210013-C', 'First Name': 'Luis', 'Middle Name': '', 'Last Name': 'Martinez', 'Program': program_codes[2]},
+                    {'Student Number': '20210014', 'First Name': 'Elena', 'Middle Name': 'Grace', 'Last Name': 'Morales', 'Program': program_codes[3]},
+                    {'Student Number': 'SUM2022-00015', 'First Name': 'Ricardo', 'Middle Name': 'Pablo', 'Last Name': 'Villanueva', 'Program': program_codes[4]},
+                ]
+                sheet_name = 'Volunteers'
+                instructions_title = 'Instructions for filling out the Volunteers template:'
+            elif template_type == 'plans':
+                sample_data = [
+                    {'Programs/Projects/Activities': 'Annual General Assembly', 'Objectives': 'To gather all members and discuss yearly plans', 'Proposed Date': '2023-08-15', 'People Involved': 'All members and officers', 'Source of Funds': 'Organization funds', 'Target Output': 'Approved annual plan'},
+                    {'Programs/Projects/Activities': 'Community Outreach Program', 'Objectives': 'To help local communities with educational materials', 'Proposed Date': '2023-09-20', 'People Involved': 'Volunteer committee', 'Source of Funds': 'Donations', 'Target Output': '100 students reached'},
+                    {'Programs/Projects/Activities': 'Leadership Training Workshop', 'Objectives': 'To develop leadership skills among members', 'Proposed Date': '2023-10-10', 'People Involved': 'Officers and selected members', 'Source of Funds': 'Organization funds', 'Target Output': '30 trained leaders'},
+                    {'Programs/Projects/Activities': 'Academic Excellence Seminar', 'Objectives': 'To provide academic support to students', 'Proposed Date': '2023-11-05', 'People Involved': 'Academic committee', 'Source of Funds': 'University grant', 'Target Output': 'Improved academic performance'},
+                    {'Programs/Projects/Activities': 'Year-End Celebration', 'Objectives': 'To celebrate achievements and recognize outstanding members', 'Proposed Date': '2023-12-15', 'People Involved': 'All members and officers', 'Source of Funds': 'Organization funds and sponsors', 'Target Output': 'Successful recognition program'},
+                ]
+                sheet_name = 'Plans'
+                instructions_title = 'Instructions for filling out the Plans template:'
+            else:  # members
+                sample_data = [
+                    {'Student Number': '20210006', 'First Name': 'Carlos', 'Middle Name': 'Miguel', 'Last Name': 'Tan', 'Program': program_codes[0]},
+                    {'Student Number': '20210007', 'First Name': 'Sofia', 'Middle Name': 'Luna', 'Last Name': 'Reyes', 'Program': program_codes[1]},
+                    {'Student Number': '20210008-B', 'First Name': 'Diego', 'Middle Name': '', 'Last Name': 'Santos', 'Program': program_codes[2]},
+                    {'Student Number': '20210009', 'First Name': 'Isabella', 'Middle Name': 'Marie', 'Last Name': 'Cruz', 'Program': program_codes[3]},
+                    {'Student Number': 'SUM2022-00010', 'First Name': 'Gabriel', 'Middle Name': 'Jose', 'Last Name': 'Garcia', 'Program': program_codes[4]},
+                ]
+                sheet_name = 'Members'
+                instructions_title = 'Instructions for filling out the Members template:'
+            
+            # Create DataFrame
+            df = pd.DataFrame(sample_data)
+            
+            # Create a temporary file path for the Excel file
+            import tempfile
+            temp_file = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
+            temp_file.close()
+            
+            # Create Excel writer with file path instead of BytesIO
+            with pd.ExcelWriter(temp_file.name, engine='xlsxwriter') as writer:
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                
+                # Get the xlsxwriter workbook and worksheet objects
+                workbook = writer.book
+                worksheet = writer.sheets[sheet_name]
+                
+                # Add a header format
+                header_format = workbook.add_format({
+                    'bold': True,
+                    'text_wrap': True,
+                    'valign': 'top',
+                    'fg_color': '#D7E4BC',
+                    'border': 1
+                })
+                
+                # Write the column headers with the defined format
+                for col_num, value in enumerate(df.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    
+                    # For Plans template, adjust column width based on content
+                    if template_type == 'plans':
+                        # Calculate the maximum width needed for this column
+                        max_len = max([len(str(value))] + [len(str(df.iloc[i, col_num])) for i in range(len(df))])
+                        # Add some padding and set the column width
+                        worksheet.set_column(col_num, col_num, max_len + 3)
+                    else:
+                        worksheet.set_column(col_num, col_num, 15)  # Set fixed column width for other templates
+                
+                # Add instructions in a new sheet
+                instructions_sheet = workbook.add_worksheet('Instructions')
+                
+                # Create instructions based on template type
+                instructions = [
+                    [instructions_title],
+                    ['']
+                ]
+                
+                # Add column descriptions based on template type
+                if template_type == 'officers':
+                    instructions.extend([
+                        ['1. Position: The role of the officer in the organization (e.g., President, Vice President, etc.)'],
+                        ['2. Student Number: The student\'s identification number as shown on their school ID'],
+                        ['3. First Name: The first name of the student'],
+                        ['4. Middle Name: The middle name of the student (can be left blank)'],
+                        ['5. Last Name: The last name of the student'],
+                        ['6. Program: Must be one of the valid program codes listed below']
+                    ])
+                elif template_type == 'volunteers':
+                    instructions.extend([
+                        ['1. Student Number: The student\'s identification number as shown on their school ID'],
+                        ['2. First Name: The first name of the student'],
+                        ['3. Middle Name: The middle name of the student (can be left blank)'],
+                        ['4. Last Name: The last name of the student'],
+                        ['5. Program: Must be one of the valid program codes listed below'],
+                        [''],
+                        ['Note: All uploaded students will automatically be assigned the "Volunteer" position.']
+                    ])
+                elif template_type == 'plans':
+                    instructions.extend([
+                        ['1. Programs/Projects/Activities: The title of the planned activity'],
+                        ['2. Objectives: The goals or objectives of the activity'],
+                        ['3. Proposed Date: The planned date for the activity (format: YYYY-MM-DD)'],
+                        ['4. People Involved: The people or groups who will be involved in the activity'],
+                        ['5. Source of Funds: Where the funding for the activity will come from'],
+                        ['6. Target Output: The expected outcomes or results of the activity']
+                    ])
+                else:  # members
+                    instructions.extend([
+                        ['1. Student Number: The student\'s identification number as shown on their school ID'],
+                        ['2. First Name: The first name of the student'],
+                        ['3. Middle Name: The middle name of the student (can be left blank)'],
+                        ['4. Last Name: The last name of the student'],
+                        ['5. Program: Must be one of the valid program codes listed below']
+                    ])
+                
+                # Only add program codes for templates that need them
+                if template_type != 'plans':
+                    instructions.extend([
+                        [''],
+                        ['Valid Program Codes:']
+                    ])
+                    
+                    # Add all program codes from the database
+                    all_programs = Program.query.all()
+                    for i, program in enumerate(all_programs):
+                        instructions.append([f'{program.program_code}: {program.program_name}'])
+                
+                # Write instructions
+                for row_num, instruction in enumerate(instructions):
+                    instructions_sheet.write(row_num, 0, instruction[0])
+                
+                instructions_sheet.set_column(0, 0, 60)  # Set column width
+            
+            # Return the generated Excel file from the temporary file
+            return send_file(
+                temp_file.name,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=download_name
+            )
+            
+        except Exception as e:
+            flash(f"Error creating template: {str(e)}", "error")
+            return redirect(url_for('user_organization.application'))
+    
+    # Return the file as an attachment
+    return send_file(template_path, 
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    as_attachment=True,
+                    download_name=download_name)
+
+@user_organization_bp.route('/import-excel', methods=['POST'])
+@login_required
+def import_excel():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to access this resource"})
+    
+    # Check if the post request has the file part
+    if 'excel_file' not in request.files:
+        return jsonify({'success': False, 'message': 'No file part'})
+    
+    file = request.files['excel_file']
+    
+    # If user does not select file, browser also submits an empty part without filename
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No selected file'})
+    
+    # Check if the file is an Excel file
+    if not allowed_file(file.filename, {'xlsx', 'xls'}):
+        return jsonify({'success': False, 'message': 'File type not allowed. Please upload an Excel file.'})
+    
+    try:
+        # Import necessary libraries for Excel processing
+        import pandas as pd
+        from app.models import db, Organization
+        
+        # Get organization ID from form data
+        organization_id = request.form.get('organization_id')
+        if not organization_id:
+            return jsonify({'success': False, 'message': 'Organization ID is required'})
+        
+        # Get upload type (officers, members, or volunteers)
+        upload_type = request.form.get('upload_type', 'officers')
+        
+        # Get the organization from the database
+        organization = Organization.query.get(organization_id)
+        if not organization:
+            return jsonify({'success': False, 'message': 'Organization not found'})
+        
+        # Check if the current user is authorized to modify this organization
+        if organization.user_id != current_user.user_id:
+            return jsonify({'success': False, 'message': 'You are not authorized to modify this organization'})
+        
+        # Read the Excel file
+        df = pd.read_excel(file)
+        
+        # Validate the Excel file structure based on upload type
+        if upload_type == 'officers':
+            required_columns = ['Position', 'Student Number', 'First Name', 'Middle Name', 'Last Name', 'Program']
+        elif upload_type == 'volunteers':
+            required_columns = ['Student Number', 'First Name', 'Middle Name', 'Last Name', 'Program']
+        elif upload_type == 'plans':
+            required_columns = ['Programs/Projects/Activities', 'Objectives', 'Proposed Date', 'People Involved', 'Source of Funds', 'Target Output']
+        else:  # members
+            required_columns = ['Student Number', 'First Name', 'Middle Name', 'Last Name', 'Program']
+            
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            return jsonify({
+                'success': False, 
+                'message': f'Missing required columns: {", ".join(missing_columns)}'
+            })
+        
+        # Check if the Excel file is empty
+        if df.empty:
+            return jsonify({
+                'success': False,
+                'message': 'The Excel file is empty. Please add data to the file.'
+            })
+        
+        # Remove rows where all required fields are empty
+        df = df.dropna(subset=required_columns, how='all')
+        
+        # Check if there are any rows left after removing empty rows
+        if df.empty:
+            return jsonify({
+                'success': False,
+                'message': 'No valid data found in the Excel file. Please ensure all required fields are filled.'
+            })
+        
+        # Validate data based on upload type
+        if upload_type != 'plans':
+            # Validate student numbers (can contain numbers, letters, and hyphens)
+            invalid_student_numbers = []
+            for index, row in df.iterrows():
+                student_no = str(row['Student Number']).strip()
+                # Allow alphanumeric characters and hyphens
+                if not student_no or not all(c.isalnum() or c == '-' for c in student_no):
+                    invalid_student_numbers.append(f"Row {index+1}: '{student_no}'")
+            
+            if invalid_student_numbers:
+                error_msg = 'Invalid student numbers found. Please check your student ID numbers.'
+                if len(invalid_student_numbers) <= 5:
+                    error_msg += f" Issues: {', '.join(invalid_student_numbers)}"
+                else:
+                    error_msg += f" Issues: {', '.join(invalid_student_numbers[:5])} and {len(invalid_student_numbers) - 5} more."
+                return jsonify({
+                    'success': False,
+                    'message': error_msg
+                })
+            
+            # Validate program codes against database
+            from app.models import Program
+            valid_program_codes = [p.program_code.upper() for p in Program.query.all()]
+            invalid_programs = []
+            
+            for index, row in df.iterrows():
+                program_code = str(row['Program']).strip().upper()
+                if program_code not in valid_program_codes:
+                    invalid_programs.append(f"Row {index+1}: '{row['Program']}'")
+            
+            if invalid_programs:
+                error_msg = 'Invalid program codes found. Please use valid program codes.'
+                if len(invalid_programs) <= 5:
+                    error_msg += f" Issues: {', '.join(invalid_programs)}"
+                else:
+                    error_msg += f" Issues: {', '.join(invalid_programs[:5])} and {len(invalid_programs) - 5} more."
+                return jsonify({
+                    'success': False,
+                    'message': error_msg
+                })
+        else:
+            # Validate date format for Plans
+            invalid_dates = []
+            for index, row in df.iterrows():
+                proposed_date = row['Proposed Date']
+                if not pd.isna(proposed_date):
+                    try:
+                        # Try to parse the date
+                        if isinstance(proposed_date, str):
+                            pd.to_datetime(proposed_date)
+                    except Exception:
+                        invalid_dates.append(f"Row {index+1}: '{proposed_date}'")
+            
+            if invalid_dates:
+                error_msg = 'Invalid date format found. Please use YYYY-MM-DD format.'
+                if len(invalid_dates) <= 5:
+                    error_msg += f" Issues: {', '.join(invalid_dates)}"
+                else:
+                    error_msg += f" Issues: {', '.join(invalid_dates[:5])} and {len(invalid_dates) - 5} more."
+                return jsonify({
+                    'success': False,
+                    'message': error_msg
+                })
+        
+        # Process the data and save to database
+        from app.models import Student, Program, Affiliation, Address, Plan, Application
+        from datetime import datetime
+        
+        # Get current academic year
+        current_year = datetime.now().year
+        academic_year = f"{current_year}-{current_year + 1}"
+        
+        # Process each row in the Excel file
+        success_count = 0
+        error_messages = []
+        
+        # Get the application for this organization
+        from app.organization_service import get_application_by_organization_id
+        application = get_application_by_organization_id(organization.organization_id)
+        if not application and upload_type == 'plans':
+            return jsonify({
+                'success': False,
+                'message': 'No application found for this organization. Please create an application first.'
+            })
+        
+        for index, row in df.iterrows():
+            try:
+                if upload_type != 'plans':
+                    # Get program by code (case-insensitive)
+                    from sqlalchemy import func
+                    program = Program.query.filter(func.upper(Program.program_code) == str(row['Program']).strip().upper()).first()
+                    if not program:
+                        error_messages.append(f"Row {index+1}: Program code '{row['Program']}' not found")
+                        continue
+                    
+                    # Check if student already exists
+                    student = Student.query.filter_by(student_number=row['Student Number']).first()
+                    
+                    if not student:
+                        # Create a default address (can be updated later)
+                        address = Address(city="Default City", province="Default Province")
+                        db.session.add(address)
+                        db.session.flush()  # Get the address ID
+                        
+                        # Handle nan values from pandas - convert to None for database
+                        middle_name = row['Middle Name']
+                        if pd.isna(middle_name):
+                            middle_name = None
+                        
+                        # Create new student
+                        student = Student(
+                            program_id=program.program_id,
+                            address_id=address.address_id,
+                            first_name=str(row['First Name']).strip(),
+                            middle_name=middle_name,
+                            last_name=str(row['Last Name']).strip(),
+                            student_number=str(row['Student Number']).strip()
+                        )
+                        db.session.add(student)
+                        db.session.flush()  # Get the student ID
+                    
+                    # Set position based on upload type
+                    if upload_type == 'officers':
+                        position = row.get('Position', 'Member')
+                        # Handle nan values for position
+                        if pd.isna(position):
+                            position = 'Member'
+                        else:
+                            position = str(position).strip()
+                    elif upload_type == 'volunteers':
+                        position = 'Volunteer'
+                    else:  # members
+                        position = 'Member'
+                    
+                    # Check if affiliation already exists
+                    existing_affiliation = Affiliation.query.filter_by(
+                        student_id=student.student_id,
+                        organization_id=organization.organization_id,
+                        position=position,
+                        academic_year=academic_year
+                    ).first()
+                    
+                    if not existing_affiliation:
+                        # Create new affiliation
+                        affiliation = Affiliation(
+                            student_id=student.student_id,
+                            organization_id=organization.organization_id,
+                            position=position,
+                            academic_year=academic_year
+                        )
+                        db.session.add(affiliation)
+                else:  # Plans upload type
+                    # Handle nan values from pandas - convert to None for database
+                    title = str(row['Programs/Projects/Activities']).strip()
+                    objectives = str(row['Objectives']).strip() if not pd.isna(row['Objectives']) else None
+                    proposed_date = None
+                    if not pd.isna(row['Proposed Date']):
+                        if isinstance(row['Proposed Date'], str):
+                            proposed_date = pd.to_datetime(row['Proposed Date']).date()
+                        else:  # Already a datetime
+                            proposed_date = row['Proposed Date'].date()
+                    people_involved = str(row['People Involved']).strip() if not pd.isna(row['People Involved']) else None
+                    funding_source = str(row['Source of Funds']).strip() if not pd.isna(row['Source of Funds']) else None
+                    target_output = str(row['Target Output']).strip() if not pd.isna(row['Target Output']) else None
+                    
+                    # Create new plan
+                    plan = Plan(
+                        application_id=application.application_id,
+                        title=title,
+                        objectives=objectives,
+                        proposed_date=proposed_date,
+                        people_involved=people_involved,
+                        funding_source=funding_source,
+                        target_output=target_output
+                    )
+                    db.session.add(plan)
+                
+                success_count += 1
+            except Exception as e:
+                # Rollback the current transaction for this row
+                db.session.rollback()
+                error_messages.append(f"Row {index+1}: {str(e)}")
+                # Continue processing other rows
+        
+        # Commit changes to database
+        try:
+            db.session.commit()
+            
+            # Prepare response message
+            message = f"Successfully imported {success_count} records."
+            if error_messages:
+                message += f" Encountered {len(error_messages)} errors: {'; '.join(error_messages[:5])}"
+                if len(error_messages) > 5:
+                    message += f" and {len(error_messages) - 5} more."
+            
+            return jsonify({'success': True, 'message': message})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f"Database error: {str(e)}"})
+        
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error importing Excel file: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error processing file: {str(e)}'})
+
 
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
@@ -29,38 +522,33 @@ def org_dashboard():
         # User has an organization, show the application page
         return redirect(url_for('user_organization.application'))
     else:
-        # User doesn't have an organization, show the first step form
-        return render_template('user/applicationfirststep.html', active_page='application')
+        # User doesn't have an organization, redirect to first step blueprint
+        return redirect(url_for('application_first_step.first_step'))
 
+# This route has been moved to neworganization.py
 @user_organization_bp.route('/application')
 @login_required
 def application():
-    # Ensure user is Organization President or Applicant
-    if current_user.role_id not in [2, 3]:
-        flash("You don't have permission to access this page", "error")
-        if current_user.role_id == 1:
-            return redirect(url_for('admin_routes.admin_dashboard'))
-        else:
-            return redirect(url_for('auth.logout'))
-    
-    # Import the service module here to avoid circular imports
-    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
-    
-    # Get user's organization
-    organization = get_organization_by_user_id(current_user.user_id)
-    
-    if not organization:
-        # User doesn't have an organization, redirect to first step
+    # Redirect to the application first step if no organization exists
+    from app.organization_service import user_has_organization, get_organization_by_user_id, get_application_by_organization_id
+    if not user_has_organization(current_user.user_id):
         return redirect(url_for('user_organization.applicationfirststep'))
     
-    # Get application associated with the organization
-    application = get_application_by_organization_id(organization.organization_id)
+    # Get organization data
+    organization = get_organization_by_user_id(current_user.user_id)
     
+    # Get application associated with the organization
+    application = None
+    if organization:
+        application = get_application_by_organization_id(organization.organization_id)
+        # Add debug logging
+        print(f"DEBUG - Application data: ID={application.application_id if application else 'None'}, Status={application.status if application else 'None'}")
+    
+    # Show the application page with organization and application data
     return render_template('user/application.html', 
-                           user=current_user, 
-                           organization=organization,
-                           application=application,
-                           active_page='application')
+                         active_page='application',
+                         organization=organization,
+                         application=application)
 
 @user_organization_bp.route('/check-organization-name', methods=['POST'])
 @login_required
@@ -81,6 +569,72 @@ def check_organization_name():
         return jsonify({'valid': False, 'message': f"Organization name '{org_name}' is already taken. Please choose a different name."})
     else:
         return jsonify({'valid': True})
+
+@user_organization_bp.route('/update-logo', methods=['POST'])
+@login_required
+def update_logo():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({
+            'success': False,
+            'message': "You don't have permission to update organization information"
+        })
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    
+    # Get the current organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    
+    if not organization:
+        return jsonify({
+            'success': False,
+            'message': "No organization found for this user"
+        })
+    
+    # Handle logo upload
+    if 'logo' not in request.files or not request.files['logo'].filename:
+        return jsonify({
+            'success': False,
+            'message': "No logo file provided"
+        })
+    
+    logo_file = request.files['logo']
+    
+    # Check if the file is allowed
+    if not allowed_file(logo_file.filename, ['png', 'jpg', 'jpeg', 'gif']):
+        return jsonify({
+            'success': False,
+            'message': "File type not allowed. Please upload a PNG, JPG, JPEG, or GIF file."
+        })
+    
+    try:
+        # Create a new logo or update existing one
+        if organization.logo_id:
+            # Update existing logo
+            logo = Logo.query.get(organization.logo_id)
+            if logo:
+                logo.logo = logo_file.read()
+        else:
+            # Create new logo
+            logo = Logo(logo=logo_file.read(), description="")
+            db.session.add(logo)
+            db.session.flush()  # Get the logo ID
+            organization.logo_id = logo.logo_id
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': "Logo updated successfully",
+            'logo_id': organization.logo_id
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f"Error updating logo: {str(e)}"
+        }), 500
 
 @user_organization_bp.route('/update-organization', methods=['POST'])
 @login_required
@@ -230,6 +784,80 @@ def save_social_media():
         result = save_social_media(data['organization_id'], data['platform'], data['link'])
         return jsonify(result)
     except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@user_organization_bp.route('/update-organization-field', methods=['POST'])
+@login_required
+def update_organization_field():
+    """
+    Update a single field of an organization
+    
+    Returns:
+        JSON response with success status
+    """
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({
+            'success': False,
+            'message': "You don't have permission to update organization information"
+        })
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    
+    # Get the current organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    
+    if not organization:
+        return jsonify({
+            'success': False,
+            'message': "No organization found for this user"
+        })
+    
+    # Get form data
+    field_id = request.form.get('field_id')
+    field_value = request.form.get('field_value')
+    
+    if not field_id or field_value is None:
+        return jsonify({
+            'success': False,
+            'message': "Field ID and value are required"
+        })
+    
+    try:
+        # Map field_id to database field
+        field_mapping = {
+            'orgName': 'organization_name',
+            'orgType': 'type',
+            'logoDescription': 'logo_description'
+        }
+        
+        db_field = field_mapping.get(field_id)
+        if not db_field:
+            return jsonify({
+                'success': False,
+                'message': f"Unknown field ID: {field_id}"
+            })
+        
+        # Update the appropriate field
+        if db_field == 'logo_description' and organization.logo_id:
+            # Update logo description
+            logo = Logo.query.get(organization.logo_id)
+            if logo:
+                logo.description = field_value
+        else:
+            # Update organization field
+            setattr(organization, db_field, field_value)
+        
+        # Save changes
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': "Field updated successfully"
+        })
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @user_organization_bp.route('/update_social_media', methods=['POST'])
@@ -573,6 +1201,12 @@ def check_and_update_application_status(application_id):
             db.session.commit()
         elif application.status.lower() == 'pending' and all_files_uploaded and all_files_verified:
             application.status = 'Verified'
+            
+            # Also update organization status from Incomplete to Active when application is verified
+            organization = Organization.query.get(application.organization_id)
+            if organization and organization.status and organization.status.lower() == 'incomplete':
+                organization.status = 'Active'
+            
             db.session.commit()
     except Exception as e:
         # Log the error but don't disrupt the file upload process

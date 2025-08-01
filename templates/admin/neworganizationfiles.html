@@ -167,37 +167,7 @@
     </div>
   </div>
 
-  <!-- Edit Feedback Modal -->
-  <div id="editFeedbackModal" class="global-modal" aria-labelledby="editFeedbackModalTitle" aria-modal="true" role="dialog">
-    <div class="modal-container">
-      <button type="button" class="btn-back" onclick="closeEditFeedbackModal()" aria-label="Close">
-        <i class="fas fa-arrow-left"></i> Back
-      </button>
 
-      <div class="modal-section">
-        <h2 class="form-title">Edit Feedback</h2>
-        <div class="form-info mb-3" style="font-size: 0.800rem">
-          <p><strong>File:</strong> <span id="edit-feedback-file-name"></span></p>
-        </div>
-        <hr class="mb-3">
-        <form id="edit-feedback-form">
-          <input type="hidden" id="edit-feedback-id" name="feedback_id">
-          <div class="mb-3">
-            <label for="edit-feedback-subject" class="form-label" style="font-size: 0.800rem; font-weight: 600;">Subject</label>
-            <input type="text" class="form-control" id="edit-feedback-subject" name="subject" required>
-          </div>
-          <div class="mb-4">
-            <label for="edit-feedback-message" class="form-label" style="font-size: 0.800rem; font-weight: 600;">Message Content</label>
-            <textarea class="form-control" id="edit-feedback-message" name="message" rows="6" required></textarea>
-          </div>
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" onclick="closeEditFeedbackModal()">Cancel</button>
-            <button type="submit" class="btn-send">Update Feedback</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
   
   <!-- File Preview Modal -->
   <div id="filePreviewModal" class="global-modal file-preview-modal" aria-labelledby="filePreviewModalTitle" aria-modal="true" role="dialog">
@@ -226,41 +196,8 @@
     </div>
   </div>
 
-  <!-- Status Update Modal -->
-  <div id="statusUpdateModal" class="global-modal" aria-labelledby="statusUpdateModalTitle" aria-modal="true" role="dialog">
-    <div class="modal-container">
-      <button type="button" class="btn-back" onclick="closeStatusModal()" aria-label="Close">
-        <i class="fas fa-arrow-left"></i> Back
-      </button>
-
-      <div class="modal-section">
-        <h2 class="form-title">Update File Status</h2>
-        <div class="form-info mb-3">
-          <p><strong>File:</strong> <span id="status-file-name"></span></p>
-          <p><strong>Submission Date:</strong> <span id="status-submission-date"></span></p>
-        </div>
-        <hr class="mb-3">
-        <form id="status-update-form">
-          <input type="hidden" id="file_id" name="file_id">
-          <div class="mb-4">
-            <label for="status" class="form-label">Select Status</label>
-            <select class="form-control form-select" id="status" name="status" required>
-              <option value="Verified">Verified</option>
-              <option value="Needs Revision">Needs Revision</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-          <div class="mb-4" id="feedback-field" style="display: none;">
-            <label for="status-feedback" class="form-label">Feedback/Comments</label>
-            <textarea class="form-control" id="status-feedback" name="feedback" rows="4" placeholder="Please provide feedback explaining why this file needs revision or is being rejected"></textarea>
-          </div>
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn-send">Update Status</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  {% include 'admin/modal/statusUpdateModal.html' %}
+  {% include 'admin/modal/editFeedbackModal.html' %}
 </main>
 
 {% block extra_js %}

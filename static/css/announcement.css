@@ -1,4 +1,4 @@
-  h1 {
+h1 {
     font-weight: 800;
     font-size: 2rem;
     line-height: 1.2;
@@ -129,5 +129,19 @@
     
     .table th {
       font-size: 0.75rem;
+      border: none;
+    }
+    
+    .table td {
+      border: none;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .table tbody tr:nth-child(even) {
+      background-color: #f5f5f5;
+    }
+    
+    .table tbody tr:hover {
+      background-color: #eaf0f3;
     }
   }

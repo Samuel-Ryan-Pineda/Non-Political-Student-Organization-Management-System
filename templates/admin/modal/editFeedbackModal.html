@@ -1,0 +1,42 @@
+<!-- Edit Feedback Modal -->
+<div id="editFeedbackModal" class="global-modal">
+  <div class="modal-container">
+    <!-- Modal Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="modal-title fw-bold">Edit Feedback</h5>
+      <button type="button" class="btn-close" onclick="closeEditFeedbackModal()" aria-label="Close"></button>
+    </div>
+    
+    <!-- File Information -->
+    <div class="mb-3 p-3 bg-light rounded">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-file-alt me-2 text-secondary"></i>
+        <div>
+          <p class="mb-0 fw-bold" id="edit-feedback-file-name">File Name</p>
+          <p class="mb-0 small text-muted" id="edit-feedback-date">Date</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Edit Feedback Form -->
+    <form id="edit-feedback-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" id="edit-feedback-id" name="feedback_id">
+      
+      <div class="mb-3">
+        <label for="edit-feedback-subject" class="form-label">Subject</label>
+        <input type="text" class="form-control" id="edit-feedback-subject" name="subject" required>
+      </div>
+      
+      <div class="mb-3">
+        <label for="edit-feedback-message" class="form-label">Message</label>
+        <textarea class="form-control" id="edit-feedback-message" name="message" rows="15" required></textarea>
+      </div>
+      
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary" onclick="closeEditFeedbackModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Feedback</button>
+      </div>
+    </form>
+  </div>
+</div>

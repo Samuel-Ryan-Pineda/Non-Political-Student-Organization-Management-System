@@ -9,3 +9,5 @@ python-dotenv
 pymysql
 cryptography
 waitress
+pandas
+openpyxl

@@ -1,5 +1,6 @@
 from app import create_app, db
 from app.models import User, EntryKey, Role
+from seed_programs import seed_programs
 
 def init_database():
     app = create_app()
@@ -24,3 +25,4 @@ def init_database():
 
 if __name__ == '__main__':
     init_database()
+    seed_programs()

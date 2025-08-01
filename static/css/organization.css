@@ -1,38 +1,51 @@
 
-/* Search component styles */
-  .search-wrapper {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
+/* Search and Categories Block Styles */
+  .search-categories-block {
+    background-color: #13454f;
+    padding: 3rem 6rem;
+    border-radius: 0 0 5rem 5rem;
+    font-size: 0.75rem;
   }
 
-  .search-input {
+  .search-container {
+    margin-bottom: 1rem;
+  }
+
+  .search-container input {
     border-radius: 50px;
-    border: 1.5px solid var(--primary-color);
-    padding: 0.75rem 3.5rem 0.75rem 1.25rem;
-    color: #6b7280;
-    width: 100%;
-    font-size: 1rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 0.75rem;
   }
 
-  .search-btn {
-    position: absolute;
-    right: 0.25rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: var(--primary-color);
-    border: none;
-    border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--white);
+  .category-pills {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
+
+  .category-pill {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .category-pill:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .category-pill.active {
+    background-color: white;
+    color: #13454f;
+    font-weight: 500;
+  }
+
   /* Make card groups (rows) display as flexbox */
   .row {
     display: flex;
@@ -105,7 +118,10 @@
   .section-organization.section-highlighted,
   .section-type.section-highlighted,
   .section-tagline.section-highlighted,
-  .section-description.section-highlighted {
+  .section-description.section-highlighted,
+  .section-adviser.section-highlighted,
+  .section-coadviser.section-highlighted,
+  .mb-3.p-3.border.rounded.bg-white.section-highlighted {
     background-color: #F4F7F9 !important;
     border: 2px solid #2196f3 !important;
     box-shadow: 0 0 10px rgba(33, 150, 243, 0.3) !important;

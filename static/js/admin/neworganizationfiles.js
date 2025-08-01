@@ -189,11 +189,18 @@
           formData.append('feedback', feedback);
         }
         
+        // Get CSRF token from meta tag or input
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                         document.querySelector('[name="csrf_token"]')?.value;
+        
         // Send the status update to the server
         fetch('/update-file-status', {
-          // Adding Content-Type header to ensure proper parsing
           method: 'POST',
-          body: formData
+          body: formData,
+          headers: {
+            'X-CSRFToken': csrfToken
+          },
+          credentials: 'same-origin' // Include cookies for CSRF token
         })
         .then(response => {
           if (!response.ok) {
@@ -418,6 +425,9 @@
     const editFeedbackModal = document.getElementById('editFeedbackModal');
     if (!editFeedbackModal) return;
     
+    // Show loading modal
+    DOMUtils.showLoadingModal('Loading feedback details...');
+    
     // Fetch feedback details from the server
     fetch(`/get-feedback-detail/${feedbackId}`)
       .then(response => {
@@ -427,24 +437,38 @@
         return response.json();
       })
       .then(feedbackData => {
+        // Hide loading modal
+        DOMUtils.hideLoadingModal();
+        
         // Update the form fields
         const feedbackIdInput = document.getElementById('edit-feedback-id');
         const subjectInput = document.getElementById('edit-feedback-subject');
         const messageInput = document.getElementById('edit-feedback-message');
         const fileNameElement = document.getElementById('edit-feedback-file-name');
+        const dateElement = document.getElementById('edit-feedback-date');
         
         if (feedbackIdInput) feedbackIdInput.value = feedbackId;
         if (subjectInput) subjectInput.value = feedbackData.subject;
         if (messageInput) messageInput.value = feedbackData.message;
         if (fileNameElement) fileNameElement.textContent = feedbackData.file_name;
         
+        // Format and display the date if available
+        if (dateElement && feedbackData.date && feedbackData.date !== 'Not available') {
+          dateElement.textContent = feedbackData.date; // Server already formats the date
+        } else if (dateElement) {
+          dateElement.textContent = 'Date not available';
+        }
+        
         // Show the modal
         editFeedbackModal.classList.add('show');
         document.body.classList.add('modal-open');
       })
       .catch(error => {
+        // Hide loading modal
+        DOMUtils.hideLoadingModal();
+        
         console.error('Error fetching feedback details:', error);
-        alert('Error loading feedback details. Please try again.');
+        DOMUtils.showNotification('Error loading feedback details. Please try again.', 'error');
       });
   }
 
@@ -488,16 +512,27 @@
           submitButton.textContent = 'Updating...';
         }
         
+        // Show loading modal
+        DOMUtils.showLoadingModal('Updating feedback...');
+        
         // Prepare data for submission
         const formData = new FormData();
         formData.append('feedback_id', feedbackId);
         formData.append('subject', subject);
         formData.append('message', message);
         
+        // Get CSRF token from meta tag or input
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                         document.querySelector('[name="csrf_token"]')?.value;
+        
         // Send the update to the server
         fetch('/update-feedback', {
           method: 'POST',
-          body: formData
+          body: formData,
+          headers: {
+            'X-CSRFToken': csrfToken
+          },
+          credentials: 'same-origin' // Include cookies for CSRF token
         })
         .then(response => {
           if (!response.ok) {
@@ -506,28 +541,37 @@
           return response.json();
         })
         .then(data => {
+          // Hide loading modal
+          DOMUtils.hideLoadingModal();
+          
           if (data.success) {
             // Close modal
             closeEditFeedbackModal();
             
             // Update the specific feedback card instead of reloading the page
             updateFeedbackCard(feedbackId, subject, message);
+            
+            // Show success notification
+            DOMUtils.showNotification('Feedback updated successfully', 'success');
           } else {
             // Re-enable submit button on error
             if (submitButton) {
               submitButton.disabled = false;
               submitButton.textContent = 'Update Feedback';
             }
-            alert('Error: ' + data.message);
+            DOMUtils.showNotification('Error: ' + data.message, 'error');
           }
         })
         .catch(error => {
+          // Hide loading modal
+          DOMUtils.hideLoadingModal();
+          
           // Re-enable submit button on error
           if (submitButton) {
             submitButton.disabled = false;
             submitButton.textContent = 'Update Feedback';
           }
-          alert('Error updating feedback: Network error');
+          DOMUtils.showNotification('Error updating feedback: Network error', 'error');
           console.error('Error updating feedback:', error);
         });
       });

@@ -15,7 +15,16 @@ def admin_dashboard():
         flash("You don't have permission to access this page", "error")
         return redirect(url_for('main.dashboard'))
     
-    return render_template('admin/organization.html', active_page='organization')
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_all_active_organizations
+    
+    # Get all active organizations
+    active_organizations = get_all_active_organizations()
+    
+    return render_template('admin/organization.html', 
+                          user=current_user, 
+                          active_page='organization',
+                          organizations=active_organizations)
 
 @admin_routes_bp.route('/member')
 @login_required
@@ -54,18 +63,89 @@ def organization():
     if current_user.role_id != 1:
         flash("You don't have permission to access this page", "error")
         return redirect(url_for('main.dashboard'))
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_all_active_organizations
+    
+    # Get all active organizations
+    active_organizations = get_all_active_organizations()
+    
     # current_user is provided by Flask-Login
-    return render_template('admin/organization.html', user=current_user, active_page='organization')
+    return render_template('admin/organization.html', 
+                          user=current_user, 
+                          active_page='organization',
+                          organizations=active_organizations)
 
 @admin_routes_bp.route('/organizationdetails')
+@admin_routes_bp.route('/organizationdetails/<int:organization_id>')
 @login_required
-def organizationdetails():
+def organizationdetails(organization_id=None):
     # Ensure user is OSOAD
     if current_user.role_id != 1:
         flash("You don't have permission to access this page", "error")
         return redirect(url_for('main.dashboard'))
+    
+    # If organization_id is provided, get organization details
+    organization = None
+    statistics = None
+    officers = None
+    members = None
+    volunteers = None
+    plans = None
+    adviser = None
+    coadviser = None
+    social_media = None
+    
+    if organization_id:
+        # Import the service modules here to avoid circular imports
+        from app.organization_service import (
+            get_organization_by_id, 
+            get_organization_statistics, 
+            get_affiliations_by_position_type,
+            get_plans_by_organization_id,
+            get_adviser_by_organization_id,
+            get_social_media_by_organization_id
+        )
+        
+        organization = get_organization_by_id(organization_id)
+        
+        if not organization:
+            flash("Organization not found", "error")
+            return redirect(url_for('admin_routes.organization'))
+        
+        # Get real statistics from the database
+        statistics = get_organization_statistics(organization_id)
+        
+        # Get officers, members, and volunteers from the database
+        officers = get_affiliations_by_position_type(organization_id, 'Officer')
+        members = get_affiliations_by_position_type(organization_id, 'Member')
+        volunteers = get_affiliations_by_position_type(organization_id, 'Volunteer')
+        
+        # Get plans from the database
+        plans = get_plans_by_organization_id(organization_id)
+        
+        # Get adviser information
+        adviser = get_adviser_by_organization_id(organization_id, adviser_type='Adviser')
+        
+        # Get co-adviser information
+        coadviser = get_adviser_by_organization_id(organization_id, adviser_type='Co-Adviser')
+        
+        # Get social media links
+        social_media = get_social_media_by_organization_id(organization_id)
+    
     # current_user is provided by Flask-Login
-    return render_template('admin/organizationdetails.html', user=current_user, active_page='organization')
+    return render_template('admin/organizationdetails.html', 
+                          user=current_user, 
+                          active_page='organization',
+                          organization=organization,
+                          statistics=statistics,
+                          officers=officers,
+                          members=members,
+                          volunteers=volunteers,
+                          plans=plans,
+                          adviser=adviser,
+                          coadviser=coadviser,
+                          social_media=social_media)
 
 @admin_routes_bp.route('/announcement')
 @login_required

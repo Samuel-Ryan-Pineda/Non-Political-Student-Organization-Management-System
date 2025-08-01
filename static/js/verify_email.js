@@ -66,7 +66,10 @@ document.addEventListener("DOMContentLoaded", function () {
         
         fetch("/resend_verification", {
             method: "POST",
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+            }
         })
         .then(response => response.json())
         .then(data => {
@@ -128,7 +131,10 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch("/verify_email", {
             method: "POST",
             body: new FormData(verificationForm),
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+            }
         })
         .then(response => response.json())
         .then(data => {

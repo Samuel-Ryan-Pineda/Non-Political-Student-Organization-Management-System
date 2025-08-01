@@ -2,13 +2,56 @@
 
 {% block title %}Organization Details{% endblock %}
 
+
+
+{% block extra_js %}
+<script>
+  // Sticky header functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const orgHeader = document.querySelector('.organization-header');
+    const stickyHeader = document.querySelector('.sticky-org-header');
+    
+    if (!orgHeader || !stickyHeader) {
+      console.error('Could not find organization header or sticky header elements');
+      return;
+    }
+    
+    // Handle scroll event
+    window.addEventListener('scroll', function() {
+      // Show sticky header when the original header is about to disappear
+      const headerRect = orgHeader.getBoundingClientRect();
+      const headerBottom = headerRect.bottom;
+      const headerHeight = headerRect.height;
+      
+      // Show sticky header when 75% of the original header has scrolled out of view
+      if (headerBottom < headerHeight * 0.25) {
+        stickyHeader.classList.add('visible');
+      } else {
+        stickyHeader.classList.remove('visible');
+      }
+    });
+    
+    // Trigger scroll event once to set initial state
+    window.dispatchEvent(new Event('scroll'));
+  });
+</script>
+{% endblock %}
+
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/organizationdetails.css') }}?v={{ cache_version }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/organization.css') }}?v={{ cache_version }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/excelUploadModal.css') }}?v={{ cache_version }}">
+<!-- Toastr CSS for toast notifications -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<!-- Load jQuery first (required for Toastr.js) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<!-- Toastr JS for toast notifications - loaded after jQuery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script src="{{ url_for('static', filename='js/manageorganization.js') }}?v={{ cache_version }}" defer></script>
 <script src="{{ url_for('static', filename='js/user/modal/editOrganizationModal.js') }}?v={{ cache_version }}" defer></script>
 <script src="{{ url_for('static', filename='js/user/modal/adviserInfoModal.js') }}?v={{ cache_version }}" defer></script>
 <script src="{{ url_for('static', filename='js/user/modal/socialMediaModal.js') }}?v={{ cache_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/user/modal/excelUploadModal.js') }}?v={{ cache_version }}" defer></script>
 <style>
   table th:nth-last-child(1),
   table td:nth-last-child(1) {
@@ -90,7 +133,22 @@
     <!-- Hidden organization ID field for JavaScript use -->
     <input type="hidden" id="organization-id" value="{{ organization.organization_id }}">
     
-    <section class="organization-header">
+    <!-- Sticky header that appears when scrolling -->
+    <div class="sticky-org-header">
+        {% if organization.logo_id %}
+        <img src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}" alt="{{ organization.organization_name }} logo" class="sticky-org-logo">
+        {% else %}
+        <img src="https://placehold.co/40x40/png/ffffff/000000?text=Logo" alt="Organization logo" class="sticky-org-logo">
+        {% endif %}
+        <div class="sticky-org-info">
+            <h3 class="sticky-org-title">{{ organization.organization_name }}</h3>
+            {% if organization.type %}
+            <p class="sticky-org-type">{{ organization.type }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <section class="organization-header org-card">
         <div class="d-flex justify-content-center align-items-center">
             <div class="d-flex flex-column flex-sm-row gap-5 align-items-center justify-content-center">
                 {% if organization.logo_id %}
@@ -112,24 +170,47 @@
                     {% if adviser %}
                     <p class="org-adviser">{{ adviser.type if adviser.type else 'Adviser' }}: {{ adviser.full_name }}</p>
                     {% endif %}
-                    {% if social_media %}
-                    <p class="org-social">
-                        <strong>Social Media:</strong><br>
-                        {% for sm in social_media %}
-                        {{ sm.platform }}: {{ sm.link }}<br>
-                        {% endfor %}
-                    </p>
+                    {% if coadviser %}
+                    <p class="org-adviser">{{ coadviser.type if coadviser.type else 'Co-Adviser' }}: {{ coadviser.full_name }}</p>
                     {% endif %}
-                    
-                    <!-- Organization Management Buttons -->
-                    <div class="mt-3 align-self-right">
-                        <button type="button" class="btn btn-primary me-2 mb-2" style="font-size: 0.8rem;" onclick="showEditOrganizationProfileModal()">
-                            Edit Organization
-                        </button>
-                        <button type="button" class="btn btn-secondary me-2 mb-2" style="font-size: 0.8rem;" onclick="showAdviserInfoModal()">
-                            Adviser Info
-                        </button>
-                        <i class="fas fa-link" style="font-size: 1.2rem; color: white; cursor: pointer;" onclick="showSocialMediaModal()" title="Social Media Links"></i>
+
+                   <!-- Social Media & Organization Management Row -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mt-3">
+                        <!-- Left Side: Buttons -->
+                        <div class="my-auto gap-2">
+                            <button type="button" class="btn btn-primary me-2 mb-2" style="font-size: 0.8rem;" onclick="showEditOrganizationProfileModal()">
+                                Edit Organization
+                            </button>
+                            <button type="button" class="btn btn-secondary my-auto me-2 mb-2" style="font-size: 0.8rem;" onclick="showAdviserInfoModal()">
+                                Adviser Info
+                            </button>
+                            <i class="fas fa-link my-auto" style="font-size: 1.5rem; color: white; cursor: pointer;" onclick="showSocialMediaModal()" title="Social Media Links"></i>
+                        </div>
+
+                        <!-- Right Side: Social Media Logos -->
+                        <div class="org-social">
+                            {% if social_media %}
+                            <div class="d-flex gap-2">
+                                {% for sm in social_media %}
+                                <a href="{{ sm.link }}" target="_blank" title="{{ sm.platform }}">
+                                    {% if sm.platform.lower() == 'facebook' %}
+                                    <i class="fab fa-facebook" style="font-size: 1.5rem; color: #fff;"></i>
+                                    {% elif sm.platform.lower() == 'twitter' %}
+                                    <i class="fab fa-twitter" style="font-size: 1.5rem; color: #fff;"></i>
+                                    {% elif sm.platform.lower() == 'instagram' %}
+                                    <i class="fab fa-instagram" style="font-size: 1.5rem; color: #fff;"></i>
+                                    {% elif sm.platform.lower() == 'messenger' %}
+                                    <i class="fab fa-facebook-messenger" style="font-size: 1.5rem; color: #fff;"></i>
+                                    {% else %}
+                                    <i class="fas fa-link" style="font-size: 1.5rem; color: #fff;"></i>
+                                    {% endif %}
+                                </a>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="d-flex gap-2"></div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -140,211 +221,250 @@
 {% block content %}
 <div class="container">
     <section class="stats-container">
-        {% set stats = [
-            {'class': 'stat-members', 'label': 'No. of Members', 'icon': 'fas fa-users', 'value': '35'},
-            {'class': 'stat-volunteers', 'label': 'No. of Volunteers', 'icon': 'fas fa-hand-holding-heart', 'value': '13'},
-            {'class': 'stat-activities', 'label': 'Accomplished Activities', 'icon': 'fas fa-tasks', 'value': '2'}
-        ] %}
-        
-        {% for stat in stats %}
-        <div class="stat-card {{ stat.class }}">
-            <div>{{ stat.label }}</div>
+        <div class="stat-card stat-members">
+            <div>No. of Members</div>
             <div class="d-flex align-items-center fw-semibold fs-4">
-                <i class="{{ stat.icon }} stat-icon"></i> {{ stat.value }}
+                <i class="fas fa-users stat-icon"></i> {{ statistics.member_count }}
             </div>
         </div>
-        {% endfor %}
+        
+        <div class="stat-card stat-volunteers">
+            <div>No. of Volunteers</div>
+            <div class="d-flex align-items-center fw-semibold fs-4">
+                <i class="fas fa-hand-holding-heart stat-icon"></i> {{ statistics.volunteer_count }}
+            </div>
+        </div>
+        
+        <div class="stat-card stat-activities">
+            <div>Accomplished Activities</div>
+            <div class="d-flex align-items-center fw-semibold fs-4">
+                <i class="fas fa-tasks stat-icon"></i> {{ statistics.accomplished_activities }}
+            </div>
+        </div>
         
         <div class="stat-card stat-status">
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 Organization Status
-                <span class="status-active">Active</span>
+                <span class="status-active">{{ statistics.organization_status }}</span>
             </div>
         </div>
     </section>
 
-    <section class="table-container">
-        <h3 class="table-title">Board of Officers</h3>
-        <div class="table-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width:12%;">Position</th>
-                        <th style="width:13%;">Student No.</th>
-                        <th style="width:25%;">Name</th>
-                        <th style="width:10%;">Program</th>
-                        <th style="width:25%;">Address</th>
-                        <th style="width:15%;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% set officers = [
-                    {'position': 'President', 'student_no': 'SUM2022-00001', 'name': 'Juan Miguel Dela Cruz', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-                    {'position': 'Vice President', 'student_no': 'SUM2022-00002', 'name': 'Maria Elena Santos', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
-                    {'position': 'Secretary', 'student_no': 'SUM2022-00003', 'name': 'Angelo Martin Reyes', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-                    {'position': 'Treasurer', 'student_no': 'SUM2022-00004', 'name': 'Bianca Rose Mendoza', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-                    {'position': 'Public Relations Officer', 'student_no': 'SUM2022-00005', 'name': 'Jasmine Mae Lim', 'program': 'BSIT', 'address': 'Palayan City, Nueva Ecija'},
-                    {'position': 'Treasurer', 'student_no': 'SUM2022-00006', 'name': 'Miguel Antonio Tan', 'program': 'BSIT', 'address': 'Talavera, Nueva Ecija'},
-                    {'position': 'Events Coordinator', 'student_no': 'SUM2022-00007', 'name': 'Sofia Marie Garcia', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'},
-                    {'position': 'Technical Lead', 'student_no': 'SUM2022-00008', 'name': 'Diego Rafael Bautista', 'program': 'BSIT', 'address': 'Gapan City, Nueva Ecija'},
-                    {'position': 'Membership Coordinator', 'student_no': 'SUM2022-00009', 'name': 'Isabella Marie Lopez', 'program': 'BSIT', 'address': 'Cabanatuan City, Nueva Ecija'}
-                    ] %}
-                    
-                    {% for officer in officers %}
-                    <tr>
-                        <td>{{ officer.position }}</td>
-                        <td>{{ officer.student_no }}</td>
-                        <td>{{ officer.name }}</td>
-                        <td>{{ officer.program }}</td>
-                        <td>{{ officer.address }}</td>
-                        <td>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditOfficerModal('{{ officer.position }}', '{{ officer.student_no }}', '{{ officer.name }}', '{{ officer.program }}', '{{ officer.address }}')">
-                                <i class="fas fa-edit"></i> Update
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="d-flex justify-content-end mb-2 mt-3">
-            <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="showOfficerModal()">
-                <i class="fas fa-plus"></i> Add Officer
-            </button>
+    <section class="import-section">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-12 col-sm-3">
+                        <h4 class="mb-0">Data Import</h4>
+                    </div>
+                    <div class="col-12 col-sm-6 my-2 my-sm-0">
+                        <p class="mb-0">Quickly upload officers, members, and volunteers in bulk using Excel import.</p>
+                    </div>
+                    <div class="col-12 col-sm-3 text-sm-end text-start">
+                        <button type="button" class="btn btn-success" style="background-color: #28a745; font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showExcelUploadModal()">
+                            Import Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section class="row g-4 mb-1">
-        {% set people_tables = [
-            {'title': 'Members', 'id': 'members'},
-            {'title': 'Volunteer', 'id': 'volunteers'}
-        ] %}
-        
-        {% for table in people_tables %}
-        <div class="col-12 col-md-6">
-            <section class="table-container">
-                <h3 class="table-title">{{ table.title }}</h3>
-                <div class="table-scroll">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width:8%;">No.</th>
-                                <th style="width:20%;">Student No.</th>
-                                <th style="width:27%;">Name</th>
-                                <th style="width:20%;">Program</th>
-                                <th style="width:25%;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% set members = [
-                            {'no': '1', 'student_no': 'SUM2022-00001', 'name': 'Miguel Santos Sanchez', 'program': 'BSIT'},
-                            {'no': '2', 'student_no': 'SUM2022-00002', 'name': 'Sophia Marie Chen', 'program': 'BSIT'},
-                            {'no': '3', 'student_no': 'SUM2022-00003', 'name': 'Amir Hassan Khan', 'program': 'BSIT'},
-                            {'no': '4', 'student_no': 'SUM2022-00004', 'name': 'Isabella Maria Rodríguez', 'program': 'BSIT'},
-                            {'no': '5', 'student_no': 'SUM2022-00005', 'name': 'Liam Patrick O\'Connor', 'program': 'BSIT'},
-                            {'no': '6', 'student_no': 'SUM2022-00006', 'name': 'Priya Raj Patel', 'program': 'BSIT'},
-                            {'no': '7', 'student_no': 'SUM2022-00007', 'name': 'Mateo Luis Fernandez', 'program': 'BSIT'},
-                            {'no': '8', 'student_no': 'SUM2022-00008', 'name': 'Zoe Elizabeth Williams', 'program': 'BSIT'},
-                            {'no': '9', 'student_no': 'SUM2022-00009', 'name': 'Jamal Andre Washington', 'program': 'BSIT'},
-                            {'no': '10', 'student_no': 'SUM2022-00010', 'name': 'Mei Ling Zhang', 'program': 'BSIT'}
-                            ] %}
-
-                            {% for member in members %}
-                            <tr>
-                                <td>{{ member.no }}</td>
-                                <td>{{ member.student_no }}</td>
-                                <td>{{ member.name }}</td>
-                                <td>{{ member.program }}</td>
-                                <td>
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="showEditMemberModal('{{ member.student_no }}', '{{ member.name }}', '{{ member.program }}')">
-                                        <i class="fas fa-edit"></i> Update
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="pagination-controls">
-                    <button type="button"><i class="fas fa-chevron-left"></i> Previous</button>
-                    <button type="button">Next <i class="fas fa-chevron-right"></i></button>
-                </div>
-                <div class="d-flex justify-content-end mb-2 mt-3">
-                    <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="show{{ table.title }}Modal()">
-                        <i class="fas fa-plus"></i> Add {{ table.title }}
-                    </button>
-                </div>
-            </section>
-        </div>
-        {% endfor %}
-    </section>
-
-    <section class="table-container">
-    <h3 class="table-title">Plans</h3>
-    <div class="table-scroll">
-        <table>
-        <thead>
-            <tr>
-            <th style="width:4%;">No.</th>
-            <th style="width:18%;">Programs/Projects/Activities</th>
-            <th style="width:23%;">Objectives</th>
-            <th style="width:10%;">Proposed Date</th>
-            <th style="width:13%;">People Involved</th>
-            <th style="width:10%;">Source of Funds</th>
-            <th style="width:10%;">Venue</th>
-            <th style="width:7%;">Outcome</th>
-            <th style="width:5%;">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% set plans = [
-            {
-                'no': '1',
-                'title': 'Alay sa First Year',
-                'objectives': 'Support the competitors in different contests in the event. To disseminate SSITE objectives through booth pitching',
-                'date': 'August 05, 2023',
-                'people': 'SSITE Officers and Members',
-                'funds': 'SSITE Funds<br><small>(if necessary)</small>',
-                'venue': 'NEUST Close Gym',
-                'outcome': 'Successful'
-            },
-            {
-                'no': '2',
-                'title': 'Midterm Exam 2023 motivational support to CICT Students',
-                'objectives': 'Provide members support for their review and preparation for the term examinations.',
-                'date': 'October 13, 2023',
-                'people': 'SSITE Officers',
-                'funds': 'SSITE Funds<br><small>(if necessary)</small>',
-                'venue': 'CICT Department',
-                'outcome': 'Successful'
-            }
-            ] %}
-            
-            {% for plan in plans %}
-            <tr>
-            <td>{{ plan.no }}</td>
-            <td>{{ plan.title }}</td>
-            <td>{{ plan.objectives }}</td>
-            <td>{{ plan.date }}</td>
-            <td>{{ plan.people }}</td>
-            <td>{{ plan.funds|safe }}</td>
-            <td>{{ plan.venue }}</td>
-            <td class="outcome-successful">{{ plan.outcome }}</td>
-            <td>
-                <button type="button" class="btn btn-primary btn-sm" onclick="showEditPlanModal('{{ plan.no }}', '{{ plan.title }}', '{{ plan.objectives }}', '{{ plan.date }}', '{{ plan.people }}', '{{ plan.funds }}', '{{ plan.venue }}', '{{ plan.outcome }}')">
-                    <i class="fas fa-edit"></i> Update
+    <!-- Tabbed interface for organization data -->
+    <section class="tabs-container">
+        <ul class="nav nav-tabs" id="organizationTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="officers-tab" data-bs-toggle="tab" data-bs-target="#officers" type="button" role="tab" aria-controls="officers" aria-selected="true">
+                    Board of Officers
                 </button>
-            </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        </table>
-    </div>
-    <div class="d-flex justify-content-end mb-2 mt-3">
-        <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="showAddPlanModal()">
-            <i class="fas fa-plus"></i> Add Plan
-        </button>
-    </div>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button" role="tab" aria-controls="members" aria-selected="false">
+                    Members
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="volunteers-tab" data-bs-toggle="tab" data-bs-target="#volunteers" type="button" role="tab" aria-controls="volunteers" aria-selected="false">
+                    Volunteers
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plans" type="button" role="tab" aria-controls="plans" aria-selected="false">
+                    Plans
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="organizationTabsContent">
+            <!-- Board of Officers Tab -->
+            <div class="tab-pane fade show active" id="officers" role="tabpanel" aria-labelledby="officers-tab">
+                <section class="table-container">
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:15%;">Position</th>
+                                    <th style="width:15%;">Student Number</th>
+                                    <th style="width:35%;">Name</th>
+                                    <th style="width:35%;">Program</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if officers %}
+                                {% for officer in officers %}
+                                <tr>
+                                    <td>{{ officer.position }}</td>
+                                    <td>{{ officer.student_no }}</td>
+                                    <td>{{ officer.name }}</td>
+                                    <td>{{ officer.program }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">No officers added yet. Use the Excel upload feature to import officers.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Members Tab -->
+            <div class="tab-pane fade" id="members" role="tabpanel" aria-labelledby="members-tab">
+                <section class="table-container">
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:8%;">No.</th>
+                                    <th style="width:20%;">Student Number</th>
+                                    <th style="width:37%;">Name</th>
+                                    <th style="width:20%;">Program</th>
+                                    <th style="width:15%;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if members|default([]) %}
+                                    {% for member in members %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ member.student_no }}</td>
+                                        <td>{{ member.name }}</td>
+                                        <td>{{ member.program }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditMemberModal('{{ member.student_no }}', '{{ member.name }}', '{{ member.program }}')">
+                                                <i class="fas fa-edit"></i> Update
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">No members added yet. Use the Excel upload feature to import members.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Volunteers Tab -->
+            <div class="tab-pane fade" id="volunteers" role="tabpanel" aria-labelledby="volunteers-tab">
+                <section class="table-container">
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:8%;">No.</th>
+                                    <th style="width:20%;">Student Number</th>
+                                    <th style="width:37%;">Name</th>
+                                    <th style="width:20%;">Program</th>
+                                    <th style="width:15%;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if volunteers|default([]) %}
+                                    {% for volunteer in volunteers %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ volunteer.student_no }}</td>
+                                        <td>{{ volunteer.name }}</td>
+                                        <td>{{ volunteer.program }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditVolunteerModal('{{ volunteer.student_no }}', '{{ volunteer.name }}', '{{ volunteer.program }}')">
+                                                <i class="fas fa-edit"></i> Update
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">No volunteers added yet. Use the Excel upload feature to import volunteers.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Plans Tab -->
+            <div class="tab-pane fade" id="plans" role="tabpanel" aria-labelledby="plans-tab">
+                <section class="table-container">
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:4%;">No.</th>
+                                    <th style="width:18%;">Programs/Projects/Activities</th>
+                                    <th style="width:23%;">Objectives</th>
+                                    <th style="width:10%;">Proposed Date</th>
+                                    <th style="width:13%;">People Involved</th>
+                                    <th style="width:10%;">Source of Funds</th>
+                                    <th style="width:10%;">Target Output</th>
+                                    <th style="width:7%;">Status</th>
+                                    <th style="width:5%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if plans|default([]) %}
+                                    {% for plan in plans %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ plan.title }}</td>
+                                        <td>{{ plan.objectives }}</td>
+                                        <td>{{ plan.proposed_date }}</td>
+                                        <td>{{ plan.people_involved }}</td>
+                                        <td>{{ plan.funding_source }}</td>
+                                        <td>{{ plan.target_output }}</td>
+                                        <td class="outcome-{% if plan.is_accomplished %}accomplished{% else %}pending{% endif %}">
+                                            {% if plan.is_accomplished %}Accomplished{% else %}Pending{% endif %}
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditPlanModal('{{ loop.index }}', '{{ plan.title }}', '{{ plan.objectives }}', '{{ plan.proposed_date }}', '{{ plan.people_involved }}', '{{ plan.funding_source }}', '{{ plan.target_output }}', '{% if plan.is_accomplished %}Accomplished{% else %}Pending{% endif %}')">
+                                                <i class="fas fa-edit"></i> Update
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="9" class="text-center py-3">No plans added yet. Click the "Add Plan" button to add organization plans.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-end mb-2 mt-3">
+                        <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="showAddPlanModal()">
+                            <i class="fas fa-plus"></i> Add Plan
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
     </section>
 </div>
 
@@ -353,4 +473,5 @@
 {% include 'user/modal/editOrganizationModal.html' %}
 {% include 'user/modal/adviserInfoModal.html' %}
 {% include 'user/modal/socialmedialinks.html' %}
+{% include 'user/modal/excelUploadModal.html' %}
 {% endblock %}

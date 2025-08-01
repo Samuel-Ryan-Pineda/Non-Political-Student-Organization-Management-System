@@ -4,6 +4,42 @@ from datetime import datetime
 from flask import flash
 import os
 
+def get_all_active_organizations():
+    """
+    Get all active organizations from the database
+    
+    Returns:
+        list: List of dictionaries containing organization information
+    """
+    try:
+        # Query for organizations with status 'Active'
+        organizations = db.session.query(
+            Organization, Logo
+        ).outerjoin(
+            Logo, Organization.logo_id == Logo.logo_id
+        ).filter(
+            Organization.status == 'Active'
+        ).order_by(
+            Organization.organization_name
+        ).all()
+        
+        result = []
+        for org, logo in organizations:
+            result.append({
+                'organization_id': org.organization_id,
+                'organization_name': org.organization_name,
+                'type': org.type,
+                'tagline': org.tagline,
+                'description': org.description,
+                'logo_id': org.logo_id,
+                'status': org.status
+            })
+        
+        return result
+    except Exception as e:
+        print(f"Error fetching active organizations: {str(e)}")
+        return []
+
 def organization_name_exists(org_name):
     """
     Check if an organization with the given name already exists
@@ -160,22 +196,23 @@ def get_organization_by_id(organization_id):
     return Organization.query.get(organization_id)
 
 
-def get_adviser_by_organization_id(organization_id):
+def get_adviser_by_organization_id(organization_id, adviser_type='Adviser'):
     """
     Get adviser information for an organization
     
     Args:
         organization_id (int): ID of the organization
+        adviser_type (str): Type of adviser (Adviser/Co-Adviser)
         
     Returns:
         dict: Dictionary containing adviser information or None
     """
     from app.models import Advisory, Adviser
     
-    # Get the active advisory for the organization
+    # Get the advisory for the organization by type
     advisory = Advisory.query.filter_by(
         organization_id=organization_id,
-        status='active'
+        type=adviser_type
     ).first()
     
     if not advisory:
@@ -193,7 +230,8 @@ def get_adviser_by_organization_id(organization_id):
         'first_name': adviser.first_name,
         'middle_name': adviser.middle_name,
         'last_name': adviser.last_name,
-        'full_name': f"{adviser.first_name} {adviser.middle_name + ' ' if adviser.middle_name else ''}{adviser.last_name}"
+        'full_name': f"{adviser.first_name} {adviser.middle_name + ' ' if adviser.middle_name else ''}{adviser.last_name}",
+        'type': adviser_type
     }
 
 def save_adviser_info(organization_id, first_name, middle_name, last_name, adviser_type, status):
@@ -205,7 +243,7 @@ def save_adviser_info(organization_id, first_name, middle_name, last_name, advis
         first_name (str): Adviser's first name
         middle_name (str): Adviser's middle name
         last_name (str): Adviser's last name
-        adviser_type (str): Type of adviser (Academic/Professional/Community)
+        adviser_type (str): Type of adviser (Adviser/Co-Adviser)
         status (str): Status of adviser (active/inactive)
         
     Returns:
@@ -218,10 +256,10 @@ def save_adviser_info(organization_id, first_name, middle_name, last_name, advis
         return {'success': False, 'message': 'First name, last name, adviser type and status are required'}
     
     try:
-        # Get or create adviser record first
+        # Check if an advisory of this type already exists
         advisory = Advisory.query.filter_by(
             organization_id=organization_id,
-            status='active'
+            type=adviser_type
         ).first()
         
         adviser = None
@@ -237,28 +275,22 @@ def save_adviser_info(organization_id, first_name, middle_name, last_name, advis
             )
             db.session.add(adviser)
             db.session.flush()
-            
-            # Create advisory relationship if it doesn't exist
-            if not advisory:
-                advisory = Advisory(
-                    organization_id=organization_id,
-                    adviser_id=adviser.adviser_id,
-                    type=adviser_type,
-                    status='active'
-                )
-                db.session.add(advisory)
-            else:
-                # Update existing advisory with adviser_id
-                advisory.adviser_id = adviser.adviser_id
+
+            # Create advisory relationship
+            advisory = Advisory(
+                organization_id=organization_id,
+                adviser_id=adviser.adviser_id,
+                type=adviser_type,
+                status=status
+            )
+            db.session.add(advisory)
         else:
             # Update existing adviser
             adviser.first_name = first_name
             adviser.middle_name = middle_name
             adviser.last_name = last_name
-            # Update advisory type and status if advisory exists
-            if advisory:
-                advisory.type = adviser_type
-                advisory.status = status
+            # Update advisory status
+            advisory.status = status
         
         db.session.commit()
         return {'success': True, 'message': 'Adviser information saved successfully'}
@@ -423,6 +455,60 @@ def delete_social_media(organization_id, platform):
             'message': f'Error deleting social media link: {str(e)}'
         }
 
+def get_affiliations_by_position_type(organization_id, position_type):
+    """
+    Get affiliations for an organization by position type
+    
+    Args:
+        organization_id (int): ID of the organization
+        position_type (str): Type of position (Officer, Member, Volunteer)
+        
+    Returns:
+        list: List of dictionaries containing affiliation information
+    """
+    from app.models import Affiliation, Student, Program
+    
+    # Define position categories
+    officer_positions = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Auditor', 'P.I.O', 'Business Manager']
+    member_positions = ['Member']
+    volunteer_positions = ['Volunteer']
+    
+    # Determine which positions to query based on position_type
+    if position_type == 'Officer':
+        positions = officer_positions
+    elif position_type == 'Member':
+        positions = member_positions
+    elif position_type == 'Volunteer':
+        positions = volunteer_positions
+    else:
+        return []
+    
+    # Get all affiliations for the organization with the specified positions
+    affiliations = db.session.query(
+        Affiliation, Student, Program
+    ).join(
+        Student, Affiliation.student_id == Student.student_id
+    ).join(
+        Program, Student.program_id == Program.program_id
+    ).filter(
+        Affiliation.organization_id == organization_id,
+        Affiliation.position.in_(positions)
+    ).all()
+    
+    result = []
+    for affiliation, student, program in affiliations:
+        result.append({
+            'affiliation_id': affiliation.affiliation_id,
+            'student_id': student.student_id,
+            'student_no': student.student_number,
+            'name': f"{student.first_name} {student.middle_name + ' ' if student.middle_name else ''}{student.last_name}",
+            'position': affiliation.position,
+            'program': program.program_code,
+            'academic_year': affiliation.academic_year
+        })
+    
+    return result
+
 def get_pending_applications():
     """
     Get all pending organization applications
@@ -465,4 +551,114 @@ def get_pending_applications():
         return result
     except Exception as e:
         print(f"Error fetching pending applications: {str(e)}")
+        return []
+
+def get_organization_statistics(organization_id):
+    """
+    Get statistics for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        
+    Returns:
+        dict: Dictionary containing organization statistics
+    """
+    from app.models import Affiliation, Application, Plan
+    
+    try:
+        # Get member count (officers + members, not including volunteers)
+        officer_positions = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Auditor', 'P.I.O', 'Business Manager']
+        member_positions = ['Member']
+        
+        # Count officers
+        officer_count = db.session.query(Affiliation).filter(
+            Affiliation.organization_id == organization_id,
+            Affiliation.position.in_(officer_positions)
+        ).count()
+        
+        # Count members
+        member_count = db.session.query(Affiliation).filter(
+            Affiliation.organization_id == organization_id,
+            Affiliation.position.in_(member_positions)
+        ).count()
+        
+        # Total members = officers + members (not including volunteers)
+        total_members = officer_count + member_count
+        
+        # Count volunteers
+        volunteer_count = db.session.query(Affiliation).filter(
+            Affiliation.organization_id == organization_id,
+            Affiliation.position == 'Volunteer'
+        ).count()
+        
+        # Count accomplished activities (plans with accomplished_date set)
+        application = Application.query.filter_by(organization_id=organization_id).first()
+        accomplished_activities = 0
+        if application:
+            accomplished_activities = db.session.query(Plan).filter(
+                Plan.application_id == application.application_id,
+                Plan.accomplished_date.isnot(None)
+            ).count()
+        
+        # Get organization status
+        organization = get_organization_by_id(organization_id)
+        org_status = organization.status if organization else 'Unknown'
+        
+        return {
+            'member_count': total_members,
+            'volunteer_count': volunteer_count,
+            'accomplished_activities': accomplished_activities,
+            'organization_status': org_status
+        }
+        
+    except Exception as e:
+        print(f"Error calculating organization statistics: {str(e)}")
+        return {
+            'member_count': 0,
+            'volunteer_count': 0,
+            'accomplished_activities': 0,
+            'organization_status': 'Unknown'
+        }
+
+def get_plans_by_organization_id(organization_id):
+    """
+    Get plans for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        
+    Returns:
+        list: List of dictionaries containing plan information
+    """
+    from app.models import Plan, Application
+    
+    try:
+        # Get the application for this organization
+        application = Application.query.filter_by(organization_id=organization_id).first()
+        
+        if not application:
+            return []
+        
+        # Get all plans for this application
+        plans = Plan.query.filter_by(application_id=application.application_id).all()
+        
+        result = []
+        for plan in plans:
+            result.append({
+                'plan_id': plan.plan_id,
+                'title': plan.title,
+                'objectives': plan.objectives,
+                'proposed_date': plan.proposed_date.strftime('%Y-%m-%d') if plan.proposed_date else '',
+                'people_involved': plan.people_involved,
+                'funding_source': plan.funding_source,
+                'accomplished_date': plan.accomplished_date.strftime('%Y-%m-%d') if plan.accomplished_date else '',
+                'target_output': plan.target_output,
+                'outcome': plan.outcome,
+                'is_accomplished': plan.accomplished_date is not None
+            })
+        
+        return result
+        
+    except Exception as e:
+        print(f"Error fetching plans: {str(e)}")
         return []

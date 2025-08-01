@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 import os
 
@@ -9,6 +10,7 @@ import os
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
+csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
@@ -36,6 +38,7 @@ def create_app():
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'error'
     mail.init_app(app)
+    csrf.init_app(app)
     
     # Register blueprints
     from app.auth import auth_bp
@@ -51,6 +54,10 @@ def create_app():
     # Register user_organization_bp separately to maintain the existing URL structure
     from app.blueprints.user.organization import user_organization_bp
     app.register_blueprint(user_organization_bp, url_prefix='/organization')
+    
+    # Register application_first_step_bp
+    from app.blueprints.user.application_first_step import application_first_step_bp
+    app.register_blueprint(application_first_step_bp)
     
     # Register context processors
     from app.context_processors import inject_cache_version

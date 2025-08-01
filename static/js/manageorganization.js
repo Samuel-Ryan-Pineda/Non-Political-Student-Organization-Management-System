@@ -1,36 +1,4 @@
 // Modal Management Functions
-function showEditOfficerModal(position, studentNo, name, program, address) {
-    const modal = document.getElementById('editOfficerModal');
-    const names = name.split(' ');
-    
-    // Populate form fields
-    document.getElementById('editOfficerPosition').value = position;
-    document.getElementById('editOfficerStudentNo').value = studentNo;
-    document.getElementById('editOfficerProgram').value = program;
-    document.getElementById('editOfficerAddress').value = address;
-    
-    // Handle name fields based on parts available
-    if (names.length >= 3) {
-        document.getElementById('editOfficerFirstName').value = names[0];
-        document.getElementById('editOfficerMiddleName').value = names[1];
-        document.getElementById('editOfficerLastName').value = names[names.length - 1];
-    } else if (names.length === 2) {
-        document.getElementById('editOfficerFirstName').value = names[0];
-        document.getElementById('editOfficerMiddleName').value = '';
-        document.getElementById('editOfficerLastName').value = names[1];
-    } else {
-        document.getElementById('editOfficerFirstName').value = name;
-        document.getElementById('editOfficerMiddleName').value = '';
-        document.getElementById('editOfficerLastName').value = '';
-    }
-    
-    modal.style.display = 'flex';
-}
-
-function hideEditOfficerModal() {
-    document.getElementById('editOfficerModal').style.display = 'none';
-}
-
 function showEditMemberModal(studentNo, name, program) {
     const modal = document.getElementById('editMemberModal');
     const names = name.split(' ');
@@ -97,16 +65,13 @@ function showSocialMediaModal() {
     }
 }
 
-// Form Submission Handlers
-const editOfficerForm = document.getElementById('editOfficerForm');
-if (editOfficerForm) {
-    editOfficerForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        // Add your form submission logic here
-        hideEditOfficerModal();
-    });
+// Adviser Modal Functions
+function showEditAdviserNameForm() {
+    document.getElementById('adviser-name-display').style.display = 'none';
+    document.getElementById('edit-adviser-name').style.display = 'block';
 }
 
+// Form Submission Handlers
 const editMemberForm = document.getElementById('editMemberForm');
 if (editMemberForm) {
     editMemberForm.addEventListener('submit', function(e) {
@@ -124,5 +89,15 @@ if (addPlanForm) {
         hideAddPlanModal();
     });
 }
+
+// Initialize tabs when the document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Bootstrap 5 handles tab functionality automatically through data attributes
+    // This is just for any additional initialization if needed
+    const tabsContainer = document.querySelector('.tabs-container');
+    if (tabsContainer) {
+        console.log('Tabs container initialized');
+    }
+});
 
 

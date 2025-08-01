@@ -64,19 +64,6 @@ body {
   border-bottom: 1px solid #f6f6f6;
 }
 
-.custom-user-img {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: #f6f6f6;
-}
-
-.custom-user-img img {
-  width: 100%;
-  object-fit: cover;
-}
-
 .custom-user-details .custom-title,
 .custom-menu .custom-title {
   font-size: 8px;
@@ -321,14 +308,15 @@ body {
     transform: translateX(-100%);
   }
   
-  .custom-content {
+  .custom-content, .additional-content {
     margin-left: 0;
     width: 100%;
     z-index: 1;
     transition: margin-left 0.3s ease;
   }
   
-  .custom-sidebar:not(.mobile-active) ~ .custom-content {
+  .custom-sidebar:not(.mobile-active) ~ .custom-content,
+  .custom-sidebar:not(.mobile-active) ~ .additional-content {
     margin-left: 240px;
   }
   

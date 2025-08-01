@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from app.models import db, ApplicationFile, Application
+from app.models import db, ApplicationFile, Application, Organization
 from datetime import datetime
+from app import csrf
 
 admin_new_organization_bp = Blueprint('admin_new_organization', __name__)
 
@@ -44,6 +45,12 @@ def check_and_update_application_status(application_id):
             db.session.commit()
         elif application.status.lower() == 'pending' and all_files_uploaded and all_files_verified:
             application.status = 'Verified'
+            
+            # Also update organization status from Incomplete to Active when application is verified
+            organization = Organization.query.get(application.organization_id)
+            if organization and organization.status and organization.status.lower() == 'incomplete':
+                organization.status = 'Active'
+            
             db.session.commit()
     except Exception as e:
         # Log the error but don't disrupt the file upload process
@@ -146,6 +153,7 @@ def update_file_status():
     print(f"Request method: {request.method}")
     print(f"Request form data: {request.form}")
     print(f"Request JSON: {request.get_json(silent=True)}")
+    print(f"Request headers: {request.headers}")
     
     # Handle both FormData and JSON requests
     if request.is_json:

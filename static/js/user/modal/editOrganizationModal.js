@@ -6,6 +6,8 @@ function showEditOrganizationProfileModal() {
         editOrgModal.classList.add('show');
     }
     
+    document.body.classList.add('modal-open'); // Add this line
+    
     // Ensure all fields have their dataset values set
     ensureDatasetValues();
 }
@@ -17,8 +19,15 @@ function hideEditOrganizationProfileModal() {
         editOrgModal.classList.remove('show');
     }
     
+    document.body.classList.remove('modal-open'); // Add this line
+    
     // Reset any active edit forms back to display mode
     clearAllSectionHighlights();
+    
+    // Reset logo description if in edit mode
+    if (document.getElementById('edit-logo-description')?.style.display !== 'none') {
+        cancelEditLogoDescription();
+    }
     
     // Reset organization name if in edit mode
     if (document.getElementById('edit-org-name')?.style.display !== 'none') {
@@ -51,6 +60,9 @@ let selectedLogoFile = null;
 let originalLogoSrc = null;
 
 function uploadNewLogo() {
+    // Cancel all other active edit forms first
+    cancelAllActiveEditForms();
+    
     // Trigger the file input click
     const logoFileInput = document.getElementById('logoFileInput');
     if (logoFileInput) {
@@ -107,9 +119,27 @@ function saveLogo() {
         formData.append('logo', selectedLogoFile);
         formData.append('logo_description', 'Organization Logo');
         
+        // Get CSRF token from meta tag or input
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                         document.querySelector('[name="csrf_token"]')?.value;
+        
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            handleSaveError(new Error('CSRF token not found'), saveButton, originalButtonText);
+            return;
+        }
+        
+        // Create headers object with CSRF token
+        const headers = {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        
         fetch(updateUrl, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: headers,
+            credentials: 'same-origin' // Include cookies for CSRF token
         })
         .then(response => {
             if (!response.ok) {
@@ -163,11 +193,193 @@ function cancelLogoUpload() {
     document.getElementById('logoSaveButtons').style.display = 'none';
 }
 
+// Logo Description functions
+function showEditLogoDescriptionForm() {
+    // Cancel all other active edit forms first
+    cancelAllActiveEditForms();
+    
+    // Ensure all fields have their dataset.value set
+    ensureDatasetValues();
+
+    // Clear any existing highlights and add highlight to current section
+    clearAllSectionHighlights();
+    document.querySelector('.section-logo-description').classList.add('section-highlighted');
+
+    const container = document.querySelector('.section-logo-description .field-container');
+    const buttonContainer = document.querySelector('.section-logo-description .d-flex');
+    const currentField = document.getElementById('logo-description-field');
+    const currentValue = currentField.dataset.value || currentField.value || '';
+
+    // Hide the display field and show the edit field
+    currentField.style.display = 'none';
+
+    // Create the edit textarea if it doesn't exist
+    let editField = document.getElementById('edit-logo-description');
+    if (!editField) {
+        editField = document.createElement('textarea');
+        editField.id = 'edit-logo-description';
+        editField.className = 'form-control';
+        editField.style.fontSize = '0.75rem';
+        editField.style.minHeight = '1.625rem';
+        container.appendChild(editField);
+        
+        // Add input event listener to adjust height as user types
+        editField.addEventListener('input', function() {
+            autoAdjustTextareaHeight(this);
+        });
+    }
+
+    // Set the value of the edit field and show it
+    editField.value = currentValue;
+    editField.style.display = 'block';
+    
+    // Adjust the height of the textarea to fit content
+    autoAdjustTextareaHeight(editField);
+    
+    // Focus the edit field
+    editField.focus();
+
+    // Replace the edit button with save and cancel buttons
+    buttonContainer.innerHTML = `
+        <label for="logo-description-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Logo Description</label>
+        <div class="d-flex gap-1">
+            <button type="button" class="btn btn-success btn-sm" onclick="saveEditLogoDescription()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Save</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEditLogoDescription()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Cancel</button>
+        </div>
+    `;
+}
+
+function cancelEditLogoDescription() {
+    // Remove highlight from current section
+    document.querySelector('.section-logo-description').classList.remove('section-highlighted');
+
+    const buttonContainer = document.querySelector('.section-logo-description .d-flex');
+    const displayField = document.getElementById('logo-description-field');
+    const editField = document.getElementById('edit-logo-description');
+
+    // Hide the edit field and show the display field
+    if (editField) {
+        editField.style.display = 'none';
+    }
+    displayField.style.display = 'block';
+
+    // Restore the original value
+    displayField.value = displayField.dataset.value || '';
+    
+    // Update the logo preview with the original description
+    // This ensures all logo images and preview elements are updated with the correct description
+    updateSpecificContent('logo_description', displayField.dataset.value || '');
+
+    // Determine button text based on whether there's data
+    const buttonText = (!displayField.dataset.value || displayField.dataset.value.trim() === '') ? 'Add' : 'Edit';
+
+    // Restore the original button with plain blue text styling
+    buttonContainer.innerHTML = `
+        <label for="logo-description-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Logo Description</label>
+        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditLogoDescriptionForm()">
+            ${buttonText}
+        </button>
+    `;
+}
+
+function saveEditLogoDescription() {
+    // Remove highlight from current section
+    document.querySelector('.section-logo-description').classList.remove('section-highlighted');
+
+    const buttonContainer = document.querySelector('.section-logo-description .d-flex');
+    const displayField = document.getElementById('logo-description-field');
+    const editField = document.getElementById('edit-logo-description');
+    const newValue = editField.value;
+
+    // Update the display field's value and dataset
+    displayField.value = newValue;
+    displayField.dataset.value = newValue;
+
+    // Hide the edit field and show the display field
+    editField.style.display = 'none';
+    displayField.style.display = 'block';
+    
+    // Adjust the height of the textarea to fit content
+    autoAdjustTextareaHeight(displayField);
+
+    // Determine button text based on whether there's data
+    const buttonText = (!newValue || newValue.trim() === '') ? 'Add' : 'Edit';
+
+    // Restore the button with plain blue text styling
+    buttonContainer.innerHTML = `
+        <label for="logo-description-field" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Logo Description</label>
+        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditLogoDescriptionForm()">
+            ${buttonText}
+        </button>
+    `;
+
+    // Immediately update all logo tooltips in the UI
+    updateSpecificContent('logo_description', newValue);
+    
+    // Get organization name and type for fallback tooltip
+    const orgName = document.getElementById('org-name-field')?.value || 'Organization';
+    const orgType = document.getElementById('org-type-field')?.value || 'Organization';
+    
+    // Update all logo images in the organization header
+    const headerLogoImages = document.querySelectorAll('.org-logo, .sticky-org-logo');
+    headerLogoImages.forEach(img => {
+        if (newValue && newValue.trim() !== '') {
+            img.title = newValue;
+            img.alt = newValue;
+        } else {
+            img.title = `${orgName} - ${orgType} Logo`;
+            img.alt = `${orgName} - ${orgType} Logo`;
+        }
+    });
+
+    // Save the logo description to the database using debounced function
+    debouncedSaveOrganizationData('logo_description', newValue);
+}
+
 // Helper function to clear all section highlights
 function clearAllSectionHighlights() {
-    const sections = document.querySelectorAll('.section-organization, .section-type, .section-tagline, .section-description');
+    const sections = document.querySelectorAll('.section-logo-description, .section-organization, .section-type, .section-tagline, .section-description');
     if (sections && sections.length > 0) {
         sections.forEach(section => section.classList.remove('section-highlighted'));
+    }
+}
+
+// Helper function to cancel all active edit forms
+function cancelAllActiveEditForms() {
+    // Cancel logo description edit if active
+    const editLogoDesc = document.getElementById('edit-logo-description');
+    if (editLogoDesc && editLogoDesc.style.display !== 'none' && editLogoDesc.style.display !== '') {
+        cancelEditLogoDescription();
+    }
+    
+    // Cancel organization name edit if active
+    const editOrgName = document.getElementById('edit-org-name');
+    if (editOrgName && editOrgName.style.display !== 'none' && editOrgName.style.display !== '') {
+        cancelEditOrganizationName();
+    }
+    
+    // Cancel organization type edit if active
+    const editOrgType = document.getElementById('edit-org-type');
+    if (editOrgType && editOrgType.style.display !== 'none' && editOrgType.style.display !== '') {
+        cancelEditOrganizationType();
+    }
+    
+    // Cancel tagline edit if active
+    const editTagline = document.getElementById('edit-tagline');
+    if (editTagline && editTagline.style.display !== 'none' && editTagline.style.display !== '') {
+        cancelEditTagline();
+    }
+    
+    // Cancel description edit if active
+    const editDescription = document.getElementById('edit-description');
+    if (editDescription && editDescription.style.display !== 'none' && editDescription.style.display !== '') {
+        cancelEditDescription();
+    }
+    
+    // Cancel logo upload if active
+    const logoSaveButtons = document.getElementById('logoSaveButtons');
+    if (logoSaveButtons && logoSaveButtons.style.display === 'block') {
+        cancelLogoUpload();
     }
 }
 
@@ -177,7 +389,8 @@ function ensureDatasetValues() {
         'org-name-field',
         'org-type-field',
         'org-tagline-field',
-        'org-description-field'
+        'org-description-field',
+        'logo-description-field'
     ];
     
     // Set dataset values and adjust heights
@@ -255,6 +468,9 @@ function autoAdjustTextareaHeight(textarea) {
 }
 
 function showEditOrganizationNameForm() {
+    // Cancel all other active edit forms first
+    cancelAllActiveEditForms();
+    
     // Ensure all fields have their dataset.value set
     ensureDatasetValues();
 
@@ -372,6 +588,9 @@ function saveEditOrganizationName() {
 }
 
 function showEditOrganizationTypeForm() {
+    // Cancel all other active edit forms first
+    cancelAllActiveEditForms();
+    
     // Ensure all fields have their dataset.value set
     ensureDatasetValues();
 
@@ -396,12 +615,13 @@ function showEditOrganizationTypeForm() {
         editField.style.fontSize = '0.75rem';
         container.appendChild(editField);
         editField.innerHTML = `
-            <option value="Academic">Academic</option>
-            <option value="Technology">Technology</option>
-            <option value="Cultural">Cultural</option>
-            <option value="Sports">Sports</option>
             <option value="Religious">Religious</option>
-            <option value="Community Service">Community Service</option>
+            <option value="Arts">Arts</option>
+            <option value="Outreach">Outreach</option>
+            <option value="Academic">Academic</option>
+            <option value="Indigenous People">Indigenous People</option>
+            <option value="Sports">Sports</option>
+            <option value="Gender">Gender</option>
         `;
     }
 
@@ -480,6 +700,9 @@ function saveEditOrganizationType() {
 }
 
 function showEditTaglineForm() {
+    // Cancel all other active edit forms first
+    cancelAllActiveEditForms();
+    
     // Ensure all fields have their dataset.value set
     ensureDatasetValues();
     
@@ -598,6 +821,9 @@ function saveEditTagline() {
 }
 
 function showEditDescriptionForm() {
+    // Cancel all other active edit forms first
+    cancelAllActiveEditForms();
+    
     // Ensure all fields have their dataset.value set
     ensureDatasetValues();
 
@@ -719,40 +945,67 @@ function saveEditDescription() {
 function updateSpecificContent(fieldType, value) {
     switch (fieldType) {
         case 'name':
-            document.getElementById('organizationNameDisplay').textContent = value;
-            document.getElementById('organizationNameInput').value = value;
+            // Update organization name in the header
+            const orgTitleElements = document.querySelectorAll('.org-title');
+            orgTitleElements.forEach(element => {
+                element.textContent = value;
+            });
+            
+            // Update any input fields if they exist
+            const orgNameInput = document.getElementById('organizationNameInput');
+            if (orgNameInput) orgNameInput.value = value;
             break;
         case 'type':
-            document.getElementById('organizationTypeDisplay').textContent = value;
-            document.getElementById('organizationTypeSelect').value = value;
+            // Update organization type in the header
+            const orgTypeElements = document.querySelectorAll('.org-type');
+            orgTypeElements.forEach(element => {
+                element.textContent = value;
+            });
             break;
         case 'tagline':
-            document.getElementById('organizationTaglineDisplay').textContent = value;
-            document.getElementById('organizationTaglineInput').value = value;
+            // Update organization tagline in the header
+            const orgTaglineElements = document.querySelectorAll('.org-tagline');
+            orgTaglineElements.forEach(element => {
+                element.textContent = value;
+            });
             break;
         case 'description':
-            document.getElementById('organizationDescriptionDisplay').textContent = value;
-            document.getElementById('organizationDescriptionInput').value = value;
+            // Update organization description in the header
+            const orgDescElements = document.querySelectorAll('.org-description');
+            orgDescElements.forEach(element => {
+                element.textContent = value;
+            });
             break;
+            
         case 'logo':
-            // Assuming 'value' for logo is the file input element
-            // And the server response contains the new logo URL
-            // For now, we'll just update the preview if it's a file input
-            if (value instanceof HTMLInputElement && value.type === 'file' && value.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('currentLogo').src = e.target.result;
-                    document.getElementById('logoPreview').src = e.target.result;
-                };
-                reader.readAsDataURL(value.files[0]);
-            } else if (typeof value === 'string') {
-                // If value is a string, assume it's the new URL from the server
-                document.getElementById('currentLogo').src = value;
-                document.getElementById('logoPreview').src = value;
+            // For logo updates, we don't need to do anything here as the page will refresh
+            // or the logo is already updated via the file input preview
+            break;
+            
+        case 'logo_description':
+            // Update the logo alt and title attributes
+            const logoImages = document.querySelectorAll('.org-logo, .sticky-org-logo, #logoPreview, .rounded-circle[alt="Organization Logo"]');
+            logoImages.forEach(img => {
+                if (value && value.trim() !== '') {
+                    img.title = value;
+                    img.alt = value;
+                } else {
+                    // If no description, use default title
+                    const orgName = document.getElementById('org-name-field')?.value || 'Organization';
+                    const orgType = document.getElementById('org-type-field')?.value || 'Organization';
+                    img.title = `${orgName} - ${orgType} Logo`;
+                    img.alt = `${orgName} - ${orgType} Logo`;
+                }
+            });
+            
+            // Update the logo description field and its dataset value
+            const logoDescField = document.getElementById('logo-description-field');
+            if (logoDescField) {
+                logoDescField.value = value || '';
+                logoDescField.dataset.value = value || '';
+                autoAdjustTextareaHeight(logoDescField);
             }
             break;
-        default:
-            console.warn('No specific content update defined for field type:', fieldType);
     }
 }
 
@@ -778,6 +1031,10 @@ function saveOrganizationData(fieldType, value) {
         case 'description':
             saveButton = document.querySelector('.section-description .btn-success');
             fieldElement = document.getElementById('org-description-field');
+            break;
+        case 'logo_description':
+            saveButton = document.querySelector('.section-logo-description .btn-success');
+            fieldElement = document.getElementById('logo-description-field');
             break;
         case 'logo':
             // For logo, we don't have a specific save button or field element
@@ -817,6 +1074,9 @@ function saveOrganizationData(fieldType, value) {
         case 'description':
             formData.append('description', value);
             break;
+        case 'logo_description':
+            formData.append('logo_description', value);
+            break;
         case 'logo':
             // For logo, value should be the file input element
             if (value && value.files && value.files.length > 0) {
@@ -829,12 +1089,32 @@ function saveOrganizationData(fieldType, value) {
             return;
     }
     
+    // Get CSRF token from meta tag or input
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        if (saveButton) {
+            handleSaveError(new Error('CSRF token not found'), saveButton, originalButtonText);
+        }
+        return;
+    }
+    
     // Send the data to the server
     const updateUrl = '/organization/update-organization';
     
+    // Create headers object with CSRF token
+    const headers = {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+    
     fetch(updateUrl, {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: headers,
+        credentials: 'same-origin' // Include cookies for CSRF token
     })
     .then(response => response.json())
     .then(data => {
@@ -1110,68 +1390,120 @@ function updateSpecificContent(fieldType, value) {
             break;
             
         case 'type':
-            // Update the organization type in the header
-            const orgType = document.querySelector('.org-type');
-            if (orgType) {
-                if (value) {
-                    orgType.innerHTML = `<strong>Type:</strong> ${value}`;
-                    orgType.style.display = '';
-                } else {
-                    orgType.style.display = 'none';
-                }
-            }
+            // Update organization type in the header
+            const orgTypeElements = document.querySelectorAll('.org-type');
+            orgTypeElements.forEach(element => {
+                element.innerHTML = `<strong>Type:</strong> ${value}`;
+            });
             
-            // Update the field element's dataset
-            const typeField = document.getElementById('org-type-field');
-            if (typeField) {
-                typeField.dataset.value = value;
-                typeField.value = value;
-            }
+            // Update any select fields if they exist
+            const orgTypeSelect = document.getElementById('organizationTypeSelect');
+            if (orgTypeSelect) orgTypeSelect.value = value;
             break;
             
         case 'tagline':
-            // Update the tagline in the header
-            const orgQuote = document.querySelector('.org-quote');
-            if (orgQuote) {
-                if (value) {
-                    orgQuote.textContent = `"${value}"`;
-                    orgQuote.style.display = '';
-                } else {
-                    orgQuote.style.display = 'none';
+            // Update tagline in the organization header
+            const taglineElements = document.querySelectorAll('.org-quote');
+            
+            if (value && value.trim() !== '') {
+                // If there's a tagline, update or create the element
+                taglineElements.forEach(element => {
+                    element.textContent = `"${value}"`;
+                    element.style.display = 'block';
+                });
+                
+                // If no tagline element exists, create one after org-type
+                if (taglineElements.length === 0) {
+                    const orgTypeEl = document.querySelector('.org-type');
+                    if (orgTypeEl) {
+                        const newTagline = document.createElement('p');
+                        newTagline.className = 'org-quote';
+                        newTagline.textContent = `"${value}"`;
+                        orgTypeEl.insertAdjacentElement('afterend', newTagline);
+                    }
                 }
+            } else {
+                // If tagline is empty, hide the elements
+                taglineElements.forEach(element => {
+                    element.style.display = 'none';
+                });
             }
             
-            // Update the field element's dataset
-            const taglineField = document.getElementById('org-tagline-field');
-            if (taglineField) {
-                taglineField.dataset.value = value;
-                taglineField.value = value;
-            }
+            // Update any input fields if they exist
+            const taglineInput = document.getElementById('organizationTaglineInput');
+            if (taglineInput) taglineInput.value = value;
             break;
-            
         case 'description':
-            // Update the description in the header
-            const orgDescription = document.querySelector('.org-description');
-            if (orgDescription) {
-                if (value) {
-                    orgDescription.textContent = value;
-                    orgDescription.style.display = '';
-                } else {
-                    orgDescription.style.display = 'none';
+            // Update description in the organization header
+            const descElements = document.querySelectorAll('.org-description');
+            
+            if (value && value.trim() !== '') {
+                // If there's a description, update or create the element
+                descElements.forEach(element => {
+                    element.textContent = value;
+                    element.style.display = 'block';
+                });
+                
+                // If no description element exists, create one after org-quote or org-type
+                if (descElements.length === 0) {
+                    const taglineEl = document.querySelector('.org-quote');
+                    const orgTypeEl = document.querySelector('.org-type');
+                    const insertAfter = taglineEl || orgTypeEl;
+                    
+                    if (insertAfter) {
+                        const newDesc = document.createElement('p');
+                        newDesc.className = 'org-description';
+                        newDesc.textContent = value;
+                        insertAfter.insertAdjacentElement('afterend', newDesc);
+                    }
                 }
+            } else {
+                // If description is empty, hide the elements
+                descElements.forEach(element => {
+                    element.style.display = 'none';
+                });
             }
             
-            // Update the field element's dataset
-            const descField = document.getElementById('org-description-field');
-            if (descField) {
-                descField.dataset.value = value;
-                descField.value = value;
-            }
+            // Update any input fields if they exist
+            const descInput = document.getElementById('organizationDescriptionInput');
+            if (descInput) descInput.value = value;
             break;
-            
         case 'logo':
-            // For logo updates, we don't need to do anything here as the page will refresh
-            // or the logo is already updated via the file input preview
+            // Assuming 'value' for logo is the file input element
+            // And the server response contains the new logo URL
+            // For now, we'll just update the preview if it's a file input
+            if (value instanceof HTMLInputElement && value.type === 'file' && value.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Update all logo images
+                    document.querySelectorAll('.org-logo, .sticky-org-logo').forEach(img => {
+                        img.src = e.target.result;
+                    });
+                    
+                    // Update preview images if they exist
+                    const currentLogo = document.getElementById('currentLogo');
+                    if (currentLogo) currentLogo.src = e.target.result;
+                    
+                    const logoPreview = document.getElementById('logoPreview');
+                    if (logoPreview) logoPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(value.files[0]);
+            } else if (typeof value === 'string') {
+                // If value is a string, assume it's the new URL from the server
+                // Update all logo images
+                document.querySelectorAll('.org-logo, .sticky-org-logo').forEach(img => {
+                    img.src = value;
+                });
+                
+                // Update preview images if they exist
+                const currentLogo = document.getElementById('currentLogo');
+                if (currentLogo) currentLogo.src = value;
+                
+                const logoPreview = document.getElementById('logoPreview');
+                if (logoPreview) logoPreview.src = value;
+            }
             break;
+        default:
+            console.warn('No specific content update defined for field type:', fieldType);
     }
 }

@@ -81,10 +81,19 @@
   .table td {
     vertical-align: middle;
     padding: 0.625rem 0.75rem;
+    border: none;
   }
 
   .table tbody tr {
-    border-bottom: 1px solid var(--secondary-color);
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .table tbody tr:nth-child(even) {
+    background-color: #f5f5f5;
+  }
+  
+  .table tbody tr:hover {
+    background-color: #eaf0f3;
   }
 
   /* Modal-specific styles */

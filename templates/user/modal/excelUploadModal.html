@@ -1,0 +1,267 @@
+<div id="excelUploadModal" class="global-modal">
+    <div class="modal-container">
+        <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+            <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;">Upload Excel File</h4>
+            <button class="btn-back" onclick="hideExcelUploadModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <hr style="margin-bottom: 1rem;">
+        <div class="container-short"> 
+            <main>
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-3" id="excelUploadTabs" role="tablist" style="font-size: 0.75rem;">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="excel-officers-tab" data-bs-toggle="tab" data-bs-target="#officers-content" type="button" role="tab" aria-controls="officers-content" aria-selected="true">
+                            Board of Officers
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="excel-members-tab" data-bs-toggle="tab" data-bs-target="#members-content" type="button" role="tab" aria-controls="members-content" aria-selected="false">
+                            Members
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="excel-volunteers-tab" data-bs-toggle="tab" data-bs-target="#volunteers-content" type="button" role="tab" aria-controls="volunteers-content" aria-selected="false">
+                            Volunteers
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="excel-plans-tab" data-bs-toggle="tab" data-bs-target="#plans-content" type="button" role="tab" aria-controls="plans-content" aria-selected="false">
+                            Plans
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="excelUploadTabContent">
+                    <!-- Officers Tab -->
+                    <div class="tab-pane fade show active" id="officers-content" role="tabpanel" aria-labelledby="officers-tab">
+                        <div class="instructions-container p-3 mb-3 bg-light rounded border">
+                            <h5 class="fw-bold" style="font-size: 0.85rem; color: #0f3a40;">Instructions for Uploading Board of Officers</h5>
+                            <p style="font-size: 0.75rem; margin-bottom: 0.5rem;">The Excel file must contain the following columns:</p>
+                            <ol style="font-size: 0.75rem; padding-left: 1.5rem;">
+                                <li><strong>Position</strong> - The role in the organization (e.g., President, Secretary)</li>
+                                <li><strong>Student Number</strong> - The student's identification number as shown on their school ID</li>
+                                <li><strong>First Name</strong> - Student's first name</li>
+                                <li><strong>Middle Name</strong> - Student's middle name (can be blank)</li>
+                                <li><strong>Last Name</strong> - Student's last name</li>
+                                <li><strong>Program</strong> - Must use valid program codes listed below</li>
+                            </ol>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">The data will be automatically imported into the database. Students who don't exist will be created automatically.</p>
+                            <p style="font-size: 0.75rem; font-style: italic; color: #6c757d;">Note: You can download a <a href="/organization/download-excel-template?type=officers" style="color: #0d6efd;">template file</a> with sample data and instructions.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Members Tab -->
+                    <div class="tab-pane fade" id="members-content" role="tabpanel" aria-labelledby="members-tab">
+                        <div class="instructions-container p-3 mb-3 bg-light rounded border">
+                            <h5 class="fw-bold" style="font-size: 0.85rem; color: #0f3a40;">Instructions for Uploading Members</h5>
+                            <p style="font-size: 0.75rem; margin-bottom: 0.5rem;">The Excel file must contain the following columns:</p>
+                            <ol style="font-size: 0.75rem; padding-left: 1.5rem;">
+                                <li><strong>Student Number</strong> - The student's identification number as shown on their school ID</li>
+                                <li><strong>First Name</strong> - Student's first name</li>
+                                <li><strong>Middle Name</strong> - Student's middle name (can be blank)</li>
+                                <li><strong>Last Name</strong> - Student's last name</li>
+                                <li><strong>Program</strong> - Must use valid program codes listed below</li>
+                            </ol>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">The data will be automatically imported into the database. Students who don't exist will be created automatically. All uploaded students will be added as members.</p>
+                            <p style="font-size: 0.75rem; font-style: italic; color: #6c757d;">Note: You can download a <a href="/organization/download-excel-template?type=members" style="color: #0d6efd;">template file</a> with sample data and instructions.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Volunteers Tab -->
+                    <div class="tab-pane fade" id="volunteers-content" role="tabpanel" aria-labelledby="volunteers-tab">
+                        <div class="instructions-container p-3 mb-3 bg-light rounded border">
+                            <h5 class="fw-bold" style="font-size: 0.85rem; color: #0f3a40;">Instructions for Uploading Volunteers</h5>
+                            <p style="font-size: 0.75rem; margin-bottom: 0.5rem;">The Excel file must contain the following columns:</p>
+                            <ol style="font-size: 0.75rem; padding-left: 1.5rem;">
+                                <li><strong>Student Number</strong> - The student's identification number as shown on their school ID</li>
+                                <li><strong>First Name</strong> - Student's first name</li>
+                                <li><strong>Middle Name</strong> - Student's middle name (can be blank)</li>
+                                <li><strong>Last Name</strong> - Student's last name</li>
+                                <li><strong>Program</strong> - Must use valid program codes listed below</li>
+                            </ol>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">The data will be automatically imported into the database. Students who don't exist will be created automatically. All uploaded students will be automatically assigned as volunteers.</p>
+                            <p style="font-size: 0.75rem; font-style: italic; color: #6c757d;">Note: You can download a <a href="/organization/download-excel-template?type=volunteers" style="color: #0d6efd;">template file</a> with sample data and instructions.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Plans Tab -->
+                    <div class="tab-pane fade" id="plans-content" role="tabpanel" aria-labelledby="plans-tab">
+                        <div class="instructions-container p-3 mb-3 bg-light rounded border">
+                            <h5 class="fw-bold" style="font-size: 0.85rem; color: #0f3a40;">Instructions for Uploading Plans</h5>
+                            <p style="font-size: 0.75rem; margin-bottom: 0.5rem;">The Excel file must contain the following columns:</p>
+                            <ol style="font-size: 0.75rem; padding-left: 1.5rem;">
+                                <li><strong>Programs/Projects/Activities</strong> - The name of the program, project, or activity</li>
+                                <li><strong>Objectives</strong> - The objectives or goals of the activity</li>
+                                <li><strong>Proposed Date</strong> - The planned date for the activity</li>
+                                <li><strong>People Involved</strong> - The people or groups who will be involved</li>
+                                <li><strong>Source of Funds</strong> - Where the funding for the activity will come from</li>
+                                <li><strong>Target Output</strong> - The expected outcomes or results of the activity</li>
+                            </ol>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">The data will be automatically imported into the database as organization plans.</p>
+                            <p style="font-size: 0.75rem; font-style: italic; color: #6c757d;">Note: You can download a <a href="/organization/download-excel-template?type=plans" style="color: #0d6efd;">template file</a> with sample data and instructions.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Program Codes Section (Common to both tabs) -->
+                <div id="program-codes-section" class="mt-2 mb-3">
+                    <p style="font-size: 0.75rem; font-weight: bold; color: #0f3a40;">Valid Program Codes:</p>
+                    <div class="program-codes-container" style="font-size: 0.7rem; max-height: 150px; overflow-y: auto; border: 2px solid #dee2e6; padding: 8px; border-radius: 4px;">
+                        <p style="margin-bottom: 4px; font-weight: bold;">Undergraduate Programs:</p>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+                            <span>BSArchi</span>
+                            <span>BSCrim</span>
+                            <span>BEED</span>
+                            <span>BPE</span>
+                            <span>BSED</span>
+                            <span>BTLED</span>
+                            <span>BSIS</span>
+                            <span>BSPED</span>
+                            <span>BSNE</span>
+                            <span>BSCE</span>
+                            <span>BSME</span>
+                            <span>BSEE</span>
+                            <span>BSIT</span>
+                            <span>BSDS</span>
+                            <span>BSBA</span>
+                            <span>BSEntrep</span>
+                            <span>BSHM</span>
+                            <span>BSHRM</span>
+                            <span>BSTM</span>
+                            <span>BPA</span>
+                            <span>BSBio</span>
+                            <span>BSFT</span>
+                            <span>BSPsych</span>
+                            <span>BSChem</span>
+                            <span>BSEnvSci</span>
+                            <span>BIT</span>
+                            <span>BSN</span>
+                        </div>
+                        <p style="margin: 6px 0 4px; font-weight: bold;">Graduate Programs:</p>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+                            <span>EdD-ITE</span>
+                            <span>PhD-SCI</span>
+                            <span>PhD-MATH</span>
+                            <span>PhD-EM</span>
+                            <span>PhD-EDM</span>
+                            <span>PhD-BA</span>
+                            <span>PhD-PA</span>
+                            <span>MAENG</span>
+                            <span>MAIE</span>
+                            <span>MAT-SCI</span>
+                            <span>MAT-PHY</span>
+                            <span>MAT-MATH</span>
+                            <span>MAVTE</span>
+                            <span>MBA</span>
+                            <span>MEM</span>
+                            <span>MEngM</span>
+                            <span>MPA</span>
+                            <span>MSAGRI</span>
+                            <span>MSIT</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Upload Section for Officers Tab -->
+                <section class="bg-white rounded-2xl border border-gray-100 p-3" id="officers-upload-section"> 
+                    <!-- Error message container for officers -->
+                    <div id="officers-error-container"></div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="officers-file-input" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Excel File (Board of Officers)</label> 
+                        <input type="hidden" id="upload-type" value="officers">
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <div class="dropzone mb-3" id="officers-dropzone"> 
+                            <input type="file" id="officers-file-input" class="file-input" accept=".xlsx,.xls" style="display: none;"/> 
+                            <i class="fas fa-cloud-upload-alt mb-1"></i> 
+                            <div>Drag & Drop or Click to Upload</div> 
+                            <div class="small text-muted">EXCEL files only</div> 
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-3" id="officers-action-buttons">
+                            <button type="button" id="officers-action-button" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="handleExcelAction('officers')">
+                                Upload Excel
+                            </button>
+                        </div>
+                    </div> 
+                </section>
+
+                <!-- File Upload Section for Members Tab -->
+                <section class="bg-white rounded-2xl border border-gray-100 p-3" id="members-upload-section" style="display: none;"> 
+                    <!-- Error message container for members -->
+                    <div id="members-error-container"></div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="members-file-input" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Excel File (Members)</label> 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <div class="dropzone mb-3" id="members-dropzone"> 
+                            <input type="file" id="members-file-input" class="file-input" accept=".xlsx,.xls" style="display: none;"/> 
+                            <i class="fas fa-cloud-upload-alt mb-1"></i> 
+                            <div>Drag & Drop or Click to Upload</div> 
+                            <div class="small text-muted">EXCEL files only</div> 
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-3" id="members-action-buttons">
+                            <button type="button" id="members-action-button" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="handleExcelAction('members')">
+                                Upload Excel
+                            </button>
+                        </div>
+                    </div> 
+                </section>
+
+                <!-- File Upload Section for Volunteers Tab -->
+                <section class="bg-white rounded-2xl border border-gray-100 p-3" id="volunteers-upload-section" style="display: none;"> 
+                    <!-- Error message container for volunteers -->
+                    <div id="volunteers-error-container"></div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="volunteers-file-input" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Excel File (Volunteers)</label> 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <div class="dropzone mb-3" id="volunteers-dropzone"> 
+                            <input type="file" id="volunteers-file-input" class="file-input" accept=".xlsx,.xls" style="display: none;"/> 
+                            <i class="fas fa-cloud-upload-alt mb-1"></i> 
+                            <div>Drag & Drop or Click to Upload</div> 
+                            <div class="small text-muted">EXCEL files only</div> 
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-3" id="volunteers-action-buttons">
+                            <button type="button" id="volunteers-action-button" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="handleExcelAction('volunteers')">
+                                Upload Excel
+                            </button>
+                        </div>
+                    </div> 
+                </section>
+
+                <!-- File Upload Section for Plans Tab -->
+                <section class="bg-white rounded-2xl border border-gray-100 p-3" id="plans-upload-section" style="display: none;"> 
+                    <!-- Error message container for plans -->
+                    <div id="plans-error-container"></div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2"> 
+                        <label for="plans-file-input" class="fw-semibold text-gray-900 mb-0" style="font-size: 0.75rem;">Excel File (Plans)</label> 
+                    </div> 
+                    <div class="field-container" style="line-height: 1.625; font-size: 0.75rem;"> 
+                        <div class="dropzone mb-3" id="plans-dropzone"> 
+                            <input type="file" id="plans-file-input" class="file-input" accept=".xlsx,.xls" style="display: none;"/> 
+                            <i class="fas fa-cloud-upload-alt mb-1"></i> 
+                            <div>Drag & Drop or Click to Upload</div> 
+                            <div class="small text-muted">EXCEL files only</div> 
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-3" id="plans-action-buttons">
+                            <button type="button" id="plans-action-button" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="handleExcelAction('plans')">
+                                Upload Excel
+                            </button>
+                        </div>
+                    </div> 
+                </section> 
+            </main> 
+        </div>
+    </div>
+</div>

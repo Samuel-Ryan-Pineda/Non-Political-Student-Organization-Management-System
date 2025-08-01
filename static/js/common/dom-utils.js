@@ -143,6 +143,62 @@ window.DOMUtils = window.DOMUtils || (function() {
     }
   }
 
+  // Helper function to show notification
+  function showNotification(message, type = 'info') {
+    // Remove any existing notification after a delay
+    const existingNotifications = document.querySelectorAll('.notification-toast');
+    existingNotifications.forEach(notification => {
+      notification.classList.add('hiding');
+      setTimeout(() => notification.remove(), 300);
+    });
+    
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = `notification-toast notification-${type}`;
+    
+    // Set icon based on type
+    let icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    if (type === 'error') icon = 'exclamation-circle';
+    if (type === 'warning') icon = 'exclamation-triangle';
+    
+    notification.innerHTML = `
+      <div class="notification-content">
+        <i class="fas fa-${icon}"></i>
+        <span>${message}</span>
+      </div>
+      <button class="notification-close"><i class="fas fa-times"></i></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Add show class after a small delay to trigger animation
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Add close button functionality
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        notification.classList.remove('show');
+        notification.classList.add('hiding');
+        setTimeout(() => notification.remove(), 300);
+      });
+    }
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        notification.classList.remove('show');
+        notification.classList.add('hiding');
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            notification.remove();
+          }
+        }, 300);
+      }
+    }, 5000);
+  }
+
   // Public API
   return {
     get: get,
@@ -151,6 +207,7 @@ window.DOMUtils = window.DOMUtils || (function() {
     showLoadingModal: showLoadingModal,
     hideLoadingModal: hideLoadingModal,
     toggleModal: toggleModal,
+    showNotification: showNotification,
     BUTTON_STATES: BUTTON_STATES
   };
 })();

@@ -1,0 +1,140 @@
+/* Excel Upload Modal Styles */
+
+/* Tab Styles */
+#excelUploadTabs .nav-link {
+  color: #212529; /* Black text for inactive tabs */
+  border-bottom: 2px solid transparent;
+}
+
+#excelUploadTabs .nav-link:hover:not(.active) {
+  color: #212529; /* Keep text black on hover for inactive tabs */
+  border-bottom-color: #dee2e6;
+}
+
+/* Custom Scrollbar Styles */
+.program-codes-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.program-codes-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.program-codes-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.program-codes-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Firefox scrollbar styles */
+.program-codes-container {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+  /* Ensure the container has enough content to trigger scrollbar */
+  min-height: 100px;
+  /* Add a subtle box shadow to make the container stand out */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Instructions Container Styles */
+.instructions-container {
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 20px;
+  font-size: 0.8rem;
+  color: #495057;
+}
+
+.instructions-container h5 {
+  color: #0f3a40;
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.instructions-container ul {
+  margin-bottom: 10px;
+}
+
+.instructions-container li {
+  margin-bottom: 5px;
+}
+
+.instructions-container a {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.instructions-container a:hover {
+  text-decoration: underline;
+}
+
+.dropzone {
+  border: 2px dashed #adb5bd;
+  border-radius: 5px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 15px;
+  color: #6c757d;
+  font-size: 0.9em;
+}
+
+.dropzone i {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  color: #6c757d;
+}
+
+.dropzone:hover {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+  color: #007bff;
+}
+
+.dropzone:hover i {
+  color: #007bff;
+}
+
+.dropzone.selected {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+  color: #007bff;
+}
+
+.dropzone.selected i {
+  color: #007bff;
+}
+
+.dropzone.highlight,
+.dropzone.dragover {
+  border-color: #28a745;
+  background-color: rgba(40, 167, 69, 0.05);
+  color: #28a745;
+}
+
+.dropzone.highlight i,
+.dropzone.dragover i {
+  color: #28a745;
+}
+
+.dropzone.loading {
+  border-color: #6c757d;
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}

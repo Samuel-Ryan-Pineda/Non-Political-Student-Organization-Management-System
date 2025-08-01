@@ -239,7 +239,10 @@ def register():
             # Log the exception for debugging
             print(f"Registration error: {str(e)}")
             return create_error_response("An unexpected error occurred during registration.", 500)
-
+    
+    # For GET requests, check if it's an AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return create_error_response("GET method not supported for AJAX requests", 400)
     return render_template('register.html')
 
 # ✅ Verification Page Route

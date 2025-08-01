@@ -62,7 +62,10 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch("/register", {
             method: "POST",
             body: new FormData(registerForm),
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+            }
         })
         .then(response => response.json())
         .then(data => {

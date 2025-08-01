@@ -16,10 +16,12 @@
   .logo-preview {
     width: 160px;
     height: 160px;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
     background-color: #e9ecef;
+    overflow: hidden;
   }
   
   .form-label {
@@ -68,6 +70,7 @@
         </p>
       <hr>
         <form id="organizationForm" class="mt-4" enctype="multipart/form-data" method="post" action="{{ url_for('user_organization.applicationfirststep') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="mb-3">
             <label class="form-label fw-medium small" for="orgName">
               Organization Name
@@ -85,23 +88,26 @@
               <option disabled selected value="">
                 Select type
               </option>
-              <option value="non-profit">
-                Non-Profit
+              <option value="Religious">
+                Religious
               </option>
-              <option value="educational">
-                Educational
+              <option value="Arts">
+                Arts
               </option>
-              <option value="corporate">
-                Corporate
+              <option value="Outreach">
+                Outreach
               </option>
-              <option value="government">
-                Government
+              <option value="Academic">
+                Academic
               </option>
-              <option value="community">
-                Community
+              <option value="Indigenous People">
+                Indigenous People
               </option>
-              <option value="other">
-                Other
+              <option value="Sports">
+                Sports
+              </option>
+              <option value="Gender">
+                Gender
               </option>
             </select>
             <div class="invalid-feedback" id="orgTypeHelp">
@@ -232,9 +238,24 @@
     
     nameCheckInProgress = true;
     try {
+      // Get CSRF token from meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                       document.querySelector('[name="csrf_token"]')?.value;
+      
+      // Prepare headers for fetch request
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      };
+      
+      if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+      }
+      
       const response = await fetch('{{ url_for("user_organization.check_organization_name") }}', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
+        credentials: 'same-origin',
         body: JSON.stringify({ orgName: name })
       });
       

@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+                // No need to set Content-Type as FormData sets it automatically with boundary
+            },
+            credentials: 'same-origin' // Include cookies for CSRF token
         })
         .then(response => response.json())
         .then(data => {

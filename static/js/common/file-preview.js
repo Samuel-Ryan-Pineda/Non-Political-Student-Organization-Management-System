@@ -209,11 +209,36 @@ window.FilePreview = window.FilePreview || (function() {
     closePreviewModal: closePreviewModal,
     PREVIEW_MODAL: PREVIEW_MODAL,
     createMessageContent: createMessageContent,
+    ensureModalInDOM: ensureModalInDOM,
     downloadFile: function(fileId) {
-      // Create a download link
+      // Get CSRF token from meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                       document.querySelector('[name="csrf_token"]')?.value;
+      
+      // Determine if we're in admin or user context based on URL
+      const isAdminContext = window.location.pathname.includes('/admin/');
+      
+      // Create a download link with CSRF token
       const downloadLink = document.createElement('a');
-      downloadLink.href = `/admin/download-application-file?file_id=${fileId}`;
-      downloadLink.download = 'application_file';
+      let url;
+      
+      if (isAdminContext) {
+        // Use admin download URL
+        url = new URL(`/admin/download-application-file`, window.location.origin);
+        url.searchParams.append('file_id', fileId);
+      } else {
+        // Use user download URL with download=true parameter
+        url = new URL(`/organization/get-application-file/${fileId}`, window.location.origin);
+        url.searchParams.append('download', 'true');
+      }
+      
+      // Add CSRF token as a query parameter if available
+      if (csrfToken) {
+        url.searchParams.append('csrf_token', csrfToken);
+      }
+      
+      downloadLink.href = url.toString();
+      downloadLink.download = ''; // Let the server determine the filename
       downloadLink.style.display = 'none';
       
       // Add the link to the document and click it

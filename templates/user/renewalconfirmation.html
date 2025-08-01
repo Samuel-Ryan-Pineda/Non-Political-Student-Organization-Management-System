@@ -1,0 +1,83 @@
+{% extends 'user/userbase.html' %}
+
+{% block title %}Confirm Organization Renewal{% endblock %}
+
+{% block head_css %}
+<style>
+    .renewal-icon-container {
+       width: 96px;
+       height: 96px;
+       color: #0D3B44;
+       border-radius: 0.375rem; /* rounded-md */
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       font-size: 3.75rem; /* text-6xl */
+     }
+    h1 {
+       color: #0D3B44; /* blue-900 */
+       font-weight: 600;
+       font-size: 1.125rem; /* text-lg */
+       margin-bottom: 1rem;
+     }
+    p {
+       color: #6b7280; /* gray-500 */
+       font-size: 0.875rem; /* text-sm */
+       margin-bottom: 1.5rem;
+     }
+    .btn-primary {
+       background-color: #1e40af;
+       color: white;
+       font-weight: 600;
+       font-size: 0.75rem;
+       padding: 0.375rem 1rem;
+       border-radius: 0.375rem;
+       text-decoration: none;
+       border: none;
+       margin-right: 0.5rem;
+     }
+    .btn-primary:hover, .btn-primary:focus {
+       background-color: #1e3a8a;
+       color: white;
+     }
+    .btn-secondary {
+       background-color: #6b7280;
+       color: white;
+       font-weight: 600;
+       font-size: 0.75rem;
+       padding: 0.375rem 1rem;
+       border-radius: 0.375rem;
+       text-decoration: none;
+       border: none;
+     }
+    .btn-secondary:hover, .btn-secondary:focus {
+       background-color: #4b5563;
+       color: white;
+     }
+   </style>
+{% endblock %}
+
+{% block content %}
+<div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 80vh;">
+  <main class="text-center w-100" style="max-width: 650px;">
+    <div class="renewal-icon-container mx-auto">
+     <i class="fas fa-sync-alt"></i>
+    </div>
+    <h1 class="mb-1">
+     Confirm Organization Renewal
+    </h1>
+    <p class="mb-4">
+     Are you sure you want to renew your organization for Academic Year 2025–2026?
+     <br>
+     <strong>Note:</strong> This will create a new renewal application for your organization.
+    </p>
+    <form action="{{ url_for('user_routes.create_renewal') }}" method="POST" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn-primary">Yes, Renew</button>
+    </form>
+    <a href="{{ url_for('user_routes.manageorganization') }}" class="btn-secondary" type="button">
+     Cancel
+    </a>
+   </main>
+</div>
+{% endblock %}

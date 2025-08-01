@@ -23,6 +23,18 @@
 
   // Initialize when DOM is loaded
   document.addEventListener('DOMContentLoaded', function() {
+    // Show loading overlay
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const documentCardsContainer = document.getElementById('documentCardsContainer');
+    
+    if (loadingOverlay) {
+      loadingOverlay.classList.remove('hidden');
+    }
+    
+    if (documentCardsContainer) {
+      documentCardsContainer.classList.remove('loaded');
+    }
+    
     // Initialize file uploads
     initializeFileUploads();
     
@@ -284,9 +296,24 @@
     };
     
     // Send the file to the server
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        handleError('CSRF token not found');
+        return;
+    }
+    
     fetch('/organization/upload-application-file', {
       method: 'POST',
-      body: formData
+      body: formData,
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin' // Include cookies for CSRF token
     })
     .then(response => response.json())
     .then(data => {
@@ -327,10 +354,29 @@
     // Reset all cards to "No File" state first
     resetAllCards();
     
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    // Prepare headers for fetch requests
+    const headers = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    
     // Load both files and feedback data
     Promise.all([
-      fetch('/organization/get-application-files').then(res => res.json()),
-      fetch('/organization/get-application-feedback').then(res => res.json())
+      fetch('/organization/get-application-files', {
+        headers: headers,
+        credentials: 'same-origin'
+      }).then(res => res.json()),
+      fetch('/organization/get-application-feedback', {
+        headers: headers,
+        credentials: 'same-origin'
+      }).then(res => res.json())
     ])
       .then(([filesData, feedbackData]) => {
         if (filesData.success && filesData.files) {
@@ -361,6 +407,20 @@
           
           // Load feedback for the application
           loadApplicationFeedback();
+          
+          // Hide loading overlay and show document cards
+          setTimeout(() => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const documentCardsContainer = document.getElementById('documentCardsContainer');
+            
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('hidden');
+            }
+            
+            if (documentCardsContainer) {
+              documentCardsContainer.classList.add('loaded');
+            }
+          }, 500); // Small delay to ensure all UI updates are complete
         }
       })
       .catch(error => {
@@ -370,8 +430,24 @@
   
   // Function to load application feedback
   function loadApplicationFeedback() {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    // Prepare headers for fetch request
+    const headers = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    
     // Fetch feedback from the server
-    fetch('/organization/get-application-feedback')
+    fetch('/organization/get-application-feedback', {
+      headers: headers,
+      credentials: 'same-origin'
+    })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
@@ -456,12 +532,25 @@
    * @param {HTMLElement} feedbackToggle - The feedback toggle button to update (can be null)
    */
   function markFeedbackAsRead(feedbackId, feedbackCard, feedbackToggle) {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    // Prepare headers for fetch request
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    
     // Call the API to mark feedback as read
     fetch('/organization/mark-feedback-read', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
+      credentials: 'same-origin',
       body: JSON.stringify({ feedback_id: feedbackId })
     })
     .then(response => response.json())
@@ -852,6 +941,121 @@
     return totalFiles;
   }
 
+  // Function to get current UI status
+  function getCurrentUIStatus() {
+    // Check the status badge first
+    const statusBadge = document.querySelector('.badge');
+    if (statusBadge) {
+      return statusBadge.textContent.trim();
+    }
+    
+    // Fallback: check the debug status
+    const debugText = document.querySelector('.small.text-danger.mb-0');
+    if (debugText && debugText.textContent.includes('Status:')) {
+      const statusMatch = debugText.textContent.match(/Status: ([^,]+)/);
+      if (statusMatch) {
+        return statusMatch[1].trim();
+      }
+    }
+    
+    // Fallback: check the status text
+    const statusText = document.querySelector('.fw-semibold.small.mb-0');
+    if (statusText && statusText.textContent.includes('Status:')) {
+      return statusText.textContent.replace('Status:', '').trim();
+    }
+    
+    return 'Unknown';
+  }
+
+  // Function to update application status UI elements
+  function updateApplicationStatusUI(newStatus) {
+    console.log(`Updating UI for new status: ${newStatus}`);
+    
+    // Update the application progress card class
+    const progressCard = document.querySelector('.info-progress-row .card:not(.org-card)');
+    if (progressCard) {
+      // Remove all existing status classes
+      progressCard.classList.remove('status-pending', 'status-approved', 'status-rejected', 'status-verified', 'status-incomplete');
+      // Add new status class
+      progressCard.classList.add(`status-${newStatus.toLowerCase()}`);
+    }
+    
+    // Update the status text
+    const statusText = document.querySelector('.fw-semibold.small.mb-0');
+    if (statusText && statusText.textContent.includes('Status:')) {
+      statusText.textContent = `Status: ${newStatus}`;
+    }
+    
+    // Update the debug text
+    const debugText = document.querySelector('.small.text-danger.mb-0');
+    if (debugText && debugText.textContent.includes('Debug - App ID:')) {
+      const appIdMatch = debugText.textContent.match(/App ID: (\d+)/);
+      const appId = appIdMatch ? appIdMatch[1] : 'Unknown';
+      debugText.textContent = `Debug - App ID: ${appId}, Status: ${newStatus}`;
+    }
+    
+    // Update the status badge
+    const statusBadge = document.querySelector('.badge');
+    if (statusBadge) {
+      // Remove all existing badge classes
+      statusBadge.classList.remove('bg-primary', 'bg-success', 'bg-danger', 'bg-secondary');
+      
+      // Update badge text and class based on new status
+      statusBadge.textContent = newStatus;
+      
+      switch (newStatus.toLowerCase()) {
+        case 'pending':
+          statusBadge.classList.add('bg-primary');
+          break;
+        case 'approved':
+        case 'verified':
+          statusBadge.classList.add('bg-success');
+          break;
+        case 'rejected':
+          statusBadge.classList.add('bg-danger');
+          break;
+        default:
+          statusBadge.classList.add('bg-secondary');
+      }
+    }
+    
+    // Update the progress bar color based on status, but don't override the width
+    // This allows the FileStatus.updateProgressBar function to control the actual progress percentage
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar) {
+      // Remove all existing progress bar classes
+      progressBar.classList.remove('bg-primary', 'bg-success', 'bg-danger', 'bg-dark');
+      
+      // Update progress bar class based on new status, but don't change the width
+      switch (newStatus.toLowerCase()) {
+        case 'pending':
+          progressBar.classList.add('bg-primary');
+          break;
+        case 'approved':
+        case 'verified':
+          progressBar.classList.add('bg-success');
+          break;
+        case 'rejected':
+          progressBar.classList.add('bg-danger');
+          break;
+        default:
+          progressBar.classList.add('bg-dark');
+      }
+      
+      // After updating the color, refresh the progress bar based on actual verified files
+      // This ensures the progress bar width reflects the actual progress
+      updateProgressAndStatusCounts();
+    }
+    
+    // Show a success message
+    console.log(`Application status updated to: ${newStatus}`);
+    
+    // Optional: Show a toast notification if toastr is available
+    if (typeof toastr !== 'undefined') {
+      toastr.success(`Application status updated to: ${newStatus}`, 'Status Updated');
+    }
+  }
+
   // Function to check if all required files are uploaded
   function checkIfAllFilesUploaded() {
     // Get all document cards
@@ -887,22 +1091,41 @@
     if (allFilesUploaded && uploadedFileCount === REQUIRED_FILES.length) {
       console.log('All required files are uploaded, checking application status...');
       // Get the current application status
-      fetch('/organization/get-application-status')
+      // Get CSRF token from meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                       document.querySelector('[name="csrf_token"]')?.value;
+      
+      // Prepare headers for fetch request
+      const headers = {
+        'X-Requested-With': 'XMLHttpRequest'
+      };
+      
+      if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+      }
+      
+      fetch('/organization/get-application-status', {
+        headers: headers,
+        credentials: 'same-origin'
+      })
         .then(response => response.json())
         .then(data => {
           console.log('Application status response:', data);
           if (data.success) {
             console.log(`Current status: ${data.status}, Previous status: ${data.previousStatus}`);
-            // Check for status changes that require page refresh
+            
+            // Check if UI needs to be updated (either status changed or UI doesn't match server status)
+            const currentUIStatus = getCurrentUIStatus();
+            console.log(`Current UI status: ${currentUIStatus}, Server status: ${data.status}`);
+            
             if ((data.status === 'Pending' && data.previousStatus === 'Incomplete') ||
-                (data.status === 'Verified' && data.previousStatus === 'Pending')) {
-              console.log(`Status changed from ${data.previousStatus} to ${data.status}, refreshing page...`);
-              // Refresh the page after a short delay to show the new status
-              setTimeout(() => {
-                window.location.reload();
-              }, 1000);
+                (data.status === 'Verified' && data.previousStatus === 'Pending') ||
+                (currentUIStatus !== data.status)) {
+              console.log(`Updating UI to match server status: ${data.status}`);
+              // Update UI elements immediately
+              updateApplicationStatusUI(data.status);
             } else {
-              console.log('No relevant status change detected');
+              console.log('UI already matches server status');
             }
           }
         })
@@ -914,50 +1137,7 @@
 
   // Function to set up form submissions
   function setupFormSubmissions() {
-    
-    // Update organization form submission
-    const updateOrgForm = document.getElementById('updateOrgForm');
-    if (updateOrgForm) {
-      updateOrgForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Show loading modal
-        DOMUtils.showLoadingModal('Updating organization information...');
-        
-        // Get form data
-        const formData = new FormData(this);
-        
-        // Send the form data to the server
-        fetch('/organization/update-organization', {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          // Hide loading modal
-          DOMUtils.hideLoadingModal();
-          
-          if (data.success) {
-            // Show success message
-            alert('Organization information updated successfully!');
-            
-            // Close modal
-            DOMUtils.toggleModal('updateOrgModal', false);
-            
-            // Refresh the page to show updated information
-            window.location.reload();
-          } else {
-            // Show error message
-            alert('Error: ' + data.message);
-          }
-        })
-        .catch(error => {
-          // Hide loading modal and show error
-          DOMUtils.hideLoadingModal();
-          alert('Error updating organization information: Network error');
-        });
-      });
-    }
+    // Update organization form submission is now handled in updateOrgModal.js
   }
 
   // Expose public functions
@@ -970,13 +1150,6 @@
   };
   // window.deleteAllFiles export removed as it was only used for testing
   window.loadApplicationFiles = loadApplicationFiles;
-
-  window.openUpdateOrgModal = function() {
-    DOMUtils.toggleModal('updateOrgModal', true);
-  };
-  window.closeUpdateOrgModal = function() {
-    DOMUtils.toggleModal('updateOrgModal', false);
-  };
   // openFeedbackDetail function removed as it's no longer needed
   // showTab function removed as we now only have one tab
 })();

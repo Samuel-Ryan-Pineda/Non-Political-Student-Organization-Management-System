@@ -15,8 +15,24 @@ function loadExistingSocialMediaLinks() {
     // Get organization ID from the page
     const orgId = document.getElementById('organization-id').value;
     
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    // Prepare headers for fetch request
+    const headers = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    
     // Fetch existing social media links
-    fetch(`/organization/get_social_media_by_organization_id?organization_id=${orgId}`)
+    fetch(`/organization/get_social_media_by_organization_id?organization_id=${orgId}`, {
+      headers: headers,
+      credentials: 'same-origin'
+    })
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to load social media links');
@@ -43,7 +59,7 @@ function loadExistingSocialMediaLinks() {
                     linkSection.innerHTML = `
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <div>
-                                <i class="fab fa-${link.platform} me-2"></i>
+                                <i class="fab fa-${link.platform === 'messenger' ? 'facebook-messenger' : link.platform} me-2"></i>
                                 <span class="fw-semibold">${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}</span>
                             </div>
                             <button class="btn text-primary" style="font-size: 0.75rem; background: none; border: none;" onclick="showEditSocialMediaForm('${inputId}')">
@@ -68,6 +84,18 @@ function hideSocialMediaModal() {
     const socialMediaModal = document.getElementById('socialMediaModal');
     if (socialMediaModal) {
         socialMediaModal.classList.remove('show');
+    }
+    
+    // If there's an active edit form, cancel it first
+    if (editingLinkId) {
+        const previousLinkSection = document.getElementById(editingLinkId);
+        if (previousLinkSection && originalLinkContent[editingLinkId]) {
+            // Restore original content
+            previousLinkSection.innerHTML = originalLinkContent[editingLinkId];
+            previousLinkSection.classList.remove('section-highlighted');
+            delete originalLinkContent[editingLinkId];
+        }
+        editingLinkId = '';
     }
     
     // Reset all UI elements
@@ -124,6 +152,22 @@ function addSocialLink(platform) {
         options.style.display = 'none';
     }
     
+    // If there's an active edit form, cancel it first
+    if (editingLinkId) {
+        const previousLinkSection = document.getElementById(editingLinkId);
+        if (previousLinkSection && originalLinkContent[editingLinkId]) {
+            // Restore original content
+            previousLinkSection.innerHTML = originalLinkContent[editingLinkId];
+            delete originalLinkContent[editingLinkId];
+        }
+        editingLinkId = '';
+    }
+    
+    // Remove highlight from any existing sections
+    document.querySelectorAll('#existing-social-links > div').forEach(section => {
+        section.classList.remove('section-highlighted');
+    });
+    
     // Check if this platform already exists
     const existingLink = document.getElementById(`${platform}-link`);
     if (existingLink) {
@@ -139,7 +183,7 @@ function addSocialLink(platform) {
     const platformLabel = document.getElementById('platform-label');
     if (platformLabel) {
         const capitalizedPlatform = platform.charAt(0).toUpperCase() + platform.slice(1);
-        platformLabel.innerHTML = `<i class="fab fa-${platform} me-2"></i>${capitalizedPlatform} URL`;
+        platformLabel.innerHTML = `<i class="fab fa-${platform === 'messenger' ? 'facebook-messenger' : platform} me-2"></i>${capitalizedPlatform} URL`;
     }
     
     // Show the form
@@ -175,12 +219,25 @@ function saveSocialMediaLink() {
     // Get organization ID from the page
     const orgId = document.getElementById('organization-id').value;
     
+    // Get CSRF token from meta tag or input
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        alert('Failed to save social media link: CSRF token not found');
+        return;
+    }
+    
     // Save to database
     fetch('/organization/save_social_media', {
          method: 'POST',
          headers: {
              'Content-Type': 'application/json',
+             'X-CSRFToken': csrfToken,
+             'X-Requested-With': 'XMLHttpRequest'
          },
+         credentials: 'same-origin', // Include cookies for CSRF token
          body: JSON.stringify({
              organization_id: orgId,
              platform: currentPlatform,
@@ -205,7 +262,7 @@ function saveSocialMediaLink() {
             linkSection.innerHTML = `
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <div>
-                        <i class="fab fa-${currentPlatform} me-2"></i>
+                        <i class="fab fa-${currentPlatform === 'messenger' ? 'facebook-messenger' : currentPlatform} me-2"></i>
                         <span class="fw-semibold">${currentPlatform.charAt(0).toUpperCase() + currentPlatform.slice(1)}</span>
                     </div>
                     <button class="btn text-primary" style="font-size: 0.75rem; background: none; border: none;" onclick="showEditSocialMediaForm('${inputId}')">
@@ -235,9 +292,30 @@ function saveSocialMediaLink() {
 let originalLinkContent = {}; // Store original content for each link
 
 function showEditSocialMediaForm(linkId) {
+    // If there's already an active edit form for another link, cancel it first
+    if (editingLinkId && editingLinkId !== linkId) {
+        const previousLinkSection = document.getElementById(editingLinkId);
+        if (previousLinkSection && originalLinkContent[editingLinkId]) {
+            // Restore original content
+            previousLinkSection.innerHTML = originalLinkContent[editingLinkId];
+            previousLinkSection.classList.remove('section-highlighted');
+            delete originalLinkContent[editingLinkId];
+        }
+    }
+    
     editingLinkId = linkId;
     const linkSection = document.getElementById(linkId);
     if (!linkSection) return;
+    
+    // Add highlight to the section being edited
+    linkSection.classList.add('section-highlighted');
+    
+    // Remove highlight from other sections
+    document.querySelectorAll('#existing-social-links > div').forEach(section => {
+        if (section.id !== linkId) {
+            section.classList.remove('section-highlighted');
+        }
+    });
 
     // Store original content before replacing
     originalLinkContent[linkId] = linkSection.innerHTML;
@@ -270,6 +348,9 @@ function cancelEditSocialMediaLink(buttonElement) {
     const linkId = buttonElement.dataset.linkId;
     const linkSection = document.getElementById(linkId);
     if (linkSection && originalLinkContent[linkId]) {
+        // Remove highlight
+        linkSection.classList.remove('section-highlighted');
+        
         linkSection.innerHTML = originalLinkContent[linkId]; // Restore original content
         delete originalLinkContent[linkId]; // Clean up stored content
     }
@@ -279,11 +360,20 @@ function cancelEditSocialMediaLink(buttonElement) {
 
 function saveEditSocialMediaLink(buttonElement) {
     const linkId = buttonElement.dataset.linkId;
+    const linkSection = document.getElementById(linkId);
     const editUrlInput = document.getElementById(`edit-platform-url-${linkId}`);
     if (!editUrlInput || !editUrlInput.value.trim()) {
         alert('Please enter a valid URL');
         return;
     }
+    
+    // Remove highlight
+    if (linkSection) {
+        linkSection.classList.remove('section-highlighted');
+    }
+    
+    // Reset the editing link ID
+    editingLinkId = '';
     
     const newUrl = editUrlInput.value.trim();
     
@@ -297,12 +387,25 @@ function saveEditSocialMediaLink(buttonElement) {
     const orgId = document.getElementById('organization-id').value;
     const platform = linkId.replace('-link', '');
     
+    // Get CSRF token from meta tag or input
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        alert('Failed to update social media link: CSRF token not found');
+        return;
+    }
+    
     // Update in database
     fetch('/organization/update_social_media', {
          method: 'POST',
          headers: {
              'Content-Type': 'application/json',
+             'X-CSRFToken': csrfToken,
+             'X-Requested-With': 'XMLHttpRequest'
          },
+         credentials: 'same-origin', // Include cookies for CSRF token
          body: JSON.stringify({
              organization_id: orgId,
              platform: platform,
@@ -342,50 +445,66 @@ function saveEditSocialMediaLink(buttonElement) {
 }
 
 
-
-
 // Function to refresh the organization header section with updated social media links
 function refreshOrganizationHeader() {
     // Get organization ID from the page
     const orgId = document.getElementById('organization-id').value;
     
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    // Prepare headers for fetch request
+    const headers = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    
     // Fetch the updated organization data
-    fetch(`/organization/get_organization_header?organization_id=${orgId}`)
+    fetch(`/organization/get_social_media_by_organization_id?organization_id=${orgId}`, {
+      headers: headers,
+      credentials: 'same-origin'
+    })
         .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to refresh organization header');
             }
             return response.json();
         })
-        .then(data => {
+        .then(responseData => {
             // Update the social media section in the organization header
-            const orgSocialSection = document.querySelector('.org-social');
-            
-            if (data.social_media && data.social_media.length > 0) {
-                // Create HTML for social media links
-                let socialHtml = '<strong>Social Media:</strong><br>';
-                data.social_media.forEach(sm => {
-                    socialHtml += `${sm.platform}: ${sm.link}<br>`;
-                });
+            const socialMediaContainer = document.querySelector('.org-social .d-flex');
+            if (socialMediaContainer) {
+                // Clear existing social media icons
+                socialMediaContainer.innerHTML = '';
                 
-                // If section exists, update it, otherwise create it
-                if (orgSocialSection) {
-                    orgSocialSection.innerHTML = socialHtml;
-                } else {
-                    // Create new section if it doesn't exist
-                    const newSocialSection = document.createElement('p');
-                    newSocialSection.className = 'org-social';
-                    newSocialSection.innerHTML = socialHtml;
+                // Ensure we have an array (handle case where response is object or empty)
+                const socialMediaLinks = Array.isArray(responseData.social_media) ? responseData.social_media : [];
+                
+                // Add each social media icon to the header
+                socialMediaLinks.forEach(sm => {
+                    const iconElement = document.createElement('a');
+                    iconElement.href = sm.link;
+                    iconElement.target = '_blank';
+                    iconElement.title = sm.platform;
                     
-                    // Find where to insert it (before the buttons div)
-                    const buttonsDiv = document.querySelector('.organization-header .mt-3');
-                    if (buttonsDiv) {
-                        buttonsDiv.parentNode.insertBefore(newSocialSection, buttonsDiv);
+                    let iconClass = 'fas fa-link';
+                    if (sm.platform.toLowerCase() === 'facebook') {
+                        iconClass = 'fab fa-facebook';
+                    } else if (sm.platform.toLowerCase() === 'twitter') {
+                        iconClass = 'fab fa-twitter';
+                    } else if (sm.platform.toLowerCase() === 'instagram') {
+                        iconClass = 'fab fa-instagram';
+                    } else if (sm.platform.toLowerCase() === 'messenger') {
+                        iconClass = 'fab fa-facebook-messenger';
                     }
-                }
-            } else if (orgSocialSection) {
-                // Remove the section if no social media links
-                orgSocialSection.remove();
+                    
+                    iconElement.innerHTML = `<i class="${iconClass}" style="font-size: 1.5rem; color: #fff;"></i>`;
+                    socialMediaContainer.appendChild(iconElement);
+                });
             }
         })
         .catch(error => {
@@ -404,12 +523,25 @@ function removeSocialLink(linkId) {
     // Get organization ID from the page
     const orgId = document.getElementById('organization-id').value;
     
+    // Get CSRF token from meta tag or input
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        alert('Failed to delete social media link: CSRF token not found');
+        return;
+    }
+    
     // Delete from database
     fetch('/organization/delete_social_media', {
          method: 'POST',
          headers: {
              'Content-Type': 'application/json',
+             'X-CSRFToken': csrfToken,
+             'X-Requested-With': 'XMLHttpRequest'
          },
+         credentials: 'same-origin', // Include cookies for CSRF token
          body: JSON.stringify({
              organization_id: orgId,
              platform: platform
