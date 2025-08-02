@@ -70,11 +70,11 @@ def userrenewal():
         flash(f"You need to create a renewal application for Academic Year {academic_year} first", "info")
         return redirect(url_for('user_routes.renewal_confirmation'))
     
-    # Get application associated with the organization (for backward compatibility)
-    application = get_application_by_organization_id(organization.organization_id)
+    # Pass the renewal application to the template instead of the first application
+    # This ensures we're showing the correct status for the renewal application
     
     # current_user is provided by Flask-Login
-    return render_template('user/userrenewal.html', user=current_user, organization=organization, application=application, active_page='userrenewal')
+    return render_template('user/userrenewal.html', user=current_user, organization=organization, application=renewal_application, active_page='userrenewal')
 
 @user_routes_bp.route('/userreport')
 @login_required

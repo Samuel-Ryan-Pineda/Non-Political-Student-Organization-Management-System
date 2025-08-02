@@ -91,6 +91,7 @@ def upload_renewal_file():
                 'filename': filename,
                 'fileType': file_type,
                 'status': "Pending",
+                'file_id': existing_file.app_file_id,
                 'submission_date': existing_file.submission_date.strftime('%Y-%m-%d %H:%M:%S')
             })
         else:
@@ -113,6 +114,7 @@ def upload_renewal_file():
                 'filename': filename,
                 'fileType': file_type,
                 'status': "Pending",
+                'file_id': new_file.app_file_id,
                 'submission_date': new_file.submission_date.strftime('%Y-%m-%d %H:%M:%S')
             })
     

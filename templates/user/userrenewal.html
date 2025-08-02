@@ -4,6 +4,7 @@
 
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/application.css') }}?v={{ cache_version }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/loading-overlay.css') }}?v={{ cache_version }}">
 <style>
   /* Additional styles specific to renewal page */
   .card-body, .container, p, span, h1, div:not(.dropzone div) { text-align: left !important; }
@@ -247,16 +248,29 @@
       </section>
     </div>
     <div class="col-md-8">
-      <!-- Application Progress -->
+      <!-- Renewal Progress -->
       <section class="card mb-3 status-incomplete">
         <div class="card-body p-3 p-md-4">
+          <!-- Hidden input to store application status from backend -->
+          <input type="hidden" id="applicationStatus" value="{{ application.status if application and application.status else 'Incomplete' }}">
+          
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
-              <p class="fw-semibold mb-0" style="font-size: 0.875rem;">APPLICATION PROGRESS</p>
-              <p class="small text-secondary mb-1">No renewal data available</p>
+              <p class="fw-semibold mb-0" style="font-size: 0.875rem;">RENEWAL PROGRESS</p>
+              <p class="small text-secondary mb-1">{{ "Application is under review" if application and application.status == "Pending" else 
+                                                  "All files verified" if application and application.status == "Verified" else 
+                                                  "Some files need attention" if application and application.status == "Rejected" else 
+                                                  "Some files need revision" if application and application.status == "Needs Revision" else 
+                                                  "Please upload all required files" if application and application.status == "Incomplete" else 
+                                                  "No renewal data available" }}</p>
             </div>
             <div>
-              <span class="badge bg-secondary">No Data</span>
+              <span class="badge {{ "bg-success" if application and application.status == "Verified" else 
+                                  "bg-danger" if application and application.status == "Rejected" else 
+                                  "bg-warning" if application and application.status == "Needs Revision" else 
+                                  "bg-primary" if application and application.status == "Pending" else 
+                                  "bg-secondary" }}">{{ "Complete" if application and application.status == "Verified" else 
+                                                      application.status if application and application.status else "No Data" }}</span>
             </div>
           </div>
           
@@ -296,6 +310,9 @@
     </div>
   </div>
   
+  <!-- Document Cards Container -->
+  <div class="document-cards-container" id="documentCardsContainer">
+  
   {% macro document_card(title, status='No File', status_class='bg-secondary', status_icon='fa-question-circle') %}
   <div class="col-12 col-md-4">
     <div class="card h-100 document-card border-0 shadow-sm">
@@ -308,15 +325,15 @@
         </div>
         
         <div class="dropzone mb-3">
-          <input type="file" class="file-input" accept=".pdf,.doc,.docx" style="display: none;"/>
+          <input type="file" class="file-input" accept=".pdf" style="display: none;"/>
           <i class="fas fa-cloud-upload-alt mb-1"></i>
           Drag & drop or click to upload
         </div>
         
         <div class="d-flex justify-content-between align-items-center gap-2">
-          <button class="btn btn-outline-dark btn-sm" type="button">Preview</button>
-          <button class="btn btn-outline-secondary btn-sm" type="button">Select File</button>
-          <button class="btn btn-primary btn-sm" type="button">Upload</button>
+          <button class="btn btn-outline-dark btn-sm preview-btn" type="button">Preview</button>
+          <button class="btn btn-outline-secondary btn-sm select-btn" type="button">Select File</button>
+          <button class="btn btn-primary btn-sm upload-btn" type="button">Upload</button>
         </div>
         
         <!-- Inline feedback toggle button -->
@@ -372,6 +389,7 @@
     
     <!-- Logo with Explanation -->
     {{ document_card('LOGO WITH EXPLANATION', 'No File', 'bg-secondary', 'fa-question-circle') }}
+  </div>
   </div>
 
   <!-- Feedback Section -->

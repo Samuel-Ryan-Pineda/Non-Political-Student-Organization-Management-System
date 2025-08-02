@@ -1,11 +1,24 @@
 /**
  * User Renewal Module
  * Handles UI interactions for the renewal page with file upload functionality
+ * FIXED VERSION - Addresses button responsiveness issues
  */
 
 (function() {
   // Initialize when DOM is loaded
   document.addEventListener('DOMContentLoaded', function() {
+    // Show loading overlay
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const documentCardsContainer = document.getElementById('documentCardsContainer');
+    
+    if (loadingOverlay) {
+      loadingOverlay.classList.remove('hidden');
+    }
+    
+    if (documentCardsContainer) {
+      documentCardsContainer.classList.remove('loaded');
+    }
+    
     // Initialize UI elements
     initializeUI();
     // Load renewal files
@@ -19,6 +32,36 @@
     setupDropzoneEvents();
     setupButtonEvents();
     setupFeedbackEvents();
+    
+    // Initialize button states
+    initializeButtonStates();
+  }
+  
+  // Function to initialize button states
+  function initializeButtonStates() {
+    // Get all document cards
+    const cards = document.querySelectorAll('.document-card');
+    
+    cards.forEach(card => {
+      // Get buttons using class selectors
+      const selectBtn = card.querySelector('.select-btn');
+      const uploadBtn = card.querySelector('.upload-btn');
+      const previewBtn = card.querySelector('.preview-btn');
+      const fileInput = card.querySelector('.file-input');
+      
+      // Set initial button states
+      if (selectBtn) {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      }
+      
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+      }
+    });
   }
 
   // Function to set up dropzone events
@@ -32,37 +75,14 @@
       if (!card) return;
       
       // Get the file input
-      const fileInput = card.querySelector('input[type="file"]');
+      const fileInput = card.querySelector('.file-input');
       if (!fileInput) return;
       
-      // Get the file type from the card title
-      const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
-      
-      // Update the dropzone text to match application page
-      dropzone.innerHTML = `
-        <i class="fas fa-cloud-upload-alt mb-1"></i>
-        <div class="text-center">Drag & Drop or Click to Upload<br>
-        PDF files only</div>
-      `;
-      
       // Set up click event on dropzone
-      dropzone.addEventListener('click', function() {
+      dropzone.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         fileInput.click();
-      });
-      
-      // Set up file input change event
-      fileInput.addEventListener('change', function(e) {
-        handleFileSelected(this, card);
-      });
-      
-      // Add click event to handle selecting the same file again
-      fileInput.addEventListener('click', function() {
-        // Store the current value to detect if the same file is selected again
-        this.dataset.previousValue = this.value;
-        // Clear the value to ensure change event fires even if same file is selected
-        if (this.value) {
-          this.value = '';
-        }
       });
       
       // Set up drag and drop events
@@ -100,38 +120,52 @@
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
   
-  // Function to handle file selection
+  // Function to handle file selection - exactly matching application.js
   function handleFileSelected(input, card) {
     if (!input.files.length) return;
     
     const file = input.files[0];
-    const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
     
     // Validate file type - only allow PDF files
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    if (fileExtension !== '.pdf' || file.type !== 'application/pdf') {
-      alert('Invalid file type. Please upload a PDF file only.');
+    if (file.type !== 'application/pdf' || fileExtension !== '.pdf') {
+      alert('Only PDF files are allowed for renewal documents.');
       input.value = '';
       return;
     }
     
-    // Update dropzone to show selected file
+    // Update dropzone to show selected file with document title instead of filename
     const dropzone = card.querySelector('.dropzone');
     if (dropzone) {
+      // Get the document title from the card
+      const documentTitle = card.querySelector('.small.fw-semibold')?.textContent?.trim() || file.name;
+      
       dropzone.innerHTML = `
-        <i class="fas fa-file-pdf mb-1"></i>
-        <div>${file.name}</div>
-        <div class="small text-muted">${formatFileSize(file.size)}</div>
+        <i class="fas fa-file-alt mb-1"></i>
+        <div>${documentTitle}</div>
+        <div class="small text-muted">${(file.size / 1024).toFixed(2)} KB</div>
       `;
       
       dropzone.classList.add('selected');
     }
     
-    // Enable upload button
-    const uploadBtn = card.querySelector('button:nth-child(3)');
+    // Enable upload button - with fallback selector
+    let uploadBtn = card.querySelector('.upload-btn');
+    
+    // Fallback to nth-child selector if class selector doesn't work
+    if (!uploadBtn) {
+      const buttons = card.querySelectorAll('button');
+      uploadBtn = buttons[2]; // Upload button is the 3rd button (index 2)
+    }
+    
     if (uploadBtn) {
-      uploadBtn.classList.remove('btn-outline-secondary');
-      uploadBtn.classList.add('btn-primary');
+      DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.ENABLED.UPLOAD);
+    }
+    
+    // Disable preview button until file is uploaded
+    const previewBtn = card.querySelector('.preview-btn');
+    if (previewBtn) {
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
     }
   }
 
@@ -143,12 +177,31 @@
     loadingMessage.textContent = 'Uploading file...';
     loadingModal.style.display = 'flex';
     
+    // Get buttons using class selectors
+    const fileInput = card.querySelector('.file-input');
+    const uploadBtn = card.querySelector('.upload-btn');
+    const previewBtn = card.querySelector('.preview-btn');
+    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('fileType', fileType);
     
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    // Prepare headers for fetch request
+    const headers = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    
     fetch('/renewal/upload-renewal-file', {
       method: 'POST',
+      headers: headers,
       body: formData
     })
     .then(response => response.json())
@@ -156,8 +209,35 @@
       loadingModal.style.display = 'none';
       
       if (data.success) {
+        // Set the file ID on the card and status badge
+        if (data.file_id) {
+          card.dataset.fileId = data.file_id;
+          
+          // Also set on status badge for consistency with application.js
+          const statusBadge = card.querySelector('.status-badge');
+          if (statusBadge) {
+            statusBadge.dataset.fileId = data.file_id;
+          }
+        }
+        
         // Update the card status
         updateCardStatus(card, 'Pending', 'bg-primary', 'fa-clock');
+        
+        // Reset the file input value to allow selecting the same file again
+        if (fileInput) {
+          fileInput.value = '';
+        }
+        
+        // Disable upload button after successful upload
+        if (uploadBtn) {
+          DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+        }
+        
+        // Enable preview button after successful upload
+        if (previewBtn) {
+          DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+        }
+        
         // Reload all files to update the progress
         loadRenewalFiles();
       } else {
@@ -171,6 +251,25 @@
           PDF files only</div>
         `;
         dropzone.classList.remove('selected');
+        
+        // Clear file ID if upload failed
+        delete card.dataset.fileId;
+        
+        // Clear status badge file ID
+        const statusBadge = card.querySelector('.status-badge');
+        if (statusBadge) {
+          delete statusBadge.dataset.fileId;
+        }
+        
+        // Disable upload button on error
+        if (uploadBtn) {
+          DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+        }
+        
+        // Disable preview button
+        if (previewBtn) {
+          DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+        }
       }
     })
     .catch(error => {
@@ -188,27 +287,48 @@
     });
   }
 
-  // Function to set up button events
+  // Function to set up button events - simplified to match working application.js
   function setupButtonEvents() {
     // Get all document cards
     const cards = document.querySelectorAll('.document-card');
     
     cards.forEach(card => {
       // Get the file input
-      const fileInput = card.querySelector('input[type="file"]');
-      if (!fileInput) return;
+      const fileInput = card.querySelector('.file-input');
+      if (!fileInput) {
+        return;
+      }
       
-      // Get buttons
-      const selectBtn = card.querySelector('button:nth-child(2)');
-      const uploadBtn = card.querySelector('button:nth-child(3)');
-      const previewBtn = card.querySelector('button:nth-child(1)');
+      // Get buttons using class selectors first, then fallback to nth-child
+      let selectBtn = card.querySelector('.select-btn');
+      let uploadBtn = card.querySelector('.upload-btn');
+      let previewBtn = card.querySelector('.preview-btn');
       
-      // Get the file type from the card title
-      const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
+      // Fallback to nth-child selectors if class selectors don't work
+      if (!selectBtn || !uploadBtn || !previewBtn) {
+        const buttons = card.querySelectorAll('button');
+        previewBtn = buttons[0]; // Preview button
+        selectBtn = buttons[1];  // Select File button
+        uploadBtn = buttons[2];  // Upload button
+      }
       
-      // Set up select button click event with fix for same file selection
+      // Set up file input change event
+      fileInput.addEventListener('change', function() {
+        handleFileSelected(this, card);
+      });
+      
+      // Add click event to handle selecting the same file again
+      fileInput.addEventListener('click', function() {
+        // Store the current value to detect if the same file is selected again
+        this.dataset.previousValue = this.value;
+      });
+      
+      // Set up select button click event
       if (selectBtn) {
-        selectBtn.addEventListener('click', function() {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+        selectBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
           // Clear the file input value before clicking it
           // This forces the browser to trigger a change event even if the same file is selected
           fileInput.value = '';
@@ -218,11 +338,13 @@
       
       // Set up upload button click event
       if (uploadBtn) {
+        // Initialize upload button as disabled
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+        
         uploadBtn.addEventListener('click', function() {
           if (fileInput.files.length) {
+            const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
             uploadFile(fileInput.files[0], fileType, card);
-          } else {
-            alert('Please select a file first');
           }
         });
       }
@@ -230,7 +352,6 @@
       // Set up preview button click event
       if (previewBtn) {
         previewBtn.addEventListener('click', function() {
-          // Get the file ID from the data attribute
           const fileId = card.dataset.fileId;
           if (fileId) {
             previewFile(fileId);
@@ -304,7 +425,6 @@
   }
 
   function loadRenewalFiles() {
-
     // Show loading modal
     const loadingModal = document.getElementById('loadingModal');
     const loadingMessage = document.getElementById('loadingMessage');
@@ -333,8 +453,27 @@
         loadingModal.style.display = 'none';
         
         if (data.success) {
+          // First update the file cards with data
           updateFileCards(data.files);
           updateProgressBar(data.files);
+          
+          // FIXED: Re-setup button events after loading files
+          // This ensures buttons work after dynamic content updates
+          setupButtonEvents();
+          
+          // Hide loading overlay and show document cards
+          setTimeout(() => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const documentCardsContainer = document.getElementById('documentCardsContainer');
+            
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('hidden');
+            }
+            
+            if (documentCardsContainer) {
+              documentCardsContainer.classList.add('loaded');
+            }
+          }, 500); // Small delay to ensure all UI updates are complete
         } else {
           console.error('Error loading files:', data.message);
         }
@@ -342,6 +481,18 @@
       .catch(error => {
         loadingModal.style.display = 'none';
         console.error('Error:', error);
+        
+        // Hide loading overlay in case of error
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const documentCardsContainer = document.getElementById('documentCardsContainer');
+        
+        if (loadingOverlay) {
+          loadingOverlay.classList.add('hidden');
+        }
+        
+        if (documentCardsContainer) {
+          documentCardsContainer.classList.add('loaded');
+        }
       });
   }
   
@@ -379,7 +530,6 @@
   
   // Function to load feedback for a specific file
   function loadFileFeedback(fileId, container) {
-    // Get all feedback for this file from the feedback section
     // Get CSRF token from meta tag
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
                      document.querySelector('[name="csrf_token"]')?.value;
@@ -433,7 +583,8 @@
     
     cards.forEach(card => {
       // Get the file type from the card title
-      const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
+      const fileType = card.querySelector('.small.fw-semibold')?.textContent?.trim();
+      if (!fileType) return;
       
       // Find the matching file
       const file = files.find(f => f.name === fileType);
@@ -443,157 +594,321 @@
         card.dataset.fileId = file.id;
         
         // Update status badge
+        const statusBadge = card.querySelector('.status-badge');
+        if (statusBadge) {
+          // Also set fileId on status badge for consistency with application.js
+          statusBadge.dataset.fileId = file.id;
+        }
+        
         updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
         
         // Update dropzone content
         const dropzone = card.querySelector('.dropzone');
         if (dropzone) {
           dropzone.innerHTML = `
-            <i class="fas fa-file-pdf mb-1"></i>
-            ${fileType} (Uploaded on ${file.submission_date})
+            <i class="fas fa-file-alt mb-1"></i>
+            <div>File Uploaded</div>
+            <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
+            <div class="small text-muted">Click to replace</div>
           `;
+          dropzone.classList.add('selected');
         }
-      }
-    });
-  }
-  
-  // Function to update the progress bar
-  function updateProgressBar(files) {
-    if (!files || files.length === 0) return;
-    
-    // Count files by status
-    const statusCounts = {
-      'Verified': 0,
-      'Pending': 0,
-      'Needs Revision': 0,
-      'Rejected': 0
-    };
-    
-    files.forEach(file => {
-      if (statusCounts.hasOwnProperty(file.status)) {
-        statusCounts[file.status]++;
-      }
-    });
-    
-    // Update the status counts in the UI
-    document.querySelector('.progress-bar').style.width = `${(statusCounts['Verified'] / files.length) * 100}%`;
-    
-    // Update the status text
-    const statusTexts = document.querySelectorAll('.d-flex.justify-content-between.small.text-secondary span');
-    if (statusTexts.length >= 4) {
-      statusTexts[0].textContent = `Verified: ${statusCounts['Verified']}`;
-      statusTexts[1].textContent = `Pending: ${statusCounts['Pending']}`;
-      statusTexts[2].textContent = `Needs Revision: ${statusCounts['Needs Revision']}`;
-      statusTexts[3].textContent = `Rejected: ${statusCounts['Rejected']}`;
-    }
-    
-    // Update application progress section
-    const progressSection = document.querySelector('.status-incomplete');
-    if (progressSection) {
-      // Update status text
-      const statusText = progressSection.querySelector('.small.text-secondary.mb-1');
-      if (statusText) {
-        if (files.length > 0) {
-          statusText.textContent = `${files.length} files uploaded`;
-        } else {
-          statusText.textContent = 'No files uploaded yet';
-        }
-      }
-      
-      // Update status badge
-      const statusBadge = progressSection.querySelector('.badge');
-      if (statusBadge) {
-        if (statusCounts['Verified'] === files.length && files.length > 0) {
-          statusBadge.className = 'badge bg-success';
-          statusBadge.textContent = 'Verified';
-        } else if (statusCounts['Pending'] > 0) {
-          statusBadge.className = 'badge bg-primary';
-          statusBadge.textContent = 'Pending';
-        } else if (statusCounts['Needs Revision'] > 0) {
-          statusBadge.className = 'badge bg-warning';
-          statusBadge.textContent = 'Needs Revision';
-        } else if (files.length > 0) {
-          statusBadge.className = 'badge bg-secondary';
-          statusBadge.textContent = 'Incomplete';
-        } else {
-          statusBadge.className = 'badge bg-secondary';
-          statusBadge.textContent = 'No Data';
-        }
-      }
-    }
-  }
-  
-  // Function to update the feedback section
-  function updateFeedbackSection(feedbacks) {
-    const receivedTab = document.getElementById('received-tab');
-    const receivedCount = document.getElementById('received-feedback-count');
-    
-    if (receivedTab && receivedCount) {
-      // Update the count
-      receivedCount.textContent = feedbacks.length;
-      
-      // Clear existing content
-      receivedTab.innerHTML = '';
-      
-      if (feedbacks.length > 0) {
-        // Sort feedbacks by date (newest first)
-        feedbacks.sort((a, b) => new Date(b.date_sent) - new Date(a.date_sent));
-        
-        // Add feedback cards
-        feedbacks.forEach(feedback => {
-          const feedbackCard = document.createElement('div');
-          feedbackCard.className = `feedback-card ${feedback.is_read ? '' : 'unread'}`;
-          feedbackCard.innerHTML = `
-            <div class="feedback-card-header">
-              <div class="feedback-card-title">${feedback.subject}</div>
-              <div class="feedback-card-date">${feedback.date_sent}</div>
-            </div>
-            <div class="feedback-card-body">${feedback.message}</div>
-            <div class="feedback-card-file">
-              <i class="fas fa-file-pdf"></i> ${feedback.file_name}
-            </div>
-          `;
-          receivedTab.appendChild(feedbackCard);
-        });
       } else {
-        // No feedback available
-        receivedTab.innerHTML = `
-          <div class="text-center p-4">
-            <p class="text-muted">No feedback available.</p>
-          </div>
-        `;
+        // No file uploaded for this type
+        card.dataset.fileId = '';
+        
+        // Update status badge
+        const statusBadge = card.querySelector('.status-badge');
+        if (statusBadge) {
+          statusBadge.dataset.fileId = '';
+          statusBadge.dataset.status = 'No File';
+          
+          // For empty file sections, use 'No File' to match application.html
+          // since it's not part of FileStatus.STATUS_CONFIGS
+          statusBadge.textContent = 'No File';
+          statusBadge.className = 'badge bg-secondary status-badge';
+          statusBadge.innerHTML = '<i class="fas fa-question-circle"></i> No File';
+        }
+        
+        // Update icon
+        const statusIcon = card.querySelector('.status-icon');
+        if (statusIcon) {
+          statusIcon.className = 'fas fa-upload status-icon';
+        }
+        
+        // Reset dropzone content
+        const dropzone = card.querySelector('.dropzone');
+        if (dropzone) {
+          dropzone.innerHTML = `
+            <i class="fas fa-cloud-upload-alt mb-1"></i>
+            <div class="text-center">Drag & Drop or Click to Upload<br>
+            PDF files only</div>
+          `;
+          dropzone.classList.remove('selected');
+        }
       }
-    }
+    });
   }
   
   // Function to update card status
-  function updateCardStatus(card, status, statusClass, statusIcon) {
-    const statusBadge = card.querySelector('.badge');
+  function updateCardStatus(card, status, statusClass, iconClass) {
+    const statusBadge = card.querySelector('.status-badge');
+    const statusIcon = card.querySelector('.status-icon');
+    
     if (statusBadge) {
-      statusBadge.className = `badge ${statusClass} status-badge`;
-      statusBadge.innerHTML = `<i class="fas ${statusIcon}"></i> ${status}`;
+      // Use FileStatus module's applyStatusBadgeConfig if available
+      if (FileStatus && typeof FileStatus.applyStatusBadgeConfig === 'function' && 
+          FileStatus.STATUS_CONFIGS && FileStatus.STATUS_CONFIGS[status]) {
+        FileStatus.applyStatusBadgeConfig(statusBadge, status);
+      } else {
+        // Fallback to our own implementation
+        statusBadge.textContent = status;
+        statusBadge.className = `badge ${statusClass} status-badge`;
+      }
+    }
+    
+    if (statusIcon) {
+      statusIcon.className = `fas ${iconClass} status-icon`;
     }
   }
   
-  // Helper function to get status class
+  /**
+   * Formats a date string or Date object into Month day, year format with AM/PM time
+   * @param {string|Date} dateInput - Date string or Date object to format
+   * @return {string} Formatted date and time string in "Month day, year, hour:minutes AM/PM" format
+   */
+  function formatDateTime(dateInput) {
+    if (!dateInput) {
+      return 'N/A';
+    }
+    
+    try {
+      const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date input:', dateInput);
+        return 'Invalid date';
+      }
+      
+      // Array of month names
+      const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      // Format date as Month day, year
+      const year = date.getFullYear();
+      const month = months[date.getMonth()];
+      const day = date.getDate();
+      const dateStr = `${month} ${day}, ${year}`;
+      
+      // Format time in 12-hour format with AM/PM (without seconds)
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      
+      // Convert hours to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      
+      const timeStr = `${hours}:${minutes} ${ampm}`;
+      
+      return `${dateStr}, ${timeStr}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Error formatting date';
+    }
+  }
+  
+  // Function to get status class based on status
   function getStatusClass(status) {
+    // Use FileStatus module's getStatusClass if available
+    if (FileStatus && typeof FileStatus.getStatusClass === 'function') {
+      const statusClass = FileStatus.getStatusClass(status);
+      if (statusClass !== 'selected') {
+        return statusClass.replace('status-', 'bg-');
+      }
+    }
+    
+    // Fallback to our own implementation
     switch (status) {
       case 'Verified': return 'bg-success';
       case 'Pending': return 'bg-primary';
       case 'Needs Revision': return 'bg-warning';
       case 'Rejected': return 'bg-danger';
+      case 'Not Uploaded': 
+      case 'No File': return 'bg-secondary';
       default: return 'bg-secondary';
     }
   }
   
-  // Helper function to get status icon
+  // Function to get status icon based on status
   function getStatusIcon(status) {
+    // Use FileStatus module's STATUS_TYPES if available
+    if (FileStatus && FileStatus.STATUS_TYPES && FileStatus.STATUS_TYPES[status]) {
+      return `fa-${FileStatus.STATUS_TYPES[status].icon}`;
+    }
+    
+    // Fallback to our own implementation
     switch (status) {
       case 'Verified': return 'fa-check-circle';
       case 'Pending': return 'fa-clock';
       case 'Needs Revision': return 'fa-exclamation-circle';
       case 'Rejected': return 'fa-times-circle';
+      case 'Not Uploaded': return 'fa-upload';
+      case 'No File': return 'fa-question-circle';
       default: return 'fa-question-circle';
     }
   }
+  
+  // Function to update progress bar and status counts
+  function updateProgressBar(files) {
+    const totalFiles = document.querySelectorAll('.document-card').length;
+    const uploadedFiles = files.length;
+    
+    // Reset counts in FileStatus.STATUS_TYPES
+    Object.keys(FileStatus.STATUS_TYPES).forEach(key => {
+      FileStatus.STATUS_TYPES[key].count = 0;
+    });
+    
+    // Count files by status
+    files.forEach(file => {
+      const status = file.status || 'Pending';
+      if (FileStatus.STATUS_TYPES[status]) {
+        FileStatus.STATUS_TYPES[status].count++;
+      } else {
+        FileStatus.STATUS_TYPES['Pending'].count++;
+      }
+    });
+    
+    // Set Not Uploaded count to total - uploaded
+    // This represents files with 'No File' status
+    const notUploadedCount = totalFiles - uploadedFiles;
+    
+    // Update status counts in the UI
+    const statusCountsHTML = FileStatus.generateStatusCountsHTML(FileStatus.STATUS_TYPES);
+    const statusCountsContainer = document.querySelector('.d-flex.justify-content-between.small.text-secondary');
+    if (statusCountsContainer) {
+      statusCountsContainer.innerHTML = statusCountsHTML;
+    }
+    
+    // Update progress bar using the common FileStatus module
+    FileStatus.updateProgressBar(FileStatus.STATUS_TYPES['Verified'].count, totalFiles);
+    
+    // Update progress text if it exists
+    const progressText = document.querySelector('.progress-text');
+    if (progressText) {
+      progressText.textContent = `${uploadedFiles} of ${totalFiles} files uploaded`;
+    }
+    
+    // Update application status badge
+    updateApplicationStatusBadge(files);
+  }
+  
+  // Function to update the application status badge
+  function updateApplicationStatusBadge(files) {
+    const statusBadge = document.querySelector('.d-flex.justify-content-between.align-items-start.mb-3 .badge');
+    const statusText = document.querySelector('.small.text-secondary.mb-1');
+    
+    if (!statusBadge || !statusText) return;
+    
+    // Check if application status is available from the server
+    const applicationStatus = document.getElementById('applicationStatus');
+    if (applicationStatus && applicationStatus.value) {
+      const status = applicationStatus.value;
+      
+      // Set badge based on application status from server
+      switch(status) {
+        case 'Verified':
+          statusBadge.className = 'badge bg-success';
+          statusBadge.textContent = 'Complete';
+          statusText.textContent = 'All files verified';
+          return;
+        case 'Rejected':
+          statusBadge.className = 'badge bg-danger';
+          statusBadge.textContent = 'Rejected';
+          statusText.textContent = 'Some files need attention';
+          return;
+        case 'Needs Revision':
+          statusBadge.className = 'badge bg-warning';
+          statusBadge.textContent = 'Needs Revision';
+          statusText.textContent = 'Some files need revision';
+          return;
+        case 'Pending':
+          statusBadge.className = 'badge bg-primary';
+          statusBadge.textContent = 'Pending';
+          statusText.textContent = 'Application is under review';
+          return;
+        case 'Incomplete':
+          statusBadge.className = 'badge bg-secondary';
+          statusBadge.textContent = 'Incomplete';
+          statusText.textContent = 'Please upload all required files';
+          return;
+      }
+    }
+    
+    // Fallback to file-based status if no application status is available
+    if (files.length === 0) {
+      statusBadge.className = 'badge bg-secondary';
+      statusBadge.textContent = 'No Data';
+      statusText.textContent = 'No renewal data available';
+      return;
+    }
+    
+    const totalRequired = document.querySelectorAll('.document-card').length;
+    const verifiedCount = FileStatus.STATUS_TYPES['Verified'].count;
+    const pendingCount = FileStatus.STATUS_TYPES['Pending'].count;
+    const needsRevisionCount = FileStatus.STATUS_TYPES['Needs Revision'].count;
+    const rejectedCount = FileStatus.STATUS_TYPES['Rejected'].count;
+    
+    if (verifiedCount === totalRequired) {
+      statusBadge.className = 'badge bg-success';
+      statusBadge.textContent = 'Complete';
+      statusText.textContent = 'All files verified';
+    } else if (rejectedCount > 0) {
+      statusBadge.className = 'badge bg-danger';
+      statusBadge.textContent = 'Rejected';
+      statusText.textContent = 'Some files need attention';
+    } else if (needsRevisionCount > 0) {
+      statusBadge.className = 'badge bg-warning';
+      statusBadge.textContent = 'Needs Revision';
+      statusText.textContent = 'Some files need revision';
+    } else if (pendingCount > 0 && files.length === totalRequired) {
+      statusBadge.className = 'badge bg-primary';
+      statusBadge.textContent = 'Pending';
+      statusText.textContent = 'All files submitted, awaiting verification';
+    } else {
+      statusBadge.className = 'badge bg-secondary';
+      statusBadge.textContent = 'Incomplete';
+      statusText.textContent = `${files.length} of ${totalRequired} files submitted`;
+    }
+  }
+  
+  // Function to update feedback section
+  function updateFeedbackSection(feedbacks) {
+    const feedbackContainer = document.querySelector('.feedback-container');
+    if (!feedbackContainer) return;
+    
+    if (feedbacks.length === 0) {
+      feedbackContainer.innerHTML = '<p class="text-muted">No feedback available.</p>';
+      return;
+    }
+    
+    let feedbackHTML = '';
+    feedbacks.forEach(feedback => {
+      feedbackHTML += `
+        <div class="feedback-item mb-3 p-3 border rounded">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">${feedback.subject}</h6>
+            <small class="text-muted">${feedback.date_sent}</small>
+          </div>
+          <p class="mb-0">${feedback.message}</p>
+        </div>
+      `;
+    });
+    
+    feedbackContainer.innerHTML = feedbackHTML;
+  }
+
 })();
