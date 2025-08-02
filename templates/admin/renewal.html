@@ -13,47 +13,35 @@
   <p class="mb-4 fs-5 text-start" style="color: var(--text-color);">Pending organization renewal applications</p>
   
   <div class="row g-4">
-    {% set org_names = [
-      "Global Institute for Sustainable Technology and Innovation",
-      "Association for Digital Ethics and Privacy Standards",
-      "Center for Advanced Materials Research and Development",
-      "Pacific Coalition for Marine Conservation and Oceanic Studies",
-      "International Forum for Renewable Energy Integration",
-      "Consortium for Artificial Intelligence Ethics and Governance",
-      "Southeast Asian Medical Research Collaborative",
-      "European Network for Urban Sustainability Solutions"
-    ] %}
-    
-    {% set submission_dates = [
-      "July 5, 2025",
-      "June 28, 2025",
-      "July 2, 2025",
-      "June 30, 2025",
-      "July 8, 2025",
-      "July 10, 2025",
-      "July 3, 2025",
-      "June 25, 2025"
-    ] %}
-    
-    {% set pending_counts = [5, 3, 5, 2, 4, 6, 3, 4] %}
-    
-    {% for i in range(8) %}
-    <div class="col-12 col-sm-6 col-lg-4">
-      <div class="card p-3 d-flex flex-column justify-content-between h-100">
-        <div>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <p class="submitted-text mb-0">Submitted on: {{ submission_dates[i] }}</p>
-            <span class="badge-pending">{{ pending_counts[i] }} pending</span>
+    {% if pending_renewals %}
+      {% for renewal in pending_renewals %}
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card p-3 d-flex flex-column justify-content-between h-100">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <p class="submitted-text mb-0">Submitted on: {{ renewal.submission_date }}</p>
+              <span class="badge-pending">{{ renewal.pending_count }} pending</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-4">
+              {% if renewal.logo_id %}
+              <img src="{{ url_for('user_organization.get_logo', logo_id=renewal.logo_id) }}" class="avatar" alt="Organization logo">
+              {% else %}
+              <div class="avatar" aria-label="Organization placeholder logo"></div>
+              {% endif %}
+              <p class="org-text mb-0">{{ renewal.organization_name }}</p>
+            </div>
           </div>
-          <div class="d-flex align-items-center gap-3 mb-4">
-            <div class="avatar" aria-label="Organization placeholder logo"></div>
-            <p class="org-text mb-0">{{ org_names[i] }}</p>
-          </div>
+          <a href="{{ url_for('organization_renewal.organizationrenewals', application_id=renewal.application_id) }}" type="button" class="btn btn-primary w-auto">Open Renewal</a>
         </div>
-        <a href="/organizationrenewals" type="button" class="btn btn-primary w-auto">Open Renewal</a>
       </div>
-    </div>
-    {% endfor %}
+      {% endfor %}
+    {% else %}
+      <div class="col-12">
+        <div class="alert alert-info">
+          No pending renewal applications found.
+        </div>
+      </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

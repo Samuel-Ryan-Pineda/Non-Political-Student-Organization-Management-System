@@ -1,0 +1,375 @@
+// Function to set up button events - FIXED VERSION
+function setupButtonEvents() {
+  // Get all document cards
+  const cards = document.querySelectorAll('.document-card');
+  
+  cards.forEach(card => {
+    // Get the file input
+    const fileInput = card.querySelector('.file-input');
+    if (!fileInput) {
+      return;
+    }
+    
+    // Get buttons using more specific selectors
+    const selectBtn = card.querySelector('button.select-btn, .btn:nth-of-type(2)');
+    const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+    const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+    
+    // Remove existing event listeners by cloning and replacing elements
+    if (selectBtn) {
+      const newSelectBtn = selectBtn.cloneNode(true);
+      selectBtn.parentNode.replaceChild(newSelectBtn, selectBtn);
+    }
+    if (uploadBtn) {
+      const newUploadBtn = uploadBtn.cloneNode(true);
+      uploadBtn.parentNode.replaceChild(newUploadBtn, uploadBtn);
+    }
+    if (previewBtn) {
+      const newPreviewBtn = previewBtn.cloneNode(true);
+      previewBtn.parentNode.replaceChild(newPreviewBtn, previewBtn);
+    }
+    
+    // Get the refreshed button references
+    const refreshedSelectBtn = card.querySelector('button.select-btn, .btn:nth-of-type(2)');
+    const refreshedUploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+    const refreshedPreviewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+    
+    // Set up file input change event
+    const newFileInput = card.querySelector('.file-input');
+    if (newFileInput) {
+      newFileInput.addEventListener('change', function() {
+        handleFileSelected(this, card);
+      });
+      
+      // Remove the click event that was causing issues
+      // The file clearing is now handled in the button/dropzone click handlers
+    }
+    
+    // Set up select button click event
+    if (refreshedSelectBtn) {
+      DOMUtils.setButtonState(refreshedSelectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      refreshedSelectBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only clear the value if there's already a file selected
+        // This prevents the double-click issue on first selection
+        if (newFileInput.value) {
+          newFileInput.value = '';
+        }
+        newFileInput.click();
+      });
+    }
+    
+    // Set up upload button click event
+    if (refreshedUploadBtn) {
+      refreshedUploadBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (newFileInput && newFileInput.files.length) {
+          const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
+          uploadFile(newFileInput.files[0], fileType, card);
+        }
+      });
+    }
+    
+    // Set up preview button click event
+    if (refreshedPreviewBtn) {
+      refreshedPreviewBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const fileId = card.dataset.fileId;
+        if (fileId) {
+          previewFile(fileId);
+        } else {
+          alert('No file available for preview');
+        }
+      });
+    }
+  });
+}
+
+// Function to update file cards based on loaded files - FIXED VERSION
+function updateFileCards(files) {
+  // Get all document cards
+  const cards = document.querySelectorAll('.document-card');
+  
+  cards.forEach(card => {
+    // Get the file type from the card title
+    const fileType = card.querySelector('.small.fw-semibold')?.textContent?.trim();
+    if (!fileType) return;
+    
+    // Find the matching file
+    const file = files.find(f => f.name === fileType);
+    
+    // Get buttons for this card
+    const selectBtn = card.querySelector('button.select-btn, .btn:nth-of-type(2)');
+    const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+    const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+    
+    if (file) {
+      // Update the card with file information
+      card.dataset.fileId = file.id;
+      
+      // Update status badge
+      const statusBadge = card.querySelector('.status-badge');
+      if (statusBadge) {
+        statusBadge.dataset.fileId = file.id;
+      }
+      
+      updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
+      
+      // Update dropzone content
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
+        dropzone.innerHTML = `
+          <i class="fas fa-file-alt mb-1"></i>
+          <div>File Uploaded</div>
+          <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
+          <div class="small text-muted">Click to replace</div>
+        `;
+        dropzone.classList.add('selected');
+      }
+      
+      // Set button states for uploaded files
+      if (selectBtn) {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      }
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+      }
+    } else {
+      // No file uploaded for this type
+      card.dataset.fileId = '';
+      
+      // Update status badge
+      const statusBadge = card.querySelector('.status-badge');
+      if (statusBadge) {
+        statusBadge.dataset.fileId = '';
+        statusBadge.dataset.status = 'No File';
+        statusBadge.textContent = 'No File';
+        statusBadge.className = 'badge bg-secondary status-badge';
+        statusBadge.innerHTML = '<i class="fas fa-question-circle"></i> No File';
+      }
+      
+      // Update icon
+      const statusIcon = card.querySelector('.status-icon');
+      if (statusIcon) {
+        statusIcon.className = 'fas fa-upload status-icon';
+      }
+      
+      // Reset dropzone content
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
+        dropzone.innerHTML = `
+          <i class="fas fa-cloud-upload-alt mb-1"></i>
+          <div class="text-center">Drag & Drop or Click to Upload<br>
+          PDF files only</div>
+        `;
+        dropzone.classList.remove('selected');
+      }
+      
+      // Set button states for files not uploaded
+      if (selectBtn) {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      }
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+      }
+    }
+  });
+}
+
+// Function to upload a file - FIXED VERSION WITH FILE REPLACEMENT
+function uploadFile(file, fileType, card) {
+  // Show loading modal
+  const loadingModal = document.getElementById('loadingModal');
+  const loadingMessage = document.getElementById('loadingMessage');
+  loadingMessage.textContent = 'Uploading file...';
+  loadingModal.style.display = 'flex';
+  
+  // Get buttons using improved selectors
+  const fileInput = card.querySelector('.file-input');
+  const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+  const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('fileType', fileType);
+  
+  // Check if there's an existing file to replace
+  const existingFileId = card.dataset.fileId;
+  if (existingFileId && existingFileId !== '') {
+    formData.append('replaceFileId', existingFileId);
+    loadingMessage.textContent = 'Replacing file...';
+  }
+  
+  // Get CSRF token from meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                   document.querySelector('[name="csrf_token"]')?.value;
+  
+  // Prepare headers for fetch request
+  const headers = {
+    'X-Requested-With': 'XMLHttpRequest'
+  };
+  
+  if (csrfToken) {
+    headers['X-CSRFToken'] = csrfToken;
+  }
+  
+  fetch('/renewal/upload-renewal-file', {
+    method: 'POST',
+    headers: headers,
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    loadingModal.style.display = 'none';
+    
+    if (data.success) {
+      // Set the file ID on the card and status badge
+      if (data.file_id) {
+        card.dataset.fileId = data.file_id;
+        
+        // Also set on status badge for consistency with application.js
+        const statusBadge = card.querySelector('.status-badge');
+        if (statusBadge) {
+          statusBadge.dataset.fileId = data.file_id;
+        }
+      }
+      
+      // Update the card status
+      updateCardStatus(card, 'Pending', 'bg-primary', 'fa-clock');
+      
+      // Reset the file input value to allow selecting the same file again
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      
+      // Update dropzone to show uploaded state
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
+        dropzone.innerHTML = `
+          <i class="fas fa-file-alt mb-1"></i>
+          <div>File Uploaded</div>
+          <div class="small text-muted">Just uploaded</div>
+          <div class="small text-muted">Click to replace</div>
+        `;
+        dropzone.classList.add('selected');
+      }
+      
+      // FIXED: Properly disable upload button and enable preview button
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+      }
+      
+      // Reload all files to update the progress
+      loadRenewalFiles();
+    } else {
+      // Show error message
+      alert(data.message || 'Error uploading file');
+      // Reset the dropzone
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
+        dropzone.innerHTML = `
+          <i class="fas fa-cloud-upload-alt mb-1"></i>
+          <div class="text-center">Drag & Drop or Click to Upload<br>
+          PDF files only</div>
+        `;
+        dropzone.classList.remove('selected');
+      }
+      
+      // Clear file ID if upload failed
+      delete card.dataset.fileId;
+      
+      // Clear status badge file ID
+      const statusBadge = card.querySelector('.status-badge');
+      if (statusBadge) {
+        delete statusBadge.dataset.fileId;
+      }
+      
+      // Disable upload button on error
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      
+      // Disable preview button
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+      }
+    }
+  })
+  .catch(error => {
+    loadingModal.style.display = 'none';
+    console.error('Error:', error);
+    alert('An error occurred while uploading the file');
+    // Reset the dropzone
+    const dropzone = card.querySelector('.dropzone');
+    if (dropzone) {
+      dropzone.innerHTML = `
+        <i class="fas fa-cloud-upload-alt mb-1"></i>
+        <div class="text-center">Drag & Drop or Click to Upload<br>
+        PDF files only</div>
+      `;
+      dropzone.classList.remove('selected');
+    }
+  });
+}
+
+// Function to handle file selection - FIXED VERSION
+function handleFileSelected(input, card) {
+  if (!input.files.length) return;
+  
+  const file = input.files[0];
+  
+  // Validate file type - only allow PDF files
+  const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+  if (file.type !== 'application/pdf' || fileExtension !== '.pdf') {
+    alert('Only PDF files are allowed for renewal documents.');
+    input.value = '';
+    return;
+  }
+  
+  // Update dropzone to show selected file with document title instead of filename
+  const dropzone = card.querySelector('.dropzone');
+  if (dropzone) {
+    // Get the document title from the card
+    const documentTitle = card.querySelector('.small.fw-semibold')?.textContent?.trim() || file.name;
+    
+    dropzone.innerHTML = `
+      <i class="fas fa-file-alt mb-1"></i>
+      <div>${documentTitle}</div>
+      <div class="small text-muted">${(file.size / 1024).toFixed(2)} KB</div>
+    `;
+    
+    dropzone.classList.add('selected');
+  }
+  
+  // Get buttons using improved selectors
+  const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+  const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+  
+  // Enable upload button
+  if (uploadBtn) {
+    DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.ENABLED.UPLOAD);
+  }
+  
+  // Disable preview button until file is uploaded (unless there's already an uploaded file)
+  if (previewBtn) {
+    const hasUploadedFile = card.dataset.fileId && card.dataset.fileId !== '';
+    if (hasUploadedFile) {
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+    } else {
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+    }
+  }
+}

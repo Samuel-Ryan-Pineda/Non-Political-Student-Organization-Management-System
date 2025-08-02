@@ -511,13 +511,13 @@ def get_affiliations_by_position_type(organization_id, position_type):
 
 def get_pending_applications():
     """
-    Get all pending organization applications
+    Get all pending NEW organization applications
     
     Returns:
         list: List of dictionaries containing application information
     """
     try:
-        # Query for organizations with applications that have status 'Pending' only
+        # Query for organizations with applications that have status 'Pending' and type 'New' only
         applications = db.session.query(
             Application, Organization, Logo
         ).join(
@@ -525,7 +525,8 @@ def get_pending_applications():
         ).outerjoin(
             Logo, Organization.logo_id == Logo.logo_id
         ).filter(
-            Application.status == 'Pending'
+            Application.status == 'Pending',
+            Application.type == 'New'
         ).order_by(
             Application.submission_date.desc()
         ).all()
@@ -551,6 +552,51 @@ def get_pending_applications():
         return result
     except Exception as e:
         print(f"Error fetching pending applications: {str(e)}")
+        return []
+
+def get_pending_renewal_applications():
+    """
+    Get all pending RENEWAL organization applications
+    
+    Returns:
+        list: List of dictionaries containing renewal application information
+    """
+    try:
+        # Query for organizations with applications that have status 'Pending' and type 'Renewal' only
+        applications = db.session.query(
+            Application, Organization, Logo
+        ).join(
+            Organization, Application.organization_id == Organization.organization_id
+        ).outerjoin(
+            Logo, Organization.logo_id == Logo.logo_id
+        ).filter(
+            Application.status == 'Pending',
+            Application.type == 'Renewal'
+        ).order_by(
+            Application.submission_date.desc()
+        ).all()
+        
+        result = []
+        for app, org, logo in applications:
+            # Count pending files for this application
+            pending_count = db.session.query(ApplicationFile).filter(
+                ApplicationFile.application_id == app.application_id,
+                ApplicationFile.status.in_(['Pending', 'Incomplete'])
+            ).count()
+            
+            result.append({
+                'application_id': app.application_id,
+                'organization_id': org.organization_id,
+                'organization_name': org.organization_name,
+                'submission_date': app.submission_date.strftime('%B %d, %Y, %I:%M %p') if app.submission_date else 'Not submitted',
+                'status': app.status,
+                'logo_id': org.logo_id,
+                'pending_count': pending_count
+            })
+        
+        return result
+    except Exception as e:
+        print(f"Error fetching pending renewal applications: {str(e)}")
         return []
 
 def get_organization_statistics(organization_id):

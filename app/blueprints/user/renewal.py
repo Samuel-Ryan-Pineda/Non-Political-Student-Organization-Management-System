@@ -58,6 +58,9 @@ def upload_renewal_file():
     if not file_type:
         return jsonify({'success': False, 'message': "File type not specified"})
     
+    # Get the replace file ID if provided
+    replace_file_id = request.form.get('replaceFileId')
+    
     # Check if the file type is allowed (PDF only)
     if not allowed_file(file.filename, ['pdf']):
         return jsonify({'success': False, 'message': "File type not allowed. Please upload PDF documents only."})
@@ -68,6 +71,39 @@ def upload_renewal_file():
         
         # Read the file data
         file_data = file.read()
+        
+        # Handle file replacement if replace_file_id is provided
+        if replace_file_id:
+            try:
+                # Find the existing file by ID
+                existing_file_by_id = ApplicationFile.query.filter_by(
+                    app_file_id=replace_file_id,
+                    application_id=renewal_application.application_id
+                ).first()
+                
+                if existing_file_by_id:
+                    # Update existing file
+                    existing_file_by_id.file = file_data
+                    existing_file_by_id.status = "Pending"
+                    existing_file_by_id.submission_date = datetime.utcnow()  # Reset submission date on update
+                    db.session.commit()
+                    
+                    # Check if all required files are uploaded and update application status if needed
+                    check_and_update_renewal_status(renewal_application.application_id)
+                    
+                    return jsonify({
+                        'success': True, 
+                        'message': f"{file_type} replaced successfully",
+                        'filename': filename,
+                        'fileType': file_type,
+                        'status': "Pending",
+                        'file_id': existing_file_by_id.app_file_id,
+                        'submission_date': existing_file_by_id.submission_date.strftime('%Y-%m-%d %H:%M:%S')
+                    })
+            except Exception as e:
+                # Log the error but continue with normal upload process
+                print(f"Error replacing file {replace_file_id}: {str(e)}")
+                # Continue with normal upload process
         
         # Check if a file with this type already exists for this application
         existing_file = ApplicationFile.query.filter_by(
@@ -305,3 +341,69 @@ def get_renewal_file(file_id):
         as_attachment=False,
         download_name=f'{app_file.file_name}.{file_extension}'
     )
+
+@user_renewal_bp.route('/replace-renewal-file/<int:file_id>', methods=['POST'])
+@login_required
+def replace_renewal_file(file_id):
+    try:
+        # Get the uploaded file and other form data
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file provided'})
+            
+        file = request.files.get('file')
+        
+        if not file or file.filename == '':
+            return jsonify({'success': False, 'message': 'No file provided'})
+        
+        # Validate file type (PDF only)
+        if not allowed_file(file.filename, ['pdf']):
+            return jsonify({'success': False, 'message': 'Only PDF files are allowed'})
+        
+        # Ensure user is Organization President or Applicant
+        if current_user.role_id not in [2, 3]:
+            return jsonify({'success': False, 'message': "You don't have permission to upload files"})
+        
+        # Import the service module here to avoid circular imports
+        from app.organization_service import get_organization_by_user_id
+        
+        # Get user's organization
+        organization = get_organization_by_user_id(current_user.user_id)
+        if not organization:
+            return jsonify({'success': False, 'message': 'User or organization not found'})
+        
+        # Find the existing file
+        existing_file = ApplicationFile.query.get(file_id)
+        
+        if not existing_file:
+            return jsonify({'success': False, 'message': 'File not found'})
+        
+        # Verify the file belongs to the user's organization
+        application = Application.query.get(existing_file.application_id)
+        if not application or application.organization_id != organization.organization_id:
+            return jsonify({'success': False, 'message': 'You do not have permission to modify this file'})
+        
+        # Read the file data
+        file_data = file.read()
+        
+        # Update the existing file record
+        existing_file.file = file_data
+        existing_file.status = 'Pending'  # Reset status to pending after replacement
+        existing_file.submission_date = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # Check if all required files are uploaded and update application status if needed
+        check_and_update_renewal_status(application.application_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'File replaced successfully',
+            'file_id': existing_file.app_file_id,
+            'status': 'Pending',
+            'submission_date': existing_file.submission_date.strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error replacing renewal file {file_id}: {str(e)}")
+        return jsonify({'success': False, 'message': 'An error occurred while replacing the file'})

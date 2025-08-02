@@ -64,52 +64,67 @@
     });
   }
 
-  // Function to set up dropzone events
-  function setupDropzoneEvents() {
-    // Get all dropzones
-    const dropzones = document.querySelectorAll('.dropzone');
+  // Function to set up dropzone events - FIXED VERSION
+function setupDropzoneEvents() {
+  // Get all dropzones
+  const dropzones = document.querySelectorAll('.dropzone');
+  
+  dropzones.forEach(dropzone => {
+    // Get the parent card
+    const card = dropzone.closest('.document-card');
+    if (!card) return;
     
-    dropzones.forEach(dropzone => {
-      // Get the parent card
-      const card = dropzone.closest('.document-card');
-      if (!card) return;
+    // Get the file input
+    const fileInput = card.querySelector('.file-input');
+    if (!fileInput) return;
+    
+    // Check if events are already attached to prevent duplicates
+    if (dropzone.dataset.eventsAttached === 'true') {
+      return;
+    }
+    
+    // Mark that events are attached
+    dropzone.dataset.eventsAttached = 'true';
+    
+    // Set up click event on dropzone - BUT NOT on buttons inside it
+    dropzone.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       
-      // Get the file input
-      const fileInput = card.querySelector('.file-input');
-      if (!fileInput) return;
+      // Check if the click came from a button - if so, don't trigger file input
+      if (e.target.closest('button') || e.target.closest('.btn')) {
+        return; // Let the button handle its own click
+      }
       
-      // Set up click event on dropzone
-      dropzone.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        fileInput.click();
-      });
-      
-      // Set up drag and drop events
-      dropzone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.classList.add('dragover');
-      });
-      
-      dropzone.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.classList.remove('dragover');
-      });
-      
-      dropzone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.classList.remove('dragover');
-        
-        if (e.dataTransfer.files.length > 0) {
-          fileInput.files = e.dataTransfer.files;
-          fileInput.dispatchEvent(new Event('change'));
-        }
-      });
+      // Only trigger file input if clicking directly on dropzone area
+      fileInput.click();
     });
-  }
+    
+    // Set up drag and drop events
+    dropzone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    });
+    
+    dropzone.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    });
+    
+    dropzone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+      
+      if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+      }
+    });
+  });
+}
   
   // Helper function to format file size
   function formatFileSize(bytes) {
@@ -120,263 +135,318 @@
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
   
-  // Function to handle file selection - exactly matching application.js
-  function handleFileSelected(input, card) {
-    if (!input.files.length) return;
+  // Function to handle file selection - FIXED VERSION
+function handleFileSelected(input, card) {
+  if (!input.files.length) return;
+  
+  const file = input.files[0];
+  
+  // Validate file type - only allow PDF files
+  const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+  if (file.type !== 'application/pdf' || fileExtension !== '.pdf') {
+    alert('Only PDF files are allowed for renewal documents.');
+    input.value = '';
+    return;
+  }
+  
+  // Update dropzone to show selected file with document title instead of filename
+  const dropzone = card.querySelector('.dropzone');
+  if (dropzone) {
+    // Get the document title from the card
+    const documentTitle = card.querySelector('.small.fw-semibold')?.textContent?.trim() || file.name;
     
-    const file = input.files[0];
+    dropzone.innerHTML = `
+      <i class="fas fa-file-alt mb-1"></i>
+      <div>${documentTitle}</div>
+      <div class="small text-muted">${(file.size / 1024).toFixed(2)} KB</div>
+    `;
     
-    // Validate file type - only allow PDF files
-    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    if (file.type !== 'application/pdf' || fileExtension !== '.pdf') {
-      alert('Only PDF files are allowed for renewal documents.');
-      input.value = '';
-      return;
-    }
-    
-    // Update dropzone to show selected file with document title instead of filename
-    const dropzone = card.querySelector('.dropzone');
-    if (dropzone) {
-      // Get the document title from the card
-      const documentTitle = card.querySelector('.small.fw-semibold')?.textContent?.trim() || file.name;
-      
-      dropzone.innerHTML = `
-        <i class="fas fa-file-alt mb-1"></i>
-        <div>${documentTitle}</div>
-        <div class="small text-muted">${(file.size / 1024).toFixed(2)} KB</div>
-      `;
-      
-      dropzone.classList.add('selected');
-    }
-    
-    // Enable upload button - with fallback selector
-    let uploadBtn = card.querySelector('.upload-btn');
-    
-    // Fallback to nth-child selector if class selector doesn't work
-    if (!uploadBtn) {
-      const buttons = card.querySelectorAll('button');
-      uploadBtn = buttons[2]; // Upload button is the 3rd button (index 2)
-    }
-    
-    if (uploadBtn) {
-      DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.ENABLED.UPLOAD);
-    }
-    
-    // Disable preview button until file is uploaded
-    const previewBtn = card.querySelector('.preview-btn');
-    if (previewBtn) {
+    dropzone.classList.add('selected');
+  }
+  
+  // Get buttons using improved selectors
+  const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+  const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+  
+  // Enable upload button
+  if (uploadBtn) {
+    DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.ENABLED.UPLOAD);
+  }
+  
+  // Disable preview button until file is uploaded (unless there's already an uploaded file)
+  if (previewBtn) {
+    const hasUploadedFile = card.dataset.fileId && card.dataset.fileId !== '';
+    if (hasUploadedFile) {
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+    } else {
       DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
     }
   }
+}
 
-  // Function to upload a file
-  function uploadFile(file, fileType, card) {
-    // Show loading modal
-    const loadingModal = document.getElementById('loadingModal');
-    const loadingMessage = document.getElementById('loadingMessage');
-    loadingMessage.textContent = 'Uploading file...';
-    loadingModal.style.display = 'flex';
+  // Function to upload a file - FIXED VERSION
+function uploadFile(file, fileType, card) {
+  // Show loading modal
+  const loadingModal = document.getElementById('loadingModal');
+  const loadingMessage = document.getElementById('loadingMessage');
+  loadingMessage.textContent = 'Uploading file...';
+  loadingModal.style.display = 'flex';
+  
+  // Get buttons using improved selectors
+  const fileInput = card.querySelector('.file-input');
+  const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+  const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('fileType', fileType);
+  
+  // Check if we have a file ID already (for replacement)
+  if (card.dataset.fileId) {
+    formData.append('replaceFileId', card.dataset.fileId);
+  }
+  
+  // Get CSRF token from meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                   document.querySelector('[name="csrf_token"]')?.value;
+  
+  // Prepare headers for fetch request
+  const headers = {
+    'X-Requested-With': 'XMLHttpRequest'
+  };
+  
+  if (csrfToken) {
+    headers['X-CSRFToken'] = csrfToken;
+  }
+  
+  fetch('/renewal/upload-renewal-file', {
+    method: 'POST',
+    headers: headers,
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    loadingModal.style.display = 'none';
     
-    // Get buttons using class selectors
-    const fileInput = card.querySelector('.file-input');
-    const uploadBtn = card.querySelector('.upload-btn');
-    const previewBtn = card.querySelector('.preview-btn');
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('fileType', fileType);
-    
-    // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
-                     document.querySelector('[name="csrf_token"]')?.value;
-    
-    // Prepare headers for fetch request
-    const headers = {
-      'X-Requested-With': 'XMLHttpRequest'
-    };
-    
-    if (csrfToken) {
-      headers['X-CSRFToken'] = csrfToken;
-    }
-    
-    fetch('/renewal/upload-renewal-file', {
-      method: 'POST',
-      headers: headers,
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      loadingModal.style.display = 'none';
+    if (data.success) {
+      // Set the file ID on the card and status badge
+      if (data.file_id) {
+        card.dataset.fileId = data.file_id;
+        
+        // Also set on status badge for consistency with application.js
+        const statusBadge = card.querySelector('.status-badge');
+        if (statusBadge) {
+          statusBadge.dataset.fileId = data.file_id;
+        }
+      }
       
-      if (data.success) {
-        // Set the file ID on the card and status badge
-        if (data.file_id) {
-          card.dataset.fileId = data.file_id;
-          
-          // Also set on status badge for consistency with application.js
-          const statusBadge = card.querySelector('.status-badge');
-          if (statusBadge) {
-            statusBadge.dataset.fileId = data.file_id;
-          }
-        }
-        
-        // Update the card status
-        updateCardStatus(card, 'Pending', 'bg-primary', 'fa-clock');
-        
-        // Reset the file input value to allow selecting the same file again
-        if (fileInput) {
-          fileInput.value = '';
-        }
-        
-        // Disable upload button after successful upload
-        if (uploadBtn) {
-          DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
-        }
-        
-        // Enable preview button after successful upload
-        if (previewBtn) {
-          DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
-        }
-        
-        // Reload all files to update the progress
-        loadRenewalFiles();
-      } else {
-        // Show error message
-        alert(data.message || 'Error uploading file');
-        // Reset the dropzone
-        const dropzone = card.querySelector('.dropzone');
+      // Update the card status
+      updateCardStatus(card, 'Pending', 'bg-primary', 'fa-clock');
+      
+      // Reset the file input value to allow selecting the same file again
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      
+      // Update dropzone to show uploaded state
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
+        dropzone.innerHTML = `
+          <i class="fas fa-file-alt mb-1"></i>
+          <div>File Uploaded</div>
+          <div class="small text-muted">Just uploaded</div>
+          <div class="small text-muted">Click to replace</div>
+        `;
+        dropzone.classList.add('selected');
+      }
+      
+      // FIXED: Properly disable upload button and enable preview button
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+      }
+      
+      // Check if all files are uploaded and update UI immediately
+      checkIfAllFilesUploaded();
+      
+      // Reload all files to update the progress
+      loadRenewalFiles();
+      
+      // Check again after loading files to ensure UI is consistent
+      setTimeout(() => {
+        checkIfAllFilesUploaded();
+      }, 500); // Small delay to ensure loadRenewalFiles has completed
+    } else {
+      // Show error message
+      alert(data.message || 'Error uploading file');
+      // Reset the dropzone
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
         dropzone.innerHTML = `
           <i class="fas fa-cloud-upload-alt mb-1"></i>
           <div class="text-center">Drag & Drop or Click to Upload<br>
           PDF files only</div>
         `;
         dropzone.classList.remove('selected');
-        
-        // Clear file ID if upload failed
-        delete card.dataset.fileId;
-        
-        // Clear status badge file ID
-        const statusBadge = card.querySelector('.status-badge');
-        if (statusBadge) {
-          delete statusBadge.dataset.fileId;
-        }
-        
-        // Disable upload button on error
-        if (uploadBtn) {
-          DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
-        }
-        
-        // Disable preview button
-        if (previewBtn) {
-          DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
-        }
       }
-    })
-    .catch(error => {
-      loadingModal.style.display = 'none';
-      console.error('Error:', error);
-      alert('An error occurred while uploading the file');
-      // Reset the dropzone
-      const dropzone = card.querySelector('.dropzone');
+      
+      // Clear file ID if upload failed
+      delete card.dataset.fileId;
+      
+      // Clear status badge file ID
+      const statusBadge = card.querySelector('.status-badge');
+      if (statusBadge) {
+        delete statusBadge.dataset.fileId;
+      }
+      
+      // Disable upload button on error
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      
+      // Disable preview button
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+      }
+    }
+  })
+  .catch(error => {
+    loadingModal.style.display = 'none';
+    console.error('Error:', error);
+    alert('An error occurred while uploading the file');
+    // Reset the dropzone
+    const dropzone = card.querySelector('.dropzone');
+    if (dropzone) {
       dropzone.innerHTML = `
         <i class="fas fa-cloud-upload-alt mb-1"></i>
         <div class="text-center">Drag & Drop or Click to Upload<br>
         PDF files only</div>
       `;
       dropzone.classList.remove('selected');
-    });
-  }
+    }
+  });
+}
 
-  // Function to set up button events - simplified to match working application.js
-  function setupButtonEvents() {
-    // Get all document cards
-    const cards = document.querySelectorAll('.document-card');
+// Updated setupButtonEvents function to work with the fixed dropzone
+function setupButtonEvents() {
+  // Get all document cards
+  const cards = document.querySelectorAll('.document-card');
+  
+  cards.forEach(card => {
+    // Get the file input
+    const fileInput = card.querySelector('.file-input');
+    if (!fileInput) {
+      return;
+    }
     
-    cards.forEach(card => {
-      // Get the file input
-      const fileInput = card.querySelector('.file-input');
-      if (!fileInput) {
-        return;
-      }
+    // Get buttons using more specific selectors
+    const selectBtn = card.querySelector('button.select-btn, .btn:nth-of-type(2)');
+    const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+    const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+    
+    // Check if events are already attached to prevent duplicates
+    if (fileInput.dataset.eventsAttached === 'true') {
+      return;
+    }
+    
+    // Mark that events are attached
+    fileInput.dataset.eventsAttached = 'true';
+    
+    // Set up file input change event (only once)
+    fileInput.addEventListener('change', function(e) {
+      e.stopPropagation();
+      handleFileSelected(this, card);
+    }, { once: false, passive: true });
+    
+    // Set up select button click event
+    if (selectBtn && !selectBtn.dataset.eventsAttached) {
+      selectBtn.dataset.eventsAttached = 'true';
+      DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
       
-      // Get buttons using class selectors first, then fallback to nth-child
-      let selectBtn = card.querySelector('.select-btn');
-      let uploadBtn = card.querySelector('.upload-btn');
-      let previewBtn = card.querySelector('.preview-btn');
-      
-      // Fallback to nth-child selectors if class selectors don't work
-      if (!selectBtn || !uploadBtn || !previewBtn) {
-        const buttons = card.querySelectorAll('button');
-        previewBtn = buttons[0]; // Preview button
-        selectBtn = buttons[1];  // Select File button
-        uploadBtn = buttons[2];  // Upload button
-      }
-      
-      // Set up file input change event
-      fileInput.addEventListener('change', function() {
-        handleFileSelected(this, card);
-      });
-      
-      // Add click event to handle selecting the same file again
-      fileInput.addEventListener('click', function() {
-        // Store the current value to detect if the same file is selected again
-        this.dataset.previousValue = this.value;
-      });
-      
-      // Set up select button click event
-      if (selectBtn) {
-        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
-        selectBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          // Clear the file input value before clicking it
-          // This forces the browser to trigger a change event even if the same file is selected
-          fileInput.value = '';
-          fileInput.click();
-        });
-      }
-      
-      // Set up upload button click event
-      if (uploadBtn) {
-        // Initialize upload button as disabled
-        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      selectBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        uploadBtn.addEventListener('click', function() {
-          if (fileInput.files.length) {
-            const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
-            uploadFile(fileInput.files[0], fileType, card);
-          }
-        });
-      }
+        // Clear the file input value
+        fileInput.value = '';
+        
+        // Trigger file picker with a small delay to prevent issues
+        setTimeout(() => {
+          fileInput.click();
+        }, 10);
+      }, { once: false, passive: false });
+    }
+    
+    // Set up upload button click event
+    if (uploadBtn && !uploadBtn.dataset.eventsAttached) {
+      uploadBtn.dataset.eventsAttached = 'true';
       
-      // Set up preview button click event
-      if (previewBtn) {
-        previewBtn.addEventListener('click', function() {
-          const fileId = card.dataset.fileId;
-          if (fileId) {
-            previewFile(fileId);
-          } else {
-            alert('No file available for preview');
-          }
-        });
-      }
+      uploadBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (fileInput && fileInput.files.length) {
+          const fileType = card.querySelector('.small.fw-semibold').textContent.trim();
+          uploadFile(fileInput.files[0], fileType, card);
+        }
+      }, { once: false, passive: false });
+    }
+    
+    // Set up preview button click event
+    if (previewBtn && !previewBtn.dataset.eventsAttached) {
+      previewBtn.dataset.eventsAttached = 'true';
+      
+      previewBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const fileId = card.dataset.fileId;
+        if (fileId) {
+          previewFile(fileId);
+        } else {
+          alert('No file available for preview');
+        }
+      }, { once: false, passive: false });
+    }
+  });
+}
+  
+  // Helper function to reset event listeners
+  function resetEventListeners() {
+    // Reset file input event listeners
+    document.querySelectorAll('.file-input').forEach(input => {
+      delete input.dataset.eventsAttached;
+    });
+    
+    // Reset button event listeners
+    document.querySelectorAll('.select-btn, .upload-btn, .preview-btn, .btn').forEach(btn => {
+      delete btn.dataset.eventsAttached;
+    });
+    
+    // Reset dropzone event listeners
+    document.querySelectorAll('.dropzone').forEach(dropzone => {
+      delete dropzone.dataset.eventsAttached;
     });
   }
   
   // Function to preview a file
   function previewFile(fileId) {
-    // Show loading modal
-    const loadingModal = document.getElementById('loadingModal');
-    const loadingMessage = document.getElementById('loadingMessage');
-    loadingMessage.textContent = 'Loading preview...';
-    loadingModal.style.display = 'flex';
+    if (!fileId) {
+      alert('No file available for preview');
+      return;
+    }
     
-    // Open the file in a new tab
-    const previewUrl = `/renewal/get-renewal-file/${fileId}`;
-    window.open(previewUrl, '_blank');
+    // Get the file name from the card
+    const card = document.querySelector(`.document-card[data-file-id="${fileId}"]`);
+    const fileName = card ? card.querySelector('.small.fw-semibold')?.textContent?.trim() || 'File' : 'File';
     
-    // Hide loading modal
-    loadingModal.style.display = 'none';
+    // Use the FilePreview module to show the file in a modal
+    FilePreview.previewFile(fileId, fileName, (id) => {
+      return `/renewal/get-renewal-file/${id}`;
+    });
   }
 
   // Function to set up feedback events
@@ -473,6 +543,9 @@
             if (documentCardsContainer) {
               documentCardsContainer.classList.add('loaded');
             }
+            
+            // Check if all files are uploaded after UI is updated
+            checkIfAllFilesUploaded();
           }, 500); // Small delay to ensure all UI updates are complete
         } else {
           console.error('Error loading files:', data.message);
@@ -576,79 +649,102 @@
       });
   }
   
-  // Function to update file cards based on loaded files
-  function updateFileCards(files) {
-    // Get all document cards
-    const cards = document.querySelectorAll('.document-card');
+  // Function to update file cards based on loaded files - FIXED VERSION
+function updateFileCards(files) {
+  // Get all document cards
+  const cards = document.querySelectorAll('.document-card');
+  
+  cards.forEach(card => {
+    // Get the file type from the card title
+    const fileType = card.querySelector('.small.fw-semibold')?.textContent?.trim();
+    if (!fileType) return;
     
-    cards.forEach(card => {
-      // Get the file type from the card title
-      const fileType = card.querySelector('.small.fw-semibold')?.textContent?.trim();
-      if (!fileType) return;
+    // Find the matching file
+    const file = files.find(f => f.name === fileType);
+    
+    // Get buttons for this card
+    const selectBtn = card.querySelector('button.select-btn, .btn:nth-of-type(2)');
+    const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+    const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+    
+    if (file) {
+      // Update the card with file information
+      card.dataset.fileId = file.id;
       
-      // Find the matching file
-      const file = files.find(f => f.name === fileType);
-      
-      if (file) {
-        // Update the card with file information
-        card.dataset.fileId = file.id;
-        
-        // Update status badge
-        const statusBadge = card.querySelector('.status-badge');
-        if (statusBadge) {
-          // Also set fileId on status badge for consistency with application.js
-          statusBadge.dataset.fileId = file.id;
-        }
-        
-        updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
-        
-        // Update dropzone content
-        const dropzone = card.querySelector('.dropzone');
-        if (dropzone) {
-          dropzone.innerHTML = `
-            <i class="fas fa-file-alt mb-1"></i>
-            <div>File Uploaded</div>
-            <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
-            <div class="small text-muted">Click to replace</div>
-          `;
-          dropzone.classList.add('selected');
-        }
-      } else {
-        // No file uploaded for this type
-        card.dataset.fileId = '';
-        
-        // Update status badge
-        const statusBadge = card.querySelector('.status-badge');
-        if (statusBadge) {
-          statusBadge.dataset.fileId = '';
-          statusBadge.dataset.status = 'No File';
-          
-          // For empty file sections, use 'No File' to match application.html
-          // since it's not part of FileStatus.STATUS_CONFIGS
-          statusBadge.textContent = 'No File';
-          statusBadge.className = 'badge bg-secondary status-badge';
-          statusBadge.innerHTML = '<i class="fas fa-question-circle"></i> No File';
-        }
-        
-        // Update icon
-        const statusIcon = card.querySelector('.status-icon');
-        if (statusIcon) {
-          statusIcon.className = 'fas fa-upload status-icon';
-        }
-        
-        // Reset dropzone content
-        const dropzone = card.querySelector('.dropzone');
-        if (dropzone) {
-          dropzone.innerHTML = `
-            <i class="fas fa-cloud-upload-alt mb-1"></i>
-            <div class="text-center">Drag & Drop or Click to Upload<br>
-            PDF files only</div>
-          `;
-          dropzone.classList.remove('selected');
-        }
+      // Update status badge
+      const statusBadge = card.querySelector('.status-badge');
+      if (statusBadge) {
+        statusBadge.dataset.fileId = file.id;
       }
-    });
-  }
+      
+      updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
+      
+      // Update dropzone content
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
+        dropzone.innerHTML = `
+          <i class="fas fa-file-alt mb-1"></i>
+          <div>File Uploaded</div>
+          <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
+          <div class="small text-muted">Click to replace</div>
+        `;
+        dropzone.classList.add('selected');
+      }
+      
+      // Set button states for uploaded files
+      if (selectBtn) {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      }
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+      }
+    } else {
+      // No file uploaded for this type
+      card.dataset.fileId = '';
+      
+      // Update status badge
+      const statusBadge = card.querySelector('.status-badge');
+      if (statusBadge) {
+        statusBadge.dataset.fileId = '';
+        statusBadge.dataset.status = 'No File';
+        statusBadge.textContent = 'No File';
+        statusBadge.className = 'badge bg-secondary status-badge';
+        statusBadge.innerHTML = '<i class="fas fa-question-circle"></i> No File';
+      }
+      
+      // Update icon
+      const statusIcon = card.querySelector('.status-icon');
+      if (statusIcon) {
+        statusIcon.className = 'fas fa-upload status-icon';
+      }
+      
+      // Reset dropzone content
+      const dropzone = card.querySelector('.dropzone');
+      if (dropzone) {
+        dropzone.innerHTML = `
+          <i class="fas fa-cloud-upload-alt mb-1"></i>
+          <div class="text-center">Drag & Drop or Click to Upload<br>
+          PDF files only</div>
+        `;
+        dropzone.classList.remove('selected');
+      }
+      
+      // Set button states for files not uploaded
+      if (selectBtn) {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      }
+      if (uploadBtn) {
+        DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+      }
+      if (previewBtn) {
+        DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+      }
+    }
+  });
+}
   
   // Function to update card status
   function updateCardStatus(card, status, statusClass, iconClass) {
@@ -802,9 +898,34 @@
       progressText.textContent = `${uploadedFiles} of ${totalFiles} files uploaded`;
     }
     
+    // Check if all files are pending
+    const allFilesPending = uploadedFiles === totalFiles && 
+                          FileStatus.STATUS_TYPES['Verified'].count === 0 && 
+                          FileStatus.STATUS_TYPES['Needs Revision'].count === 0 && 
+                          FileStatus.STATUS_TYPES['Rejected'].count === 0 &&
+                          FileStatus.STATUS_TYPES['Pending'].count === totalFiles;
+                          
+    if (allFilesPending) {
+      console.log('All files are pending, setting UI to Pending status');
+      const statusBadge = document.querySelector('.d-flex.justify-content-between.align-items-start.mb-3 .badge');
+      const statusText = document.querySelector('.small.text-secondary.mb-1');
+      if (statusBadge && statusText) {
+        statusBadge.className = 'badge bg-primary';
+        statusBadge.textContent = 'Pending';
+        statusText.textContent = 'All files submitted, awaiting verification';
+      }
+      return; // Skip the regular updateApplicationStatusBadge call
+    }
+    
     // Update application status badge
     updateApplicationStatusBadge(files);
+    
+    // Check if all files are uploaded after updating the UI
+    setTimeout(() => {
+      checkIfAllFilesUploaded();
+    }, 100);
   }
+
   
   // Function to update the application status badge
   function updateApplicationStatusBadge(files) {
@@ -910,5 +1031,65 @@
     
     feedbackContainer.innerHTML = feedbackHTML;
   }
+
+  // Function to check if all required files are uploaded and update UI immediately
+  function checkIfAllFilesUploaded() {
+    // Get all document cards
+    const cards = document.querySelectorAll('.document-card');
+    
+    // Get the total number of required files
+    const totalRequired = parseInt(document.querySelector('.total-required')?.textContent || '0');
+    
+    // Check if all required files are uploaded
+    let allFilesUploaded = true;
+    let uploadedFileCount = 0;
+    
+    // Count files with file IDs (uploaded files)
+    cards.forEach(card => {
+      if (card.dataset.fileId) {
+        uploadedFileCount++;
+      } else {
+        allFilesUploaded = false;
+      }
+    });
+    
+    console.log(`All files uploaded: ${allFilesUploaded}, Count: ${uploadedFileCount}/${totalRequired}`);
+    
+    // If all files are uploaded, update the UI immediately
+    if (allFilesUploaded && uploadedFileCount === totalRequired) {
+      console.log('All required files are uploaded, updating UI status...');
+      
+      // Update the status badge and text
+      const statusBadge = document.querySelector('.status-badge');
+      const statusText = document.querySelector('.status-text');
+      
+      if (statusBadge && statusText) {
+        statusBadge.className = 'badge bg-primary';
+        statusBadge.textContent = 'Pending';
+        statusText.textContent = 'All files submitted, awaiting verification';
+      }
+      
+      // Update the progress bar color
+      const progressBar = document.querySelector('.progress-bar');
+      if (progressBar) {
+        progressBar.classList.remove('bg-secondary', 'bg-success', 'bg-danger', 'bg-warning');
+        progressBar.classList.add('bg-primary');
+      }
+      
+      // Update status counts in the UI
+      document.querySelector('.pending-count').textContent = uploadedFileCount;
+      document.querySelector('.verified-count').textContent = '0';
+      document.querySelector('.needs-revision-count').textContent = '0';
+      document.querySelector('.rejected-count').textContent = '0';
+      
+      // Optional: Show a toast notification if toastr is available
+      if (typeof toastr !== 'undefined') {
+        toastr.success('All files submitted successfully', 'Status Updated');
+      }
+    }
+  }
+
+  // Expose public functions
+  window.checkIfAllFilesUploaded = checkIfAllFilesUploaded;
 
 })();

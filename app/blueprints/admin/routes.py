@@ -36,25 +36,7 @@ def member():
     # current_user is provided by Flask-Login
     return render_template('admin/member.html', user=current_user, active_page='member')
 
-@admin_routes_bp.route('/renewal')
-@login_required
-def renewal():
-    # Ensure user is OSOAD
-    if current_user.role_id != 1:
-        flash("You don't have permission to access this page", "error")
-        return redirect(url_for('main.dashboard'))
-    # current_user is provided by Flask-Login
-    return render_template('admin/renewal.html', user=current_user, active_page='renewal')
 
-@admin_routes_bp.route('/organizationrenewals')
-@login_required
-def organizationrenewals():
-    # Ensure user is OSOAD
-    if current_user.role_id != 1:
-        flash("You don't have permission to access this page", "error")
-        return redirect(url_for('main.dashboard'))
-    # current_user is provided by Flask-Login
-    return render_template('admin/organizationrenewals.html', user=current_user, active_page='renewal')
 
 @admin_routes_bp.route('/organization')
 @login_required

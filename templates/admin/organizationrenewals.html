@@ -20,10 +20,10 @@
     
     <div class="org-info">
       <p class="mb-1">
-        <span class="fw-semibold">Organization:</span> Global Institute for Sustainable Technology and Innovation
+        <span class="fw-semibold">Organization:</span> {{ organization.organization_name }}
       </p>
       <p class="mb-4">
-        <span class="fw-semibold">Date Submitted:</span> July 5, 2025
+        <span class="fw-semibold">Date Submitted:</span> {{ application.submission_date.strftime('%B %d, %Y') if application.submission_date else 'Not submitted' }}
       </p>
     </div>
 
@@ -33,127 +33,39 @@
           <tr>
             <th scope="col" style="text-align: left;">File Name</th>
             <th scope="col" style="text-align: left;">Submission Date</th>
-            <th scope="col" style="text-align: left;">Form Type</th>
+
             <th scope="col">Status</th>
             <th scope="col">Action</th>
           </tr>
         </thead>
         <tbody>
-          {% set file_data = [
-            {
-              "name": "appforrecog.pdf",
-              "date": "July 5, 2025, 1:00 PM",
-              "type_code": "Form 1B",
-              "type_desc": "APPLICATION FOR RENEWAL OF RECOGNITION",
-              "status": "Verified",
-              "status_class": "status-verified",
-              "feedback_count": 0
-            },
-            {
-              "name": "lettofacceptance.pdf",
-              "date": "July 5, 2025, 1:01 PM",
-              "type_code": "Form 2",
-              "type_desc": "LETTER OF ACCEPTANCE",
-              "status": "Verified",
-              "status_class": "status-verified",
-              "feedback_count": 0
-            },
-            {
-              "name": "listofactivities.pdf",
-              "date": "July 5, 2025, 1:01 PM",
-              "type_code": "Form 3",
-              "type_desc": "LIST OF PROGRAMS/PROJECTS/ACTIVITIES",
-              "status": "Verified",
-              "status_class": "status-verified",
-              "feedback_count": 0
-            },
-            {
-              "name": "listofmembers.pdf",
-              "date": "July 5, 2025, 1:02 PM",
-              "type_code": "Form 4",
-              "type_desc": "LIST OF MEMBERS",
-              "status": "For Revision",
-              "status_class": "status-revision",
-              "feedback_count": 1
-            },
-            {
-              "name": "boardofofficer.pdf",
-              "date": "July 5, 2025, 1:02 PM",
-              "type_code": "",
-              "type_desc": "BOARD OF OFFICERS",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            },
-            {
-              "name": "constitution.pdf",
-              "date": "July 5, 2025, 1:03 PM",
-              "type_code": "",
-              "type_desc": "UPDATED CONSTITUTION AND BYLAWS",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            },
-            {
-              "name": "accomplishment.pdf",
-              "date": "July 5, 2025, 1:04 PM",
-              "type_code": "",
-              "type_desc": "ACCOMPLISHMENT REPORT AND DOCUMENTATION",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            },
-            {
-              "name": "financial.pdf",
-              "date": "July 5, 2025, 1:05 PM",
-              "type_code": "",
-              "type_desc": "FINANCIAL STATEMENT OF THE PREVIOUS ACADEMIC YEAR",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            },
-            {
-              "name": "logo.pdf",
-              "date": "July 5, 2025, 1:06 PM",
-              "type_code": "",
-              "type_desc": "LOGO WITH EXPLANATION",
-              "status": "Pending",
-              "status_class": "status-pending",
-              "feedback_count": 0
-            }
-          ] %}
-          
-          {% for file in file_data %}
+          {% if files %}          
+          {% for file in files %}
           <tr>
-            <td class="fw-semibold" style="text-align: left;">{{ file.name }}</td>
-            <td style="text-align: left;">{{ file.date }}</td>
-            <td style="text-align: left;">
-              {% if file.type_code %}
-              <span class="fw-semibold text-dark">{{ file.type_code }}</span> - {{ file.type_desc }}
-              {% else %}
-              {{ file.type_desc }}
-              {% endif %}
+            <td class="fw-semibold" style="text-align: left;">{{ file.filename }}</td>
+            <td style="text-align: left;">{{ file.upload_date.strftime('%B %d, %Y, %I:%M %p') }}</td>
+
+            <td>
+              <span class="status-badge status-{{ file.status.lower() }}">{{ file.status }}</span>
             </td>
             <td>
-              <span class="status-badge {{ file.status_class }}">{{ file.status }}</span>
-            </td>
-            <td>
-              <div class="action-buttons">
-                <button type="button" class="btn admin-preview-btn btn-sm">Preview</button>
-                <button type="button" class="btn btn-update btn-sm">Update Status</button>
-                <button type="button" class="btn btn-feedback btn-sm position-relative" 
-                   onclick="openFeedbackModal('{{ file.name }}', '{% if file.type_code %}{{ file.type_code }} - {% endif %}{{ file.type_desc }}', '{{ file.status }}')">
-                  Add Feedback
-                  {% if file.feedback_count > 0 %}
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {{ file.feedback_count }}
-                  </span>
-                  {% endif %}
+              <div class="action-buttons d-flex justify-content-center gap-2">
+                <button type="button" class="btn admin-preview-btn btn-sm" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')">
+                  <i class="fas fa-eye"></i> Preview
                 </button>
+                <button type="button" class="btn btn-update btn-sm" onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}', '{{ file.file_name }}', '{{ file.submission_date.strftime('%B %d, %Y, %I:%M %p') if file.submission_date else 'Not available' }}')">
+                  Update Status
+                </button>
+
               </div>
             </td>
           </tr>
           {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center">No files found for this renewal application.</td>
+          </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
@@ -162,48 +74,66 @@
   <!-- Feedback History Section -->
   <section class="feedback-history-section" aria-label="Feedback History">
     <div class="feedback-history-tabs">
-      <div class="feedback-tab active" onclick="showTab('sent')">Sent Feedback <span class="feedback-count">1</span></div>
-      <div class="feedback-tab" onclick="showTab('received')">Received Feedback <span class="feedback-count">1</span></div>
+      <div class="feedback-tab active" onclick="showTab('sent')">Sent Feedback <span class="feedback-count">{{ sent_feedback|length if sent_feedback else 0 }}</span></div>
+      <div class="feedback-tab" onclick="showTab('received')">Received Feedback <span class="feedback-count">{{ received_feedback|length if received_feedback else 0 }}</span></div>
     </div>
     
     <!-- Sent Feedback Tab -->
     <div class="feedback-tab-content active" id="sent-tab">
-      <!-- Feedback Item 1 -->
-      <div class="feedback-card sent">
-        <div class="feedback-card-header">
-          <div class="feedback-card-title">Updated Member Information Required</div>
-          <div class="feedback-card-date">July 10, 2025, 3:45 PM</div>
+      {% if sent_feedback %}
+        {% for feedback in sent_feedback %}
+        <div class="feedback-card sent">
+          <div class="feedback-card-header">
+            <div class="feedback-card-title">{{ feedback.title }}</div>
+            <div class="feedback-card-date">{{ feedback.created_date.strftime('%B %d, %Y, %I:%M %p') }}</div>
+          </div>
+          <div class="feedback-card-body">
+            <p>{{ feedback.message }}</p>
+          </div>
+          <div class="feedback-card-file">
+            <strong>File:</strong> {{ feedback.file_name }}
+          </div>
+          <div class="d-flex justify-content-end mt-2">
+            <button class="btn btn-view-feedback" onclick="openFeedbackDetail('sent', {{ feedback.feedback_id }})">View Details</button>
+          </div>
         </div>
-        <div class="feedback-card-body">
-          <p>The membership list needs to be updated with the current academic year information. Please ensure all graduating members are marked accordingly and include new members who have joined since last term.</p>
+        {% endfor %}
+      {% else %}
+        <div class="feedback-card">
+          <div class="feedback-card-body text-center">
+            <p>No feedback sent yet.</p>
+          </div>
         </div>
-        <div class="feedback-card-file">
-          <strong>File:</strong> listofmembers.pdf
-        </div>
-        <div class="d-flex justify-content-end mt-2">
-          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('sent', 1)">View Details</button>
-        </div>
-      </div>
+      {% endif %}
     </div>
     
     <!-- Received Feedback Tab -->
     <div class="feedback-tab-content" id="received-tab">
-      <!-- Received Feedback Item 1 -->
-      <div class="feedback-card received">
-        <div class="feedback-card-header">
-          <div class="feedback-card-title">Response to Member List Update Request</div>
-          <div class="feedback-card-date">July 11, 2025, 10:15 AM</div>
+      {% if received_feedback %}
+        {% for feedback in received_feedback %}
+        <div class="feedback-card received">
+          <div class="feedback-card-header">
+            <div class="feedback-card-title">{{ feedback.title }}</div>
+            <div class="feedback-card-date">{{ feedback.created_date.strftime('%B %d, %Y, %I:%M %p') }}</div>
+          </div>
+          <div class="feedback-card-body">
+            <p>{{ feedback.message }}</p>
+          </div>
+          <div class="feedback-card-file">
+            <strong>File:</strong> {{ feedback.file_name }}
+          </div>
+          <div class="d-flex justify-content-end mt-2">
+            <button class="btn btn-view-feedback" onclick="openFeedbackDetail('received', {{ feedback.feedback_id }})">View Details</button>
+          </div>
         </div>
-        <div class="feedback-card-body">
-          <p>We have updated our membership list with current academic year information. All graduating members have been properly marked, and new members have been added with their complete information.</p>
+        {% endfor %}
+      {% else %}
+        <div class="feedback-card">
+          <div class="feedback-card-body text-center">
+            <p>No feedback received yet.</p>
+          </div>
         </div>
-        <div class="feedback-card-file">
-          <strong>File:</strong> listofmembers.pdf
-        </div>
-        <div class="d-flex justify-content-end mt-2">
-          <button class="btn btn-view-feedback" onclick="openFeedbackDetail('received', 1)">View Details</button>
-        </div>
-      </div>
+      {% endif %}
     </div>
   </section>
 
