@@ -1,0 +1,365 @@
+<!-- Edit Plan Modal -->
+<div id="editPlanModal" class="global-modal">
+    <div class="modal-container">
+        <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+            <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;">Edit Plan</h4>
+            <button class="btn-back" onclick="hideEditPlanModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="container-short"> 
+            <main>
+                <form id="editPlanForm">
+                    <!-- Hidden field for plan ID -->
+                    <input type="hidden" id="edit-plan-id" name="plan_id">
+                    
+                    <!-- Plan Title -->
+                    <div class="mb-3">
+                        <label for="editPlanTitle" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Programs/Projects/Activities</label>
+                        <input type="text" class="form-control" id="editPlanTitle" name="title" required style="font-size: 0.75rem;">
+                    </div>
+                    
+                    <!-- Objectives -->
+                    <div class="mb-3">
+                        <label for="editPlanObjectives" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Objectives</label>
+                        <textarea class="form-control" id="editPlanObjectives" name="objectives" rows="3" required style="font-size: 0.75rem; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <!-- Proposed Date and People Involved in one row -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editPlanDate" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Proposed Date</label>
+                            <input type="date" class="form-control" id="editPlanDate" name="proposed_date" required style="font-size: 0.75rem;">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editPlanPeople" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">People Involved</label>
+                            <input type="text" class="form-control" id="editPlanPeople" name="people_involved" required style="font-size: 0.75rem;">
+                        </div>
+                    </div>
+                    
+                    <!-- Source of Funds and Target Output in one row -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="editPlanFunds" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Source of Funds</label>
+                            <input type="text" class="form-control" id="editPlanFunds" name="funding_source" required style="font-size: 0.75rem;">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editPlanVenue" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Target Output</label>
+                            <input type="text" class="form-control" id="editPlanVenue" name="target_output" required style="font-size: 0.75rem;">
+                        </div>
+                    </div>
+                    
+                    <!-- Status -->
+                    <div class="mb-4">
+                        <label for="editPlanOutcome" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Status</label>
+                        <select class="form-select" id="editPlanOutcome" name="status" required style="font-size: 0.75rem;">
+                            <option value="">Select Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Accomplished">Accomplished</option>
+                            <option value="Failed to Accomplish">Failed to Accomplish</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-secondary" onclick="hideEditPlanModal()" style="font-size: 0.75rem; padding: 0.5rem 1rem;">
+                            Cancel
+                        </button>
+                        <button type="submit" id="save-plan-changes-btn" class="btn btn-primary" disabled style="font-size: 0.75rem; padding: 0.5rem 1rem;">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </main> 
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables for plan editing
+let originalPlanData = {};
+let currentPlanId = null;
+
+// Show edit plan modal
+function showEditPlanModal(planId, title, objectives, date, people, funds, venue, outcome) {
+    const modal = document.getElementById('editPlanModal');
+    
+    // Store plan ID for later use
+    currentPlanId = planId;
+    
+    // Store original data for comparison
+    originalPlanData = {
+        title: title || '',
+        objectives: objectives || '',
+        proposed_date: formatDateForInput(date) || '',
+        people_involved: people || '',
+        funding_source: funds || '',
+        target_output: venue || '',
+        status: outcome || ''
+    };
+    
+    // Populate form fields
+    document.getElementById('edit-plan-id').value = planId;
+    document.getElementById('editPlanTitle').value = title || '';
+    document.getElementById('editPlanObjectives').value = objectives || '';
+    document.getElementById('editPlanDate').value = formatDateForInput(date) || '';
+    document.getElementById('editPlanPeople').value = people || '';
+    document.getElementById('editPlanFunds').value = funds || '';
+    document.getElementById('editPlanVenue').value = venue || '';
+    document.getElementById('editPlanOutcome').value = outcome || '';
+    
+    // Reset save button state
+    document.getElementById('save-plan-changes-btn').disabled = true;
+    
+    // Show modal
+    modal.style.display = 'flex';
+    
+    // Attach event listeners for change detection
+    attachPlanChangeListeners();
+    
+    // Initial check for changes
+    checkForPlanChanges();
+}
+
+// Hide edit plan modal
+function hideEditPlanModal() {
+    document.getElementById('editPlanModal').style.display = 'none';
+    const form = document.getElementById('editPlanForm');
+    if (form) {
+        form.reset();
+    }
+    // Reset save button state
+    const saveButton = document.getElementById('save-plan-changes-btn');
+    if (saveButton) {
+        saveButton.disabled = true;
+    }
+    
+    // Reset global variables
+    currentPlanId = null;
+    originalPlanData = {};
+}
+
+// Format date for input field (YYYY-MM-DD)
+function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    
+    try {
+        // Handle different date formats
+        let date;
+        if (dateStr.includes('/')) {
+            // Handle MM/DD/YYYY or DD/MM/YYYY format
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                // Assume MM/DD/YYYY format
+                date = new Date(parts[2], parts[0] - 1, parts[1]);
+            }
+        } else if (dateStr.includes('-')) {
+            // Handle YYYY-MM-DD format
+            date = new Date(dateStr);
+        } else {
+            // Try to parse as is
+            date = new Date(dateStr);
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+        
+        // Return in YYYY-MM-DD format
+        return date.toISOString().split('T')[0];
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return '';
+    }
+}
+
+// Attach event listeners for change detection
+function attachPlanChangeListeners() {
+    const fields = ['editPlanTitle', 'editPlanObjectives', 'editPlanDate', 'editPlanPeople', 'editPlanFunds', 'editPlanVenue', 'editPlanOutcome'];
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            // Remove existing listeners to avoid duplicates
+            field.removeEventListener('input', checkForPlanChanges);
+            field.removeEventListener('change', checkForPlanChanges);
+            
+            // Add new listeners
+            field.addEventListener('input', checkForPlanChanges);
+            field.addEventListener('change', checkForPlanChanges);
+        }
+    });
+}
+
+// Check for changes and enable/disable save button
+function checkForPlanChanges() {
+    const currentData = {
+        title: document.getElementById('editPlanTitle').value.trim(),
+        objectives: document.getElementById('editPlanObjectives').value.trim(),
+        proposed_date: document.getElementById('editPlanDate').value,
+        people_involved: document.getElementById('editPlanPeople').value.trim(),
+        funding_source: document.getElementById('editPlanFunds').value.trim(),
+        target_output: document.getElementById('editPlanVenue').value.trim(),
+        status: document.getElementById('editPlanOutcome').value
+    };
+
+    const hasChanges = 
+        currentData.title !== originalPlanData.title ||
+        currentData.objectives !== originalPlanData.objectives ||
+        currentData.proposed_date !== originalPlanData.proposed_date ||
+        currentData.people_involved !== originalPlanData.people_involved ||
+        currentData.funding_source !== originalPlanData.funding_source ||
+        currentData.target_output !== originalPlanData.target_output ||
+        currentData.status !== originalPlanData.status;
+
+    const saveButton = document.getElementById('save-plan-changes-btn');
+    if (saveButton) {
+        saveButton.disabled = !hasChanges;
+        saveButton.style.opacity = hasChanges ? '1' : '0.6';
+    }
+}
+
+// Save plan changes
+function savePlanChanges() {
+    // Get CSRF token from meta tag or input
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        showAlert('Error: CSRF token not found', 'error');
+        return;
+    }
+    
+    const statusValue = document.getElementById('editPlanOutcome').value;
+    const data = {
+        plan_id: currentPlanId,
+        title: document.getElementById('editPlanTitle').value.trim(),
+        objectives: document.getElementById('editPlanObjectives').value.trim(),
+        proposed_date: document.getElementById('editPlanDate').value,
+        people_involved: document.getElementById('editPlanPeople').value.trim(),
+        funding_source: document.getElementById('editPlanFunds').value.trim(),
+        target_output: document.getElementById('editPlanVenue').value.trim(),
+        status: statusValue,
+        is_accomplished: statusValue === 'Accomplished'
+    };
+    
+    // Send update request
+    fetch('/organization/update-plan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify(data),
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the table row with new data
+            updatePlanTableRow(currentPlanId, {
+                title: document.getElementById('editPlanTitle').value.trim(),
+                objectives: document.getElementById('editPlanObjectives').value.trim(),
+                proposed_date: document.getElementById('editPlanDate').value,
+                people_involved: document.getElementById('editPlanPeople').value.trim(),
+                funding_source: document.getElementById('editPlanFunds').value.trim(),
+                target_output: document.getElementById('editPlanVenue').value.trim(),
+                outcome: document.getElementById('editPlanOutcome').value
+            });
+            
+            // Show success message
+            showAlert('Plan updated successfully!', 'success');
+            
+            // Hide modal
+            hideEditPlanModal();
+        } else {
+            showAlert(data.message || 'Error updating plan', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating plan:', error);
+        showAlert('Error updating plan', 'error');
+    });
+}
+
+// Add event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle save button click
+    const saveButton = document.getElementById('save-plan-changes-btn');
+    if (saveButton) {
+        saveButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            savePlanChanges();
+        });
+    }
+});
+
+// Function to update plan table row dynamically
+function updatePlanTableRow(planId, updatedData) {
+    // Find the table row that contains the plan with the given ID
+    const planRows = document.querySelectorAll('#plans tbody tr');
+    
+    planRows.forEach(row => {
+        const updateButton = row.querySelector('button[onclick*="showEditPlanModal"]');
+        if (updateButton && updateButton.getAttribute('onclick').includes(`'${planId}'`)) {
+            // Update the table cells with new data
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 8) {
+                cells[1].textContent = updatedData.title; // Programs/Projects/Activities
+                cells[2].textContent = updatedData.objectives; // Objectives
+                cells[3].textContent = formatDateForDisplay(updatedData.proposed_date); // Proposed Date
+                cells[4].textContent = updatedData.people_involved; // People Involved
+                cells[5].textContent = updatedData.funding_source; // Source of Funds
+                cells[6].textContent = updatedData.target_output; // Target Output
+                
+                // Update outcome cell with proper styling
+                const outcomeCell = cells[7];
+                outcomeCell.textContent = updatedData.outcome || 'Pending';
+                
+                // Remove existing outcome classes
+                outcomeCell.classList.remove('outcome-accomplished', 'outcome-pending', 'outcome-failed');
+                
+                // Add appropriate class based on outcome
+                if (updatedData.outcome === 'Accomplished') {
+                    outcomeCell.classList.add('outcome-accomplished');
+                } else if (updatedData.outcome === 'Failed to Accomplish') {
+                    outcomeCell.classList.add('outcome-failed');
+                } else {
+                    outcomeCell.classList.add('outcome-pending');
+                }
+                
+                // Update the onclick attribute of the update button with new data
+                const newOnclick = `showEditPlanModal('${planId}', '${updatedData.title}', '${updatedData.objectives}', '${updatedData.proposed_date}', '${updatedData.people_involved}', '${updatedData.funding_source}', '${updatedData.target_output}', '${updatedData.outcome || 'Pending'}')`;
+                updateButton.setAttribute('onclick', newOnclick);
+            }
+        }
+    });
+}
+
+// Function to format date for display
+function formatDateForDisplay(dateStr) {
+    if (!dateStr) return '';
+    
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+            return dateStr; // Return original if invalid
+        }
+        
+        // Format as MM/DD/YYYY or keep original format
+        return date.toLocaleDateString();
+    } catch (error) {
+        return dateStr; // Return original if error
+    }
+}
+
+// Utility function to show alerts
+function showAlert(message, type) {
+    if (type === 'success') {
+        alert('✓ ' + message);
+    } else {
+        alert('✗ ' + message);
+    }
+}
+</script>

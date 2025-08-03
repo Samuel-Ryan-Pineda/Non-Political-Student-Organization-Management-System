@@ -652,3 +652,9 @@
 .notification-info i {
   color: var(--button-color);
 }
+
+/* Remove top, left, and right padding from modal headers and remove background color */
+.modal-header.d-flex {
+  padding: 0 0 1rem 0 !important;
+  background-color: transparent !important;
+}

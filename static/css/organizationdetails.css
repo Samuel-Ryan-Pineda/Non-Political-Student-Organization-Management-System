@@ -451,13 +451,19 @@
       white-space: nowrap;
     }
     
-    .outcome-successful {
+    .outcome-successful,
+    .outcome-accomplished {
       color: var(--success-color);
       font-weight: 600;
     }
     
     .outcome-pending {
       color: var(--warning-color, #ffc107);
+      font-weight: 600;
+    }
+    
+    .outcome-failed {
+      color: var(--danger-color, #dc3545);
       font-weight: 600;
     }
     

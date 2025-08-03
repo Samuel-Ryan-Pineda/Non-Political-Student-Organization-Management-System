@@ -58,6 +58,36 @@
     text-align: center;
   }
 
+  /* Left align specific columns for all tables */
+  /* Officers table - first 4 columns left aligned (excluding Action) */
+  #officers table th:nth-child(1), #officers table td:nth-child(1), /* Position */
+  #officers table th:nth-child(2), #officers table td:nth-child(2), /* Student Number */
+  #officers table th:nth-child(3), #officers table td:nth-child(3), /* Name */
+  #officers table th:nth-child(4), #officers table td:nth-child(4), /* Program */
+  
+  /* Members table - first 4 columns left aligned (excluding Action) */
+  #members table th:nth-child(1), #members table td:nth-child(1), /* No. */
+  #members table th:nth-child(2), #members table td:nth-child(2), /* Student Number */
+  #members table th:nth-child(3), #members table td:nth-child(3), /* Name */
+  #members table th:nth-child(4), #members table td:nth-child(4), /* Program */
+  
+  /* Volunteers table - first 4 columns left aligned (excluding Action) */
+  #volunteers table th:nth-child(1), #volunteers table td:nth-child(1), /* No. */
+  #volunteers table th:nth-child(2), #volunteers table td:nth-child(2), /* Student Number */
+  #volunteers table th:nth-child(3), #volunteers table td:nth-child(3), /* Name */
+  #volunteers table th:nth-child(4), #volunteers table td:nth-child(4), /* Program */
+  
+  /* Plans table - first 7 columns left aligned (excluding Status and Action) */
+  #plans table th:nth-child(1), #plans table td:nth-child(1), /* No. */
+  #plans table th:nth-child(2), #plans table td:nth-child(2), /* Programs/Projects/Activities */
+  #plans table th:nth-child(3), #plans table td:nth-child(3), /* Objectives */
+  #plans table th:nth-child(4), #plans table td:nth-child(4), /* Proposed Date */
+  #plans table th:nth-child(5), #plans table td:nth-child(5), /* People Involved */
+  #plans table th:nth-child(6), #plans table td:nth-child(6), /* Source of Funds */
+  #plans table th:nth-child(7), #plans table td:nth-child(7) { /* Target Output */
+    text-align: left !important;
+  }
+
   .organization-header {
     position: relative;
   }
@@ -270,6 +300,20 @@
         </div>
     </section>
 
+    <!-- Academic Year Selector -->
+    <section class="academic-year-section" style="margin-bottom: 1rem;">
+        <div class="d-flex justify-content-end align-items-center gap-3" style="padding: 0.5rem 0;">
+            <label for="academicYearSelect" class="form-label mb-0" style="font-size: 0.875rem;">View data for:</label>
+            <select class="form-select" id="academicYearSelect" onchange="changeAcademicYear()" style="width: auto; font-size: 0.875rem;">
+                {% for year in available_years %}
+                <option value="{{ year }}" {% if year == selected_academic_year %}selected{% endif %}>
+                    {{ year }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </section>
+
     <!-- Tabbed interface for organization data -->
     <section class="tabs-container">
         <ul class="nav nav-tabs" id="organizationTabs" role="tablist">
@@ -305,8 +349,9 @@
                                 <tr>
                                     <th style="width:15%;">Position</th>
                                     <th style="width:15%;">Student Number</th>
-                                    <th style="width:35%;">Name</th>
-                                    <th style="width:35%;">Program</th>
+                                    <th style="width:30%;">Name</th>
+                                    <th style="width:25%;">Program</th>
+                                    <th style="width:15%;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -317,11 +362,16 @@
                                     <td>{{ officer.student_no }}</td>
                                     <td>{{ officer.name }}</td>
                                     <td>{{ officer.program }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="showEditOfficerModal('{{ officer.affiliation_id }}', '{{ officer.student_id }}', '{{ officer.position }}', '{{ officer.student_no }}', '{{ officer.program }}')">
+                                            <i class="fas fa-edit"></i> Update
+                                        </button>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                                 {% else %}
                                 <tr>
-                                    <td colspan="4" class="text-center py-3">No officers added yet. Use the Excel upload feature to import officers.</td>
+                                    <td colspan="5" class="text-center py-3">No officers added yet. Use the Excel upload feature to import officers.</td>
                                 </tr>
                                 {% endif %}
                             </tbody>
@@ -341,7 +391,7 @@
                                     <th style="width:20%;">Student Number</th>
                                     <th style="width:37%;">Name</th>
                                     <th style="width:20%;">Program</th>
-                                    <th style="width:15%;">Actions</th>
+                                    <th style="width:15%;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -353,7 +403,7 @@
                                         <td>{{ member.name }}</td>
                                         <td>{{ member.program }}</td>
                                         <td>
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditMemberModal('{{ member.student_no }}', '{{ member.name }}', '{{ member.program }}')">
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditMemberModal('{{ member.affiliation_id }}', '{{ member.student_id }}', '{{ member.student_no }}', '{{ member.name }}', '{{ member.program }}')">
                                                 <i class="fas fa-edit"></i> Update
                                             </button>
                                         </td>
@@ -381,7 +431,7 @@
                                     <th style="width:20%;">Student Number</th>
                                     <th style="width:37%;">Name</th>
                                     <th style="width:20%;">Program</th>
-                                    <th style="width:15%;">Actions</th>
+                                    <th style="width:15%;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -393,7 +443,7 @@
                                         <td>{{ volunteer.name }}</td>
                                         <td>{{ volunteer.program }}</td>
                                         <td>
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditVolunteerModal('{{ volunteer.student_no }}', '{{ volunteer.name }}', '{{ volunteer.program }}')">
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditVolunteerModal('{{ volunteer.affiliation_id }}', '{{ volunteer.student_id }}', '{{ volunteer.student_no }}', '{{ volunteer.name }}', '{{ volunteer.program }}')">
                                                 <i class="fas fa-edit"></i> Update
                                             </button>
                                         </td>
@@ -439,14 +489,14 @@
                                         <td>{{ plan.people_involved }}</td>
                                         <td>{{ plan.funding_source }}</td>
                                         <td>{{ plan.target_output }}</td>
-                                        <td class="outcome-{% if plan.is_accomplished %}accomplished{% else %}pending{% endif %}">
-                                            {% if plan.is_accomplished %}Accomplished{% else %}Pending{% endif %}
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditPlanModal('{{ loop.index }}', '{{ plan.title }}', '{{ plan.objectives }}', '{{ plan.proposed_date }}', '{{ plan.people_involved }}', '{{ plan.funding_source }}', '{{ plan.target_output }}', '{% if plan.is_accomplished %}Accomplished{% else %}Pending{% endif %}')">
-                                                <i class="fas fa-edit"></i> Update
-                                            </button>
-                                        </td>
+                                        <td class="outcome-{% if plan.outcome == 'Accomplished' %}accomplished{% elif plan.outcome == 'Failed to Accomplish' %}failed{% else %}pending{% endif %}">
+                            {{ plan.outcome or 'Pending' }}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="showEditPlanModal('{{ plan.plan_id }}', '{{ plan.title }}', '{{ plan.objectives }}', '{{ plan.proposed_date }}', '{{ plan.people_involved }}', '{{ plan.funding_source }}', '{{ plan.target_output }}', '{{ plan.outcome or "Pending" }}')">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
+                        </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
@@ -474,4 +524,10 @@
 {% include 'user/modal/adviserInfoModal.html' %}
 {% include 'user/modal/socialmedialinks.html' %}
 {% include 'user/modal/excelUploadModal.html' %}
+
+<!-- Include Unified Edit Student Modal (Officers, Members, Volunteers) -->
+{% include 'user/modal/editstudentmodal.html' %}
+
+<!-- Include Edit Plan Modal -->
+{% include 'user/modal/editplanmodal.html' %}
 {% endblock %}

@@ -1,0 +1,226 @@
+1. Update the updateFileCards function
+Replace the file handling section in updateFileCards with this:
+javascriptif (file) {
+  // Update the card with file information
+  card.dataset.fileId = file.id;
+  
+  // Update status badge
+  const statusBadge = card.querySelector('.status-badge');
+  if (statusBadge) {
+    statusBadge.dataset.fileId = file.id;
+    statusBadge.dataset.status = file.status; // Store status for counting
+  }
+  
+  updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
+  
+  // Update dropzone content
+  const dropzone = card.querySelector('.dropzone');
+  if (dropzone) {
+    dropzone.innerHTML = `
+      <i class="fas fa-file-alt mb-1"></i>
+      <div>File Uploaded</div>
+      <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
+      ${file.status === 'Verified' ? 
+        '<div class="small text-muted verified-message">File verified - cannot be changed</div>' : 
+        '<div class="small text-muted">Click to replace</div>'}
+    `;
+    
+    // Remove all status classes first
+    dropzone.classList.remove('selected', 'loading', 'status-verified', 'status-pending', 'status-needs-revision', 'status-rejected');
+    
+    // Add appropriate status class
+    if (FileStatus && typeof FileStatus.getStatusClass === 'function') {
+      dropzone.classList.add(FileStatus.getStatusClass(file.status));
+    } else {
+      // Fallback status class
+      dropzone.classList.add(`status-${file.status.toLowerCase().replace(' ', '-')}`);
+    }
+  }
+  
+  // Set button states and dropzone behavior based on file status
+  if (file.status === 'Verified') {
+    // Hide select and upload buttons, center preview button
+    if (uploadBtn) uploadBtn.style.display = 'none';
+    if (selectBtn) selectBtn.style.display = 'none';
+    if (previewBtn) {
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+      previewBtn.style.margin = '0 auto';
+    }
+    
+    // Disable dropzone click and drag events
+    if (dropzone) {
+      dropzone.style.pointerEvents = 'none';
+      dropzone.style.opacity = '0.7';
+    }
+    
+    // Disable file input
+    const fileInput = card.querySelector('.file-input');
+    if (fileInput) {
+      fileInput.disabled = true;
+    }
+  } else {
+    // Show all buttons for non-verified files
+    if (uploadBtn) {
+      uploadBtn.style.display = '';
+      DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+    }
+    if (selectBtn) {
+      selectBtn.style.display = '';
+      // Use 'Replace File' button text for files that need revision or are rejected
+      if (file.status === 'Needs Revision' || file.status === 'Rejected') {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.REPLACE);
+      } else {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      }
+    }
+    if (previewBtn) {
+      previewBtn.style.margin = '';
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+    }
+    
+    // Enable dropzone
+    if (dropzone) {
+      dropzone.style.pointerEvents = '';
+      dropzone.style.opacity = '';
+    }
+    
+    // Enable file input
+    const fileInput = card.querySelector('.file-input');
+    if (fileInput) {
+      fileInput.disabled = false;
+    }
+  }
+  
+  // Check if there's feedback for this file
+  const feedback = feedbackMap.get(file.id);
+  
+  // Show feedback toggle only for files with feedback and status 'Needs Revision' or 'Rejected'
+  if (feedback && (file.status === 'Needs Revision' || file.status === 'Rejected')) {
+    // ... existing feedback handling code ...
+  }
+}
+2. Update the fallback function updateCardsWithoutFeedback
+Replace the file handling section with:
+javascriptif (file) {
+  // Update the card with file information
+  card.dataset.fileId = file.id;
+  
+  // Update status badge
+  const statusBadge = card.querySelector('.status-badge');
+  if (statusBadge) {
+    statusBadge.dataset.fileId = file.id;
+    statusBadge.dataset.status = file.status; // Store status for counting
+  }
+  
+  updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
+  
+  // Update dropzone content
+  const dropzone = card.querySelector('.dropzone');
+  if (dropzone) {
+    dropzone.innerHTML = `
+      <i class="fas fa-file-alt mb-1"></i>
+      <div>File Uploaded</div>
+      <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
+      ${file.status === 'Verified' ? 
+        '<div class="small text-muted verified-message">File verified - cannot be changed</div>' : 
+        '<div class="small text-muted">Click to replace</div>'}
+    `;
+    
+    // Remove all status classes first
+    dropzone.classList.remove('selected', 'loading', 'status-verified', 'status-pending', 'status-needs-revision', 'status-rejected');
+    
+    // Add appropriate status class
+    if (FileStatus && typeof FileStatus.getStatusClass === 'function') {
+      dropzone.classList.add(FileStatus.getStatusClass(file.status));
+    } else {
+      // Fallback status class
+      dropzone.classList.add(`status-${file.status.toLowerCase().replace(' ', '-')}`);
+    }
+  }
+  
+  // Set button states and dropzone behavior based on file status
+  if (file.status === 'Verified') {
+    // Hide select and upload buttons, center preview button
+    if (uploadBtn) uploadBtn.style.display = 'none';
+    if (selectBtn) selectBtn.style.display = 'none';
+    if (previewBtn) {
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+      previewBtn.style.margin = '0 auto';
+    }
+    
+    // Disable dropzone click and drag events
+    if (dropzone) {
+      dropzone.style.pointerEvents = 'none';
+      dropzone.style.opacity = '0.7';
+    }
+    
+    // Disable file input
+    const fileInput = card.querySelector('.file-input');
+    if (fileInput) {
+      fileInput.disabled = true;
+    }
+  } else {
+    // Show all buttons for non-verified files
+    if (uploadBtn) {
+      uploadBtn.style.display = '';
+      DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+    }
+    if (selectBtn) {
+      selectBtn.style.display = '';
+      // Use 'Replace File' button text for files that need revision or are rejected
+      if (file.status === 'Needs Revision' || file.status === 'Rejected') {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.REPLACE);
+      } else {
+        DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+      }
+    }
+    if (previewBtn) {
+      previewBtn.style.margin = '';
+      DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+    }
+    
+    // Enable dropzone
+    if (dropzone) {
+      dropzone.style.pointerEvents = '';
+      dropzone.style.opacity = '';
+    }
+    
+    // Enable file input
+    const fileInput = card.querySelector('.file-input');
+    if (fileInput) {
+      fileInput.disabled = false;
+    }
+  }
+}
+3. Add missing CSS styles to userrenewal.html
+Add this CSS to the <style> section in userrenewal.html:
+css/* Status-based dropzone styling */
+.dropzone.status-verified {
+  background-color: rgba(25, 135, 84, 0.1) !important;
+  border-color: #198754 !important;
+  color: #198754 !important;
+}
+
+.dropzone.status-pending {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  border-color: #0d6efd !important;
+  color: #0d6efd !important;
+}
+
+.dropzone.status-needs-revision {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  border-color: #ffc107 !important;
+  color: #856404 !important;
+}
+
+.dropzone.status-rejected {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-color: #dc3545 !important;
+  color: #dc3545 !important;
+}
+
+/* Verified message styling */
+.verified-message {
+  font-weight: 500;
+  color: #198754 !important;
+}

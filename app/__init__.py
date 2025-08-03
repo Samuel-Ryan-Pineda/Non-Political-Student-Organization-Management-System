@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
 
@@ -11,12 +12,39 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
 csrf = CSRFProtect()
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
     
     # Load configuration
     load_dotenv()  # Load environment variables
+    
+    # Import scheduler for organization status checks
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from datetime import datetime, timedelta
+    from app.models import Organization
+    
+    # Initialize scheduler
+    scheduler = BackgroundScheduler()
+    
+    def check_organization_expiry():
+        """Check and update organization statuses that have been active for over a year"""
+        with app.app_context():
+            one_year_ago = datetime.now() - timedelta(days=365)
+            expired_orgs = Organization.query.filter(
+                Organization.status == 'Active',
+                Organization.activation_date <= one_year_ago,
+                Organization.last_renewal_date <= one_year_ago
+            ).all()
+            
+            for org in expired_orgs:
+                org.status = 'Inactive'
+                db.session.commit()
+    
+    # Schedule the job to run daily at midnight
+    scheduler.add_job(check_organization_expiry, 'cron', hour=0, minute=0)
+    scheduler.start()
     
     # Database configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI", 'mysql+pymysql://root:@localhost/npsoms_db')
@@ -39,6 +67,7 @@ def create_app():
     login_manager.login_message_category = 'error'
     mail.init_app(app)
     csrf.init_app(app)
+    migrate.init_app(app, db)
     
     # Register blueprints
     from app.auth import auth_bp

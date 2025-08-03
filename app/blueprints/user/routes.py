@@ -177,7 +177,8 @@ def manageorganization():
         get_social_media_by_organization_id,
         get_affiliations_by_position_type,
         get_organization_statistics,
-        get_plans_by_organization_id
+        get_plans_by_organization_id,
+        get_available_academic_years
     )
     
     # Get user's organization
@@ -195,6 +196,16 @@ def manageorganization():
         # Application is not verified, redirect to block access page
         return redirect(url_for('user_routes.blockmanageaccess'))
     
+    # Get selected academic year from query parameter
+    selected_academic_year = request.args.get('academic_year')
+    
+    # Get available academic years
+    available_years = get_available_academic_years(organization.organization_id)
+    
+    # If no academic year selected, use the current one
+    if not selected_academic_year and available_years:
+        selected_academic_year = available_years[0]  # Most recent year
+    
     # Get adviser information
     adviser = get_adviser_by_organization_id(organization.organization_id, adviser_type='Adviser')
     
@@ -204,17 +215,16 @@ def manageorganization():
     # Get social media links
     social_media = get_social_media_by_organization_id(organization.organization_id)
     
-    # Get officers, members, and volunteers for the organization
-    # Get affiliations data
-    officers = get_affiliations_by_position_type(organization.organization_id, 'Officer')
-    members = get_affiliations_by_position_type(organization.organization_id, 'Member')
-    volunteers = get_affiliations_by_position_type(organization.organization_id, 'Volunteer')
+    # Get officers, members, and volunteers for the selected academic year
+    officers = get_affiliations_by_position_type(organization.organization_id, 'Officer', selected_academic_year)
+    members = get_affiliations_by_position_type(organization.organization_id, 'Member', selected_academic_year)
+    volunteers = get_affiliations_by_position_type(organization.organization_id, 'Volunteer', selected_academic_year)
     
-    # Get organization statistics
-    statistics = get_organization_statistics(organization.organization_id)
+    # Get organization statistics for the selected academic year
+    statistics = get_organization_statistics(organization.organization_id, selected_academic_year)
     
-    # Get plans data
-    plans = get_plans_by_organization_id(organization.organization_id)
+    # Get plans data for the selected academic year
+    plans = get_plans_by_organization_id(organization.organization_id, selected_academic_year)
     
     return render_template(
         'user/manageorganization.html', 
@@ -229,6 +239,8 @@ def manageorganization():
         volunteers=volunteers,
         statistics=statistics,
         plans=plans,
+        available_years=available_years,
+        selected_academic_year=selected_academic_year,
         active_page='manageorganization'
     )
 
@@ -337,9 +349,19 @@ def create_renewal():
     )
     
     try:
+        # Add the new application
         db.session.add(new_application)
+        
+        # Update the organization's current academic year
+        organization.current_academic_year = academic_year
+        organization.last_renewal_date = datetime.now()
+        
+        # Clear current academic year data (but don't delete - just mark as previous year)
+        # Note: The data is preserved with their academic_year field, so it can be viewed later
+        # No need to delete anything - the academic year filtering will handle showing current vs past data
+        
         db.session.commit()
-        flash(f"Renewal application for Academic Year {academic_year} has been created successfully", "success")
+        flash(f"Renewal application for Academic Year {academic_year} has been created successfully. Previous year data has been preserved and can be viewed using the Academic Year selector.", "success")
         return redirect(url_for('user_routes.userrenewal'))
     except Exception as e:
         db.session.rollback()

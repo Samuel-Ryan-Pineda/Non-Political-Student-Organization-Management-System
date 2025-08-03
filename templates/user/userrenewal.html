@@ -6,6 +6,36 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/application.css') }}?v={{ cache_version }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/loading-overlay.css') }}?v={{ cache_version }}">
 <style>
+/* Status-based dropzone styling */
+.dropzone.status-verified {
+  background-color: rgba(25, 135, 84, 0.1) !important;
+  border-color: #198754 !important;
+  color: #198754 !important;
+}
+
+.dropzone.status-pending {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  border-color: #0d6efd !important;
+  color: #0d6efd !important;
+}
+
+.dropzone.status-needs-revision {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  border-color: #ffc107 !important;
+  color: #856404 !important;
+}
+
+.dropzone.status-rejected {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-color: #dc3545 !important;
+  color: #dc3545 !important;
+}
+
+/* Verified message styling */
+.verified-message {
+  font-weight: 500;
+  color: #198754 !important;
+}
   /* Additional styles specific to renewal page */
   .card-body, .container, p, span, h1, div:not(.dropzone div) { text-align: left !important; }
   

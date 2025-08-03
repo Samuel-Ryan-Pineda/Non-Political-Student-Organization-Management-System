@@ -11,3 +11,4 @@ cryptography
 waitress
 pandas
 openpyxl
+APScheduler

@@ -21,6 +21,8 @@
     
     // Initialize UI elements
     initializeUI();
+    // Set up feedback events
+    setupFeedbackEvents();
     // Load renewal files
     loadRenewalFiles();
     // Load feedback
@@ -453,54 +455,82 @@ function setupButtonEvents() {
   function setupFeedbackEvents() {
     // Get all feedback toggle buttons
     const feedbackToggles = document.querySelectorAll('.inline-feedback-toggle');
-    
+
     feedbackToggles.forEach(toggle => {
-      toggle.addEventListener('click', function() {
-        const card = toggle.closest('.document-card');
-        const feedbackContainer = card.querySelector('.inline-feedback-container');
-        
+      // Ensure events are attached only once
+      if (toggle.dataset.eventsAttached === 'true') {
+        return;
+      }
+      toggle.dataset.eventsAttached = 'true';
+
+      const card = toggle.closest('.document-card');
+      const feedbackContainer = card.querySelector('.inline-feedback-container');
+      const closeButton = feedbackContainer ? feedbackContainer.querySelector('.inline-feedback-close button') : null;
+
+      const toggleFeedbackVisibility = () => {
         if (feedbackContainer) {
-          // Toggle visibility
           if (feedbackContainer.style.display === 'block') {
             feedbackContainer.style.display = 'none';
             toggle.setAttribute('aria-expanded', 'false');
           } else {
             feedbackContainer.style.display = 'block';
             toggle.setAttribute('aria-expanded', 'true');
-            
-            // Get the file ID from the card
+
             const fileId = card.dataset.fileId;
             if (fileId) {
-              // Load feedback for this file
               loadFileFeedback(fileId, feedbackContainer);
+
+              if (toggle.classList.contains('unread')) {
+                const feedbackId = toggle.dataset.feedbackId;
+                if (feedbackId) {
+                  markFeedbackAsRead(feedbackId, null, toggle);
+                }
+              }
             }
           }
         }
+      };
+
+      // Click event
+      toggle.addEventListener('click', toggleFeedbackVisibility);
+
+      // Keyboard accessibility (Enter/Space key)
+      toggle.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleFeedbackVisibility();
+        }
       });
-    });
-    
-    // Set up close buttons for feedback containers
-    document.querySelectorAll('.inline-feedback-close button').forEach(button => {
-      button.addEventListener('click', function() {
-        const feedbackContainer = button.closest('.inline-feedback-container');
-        if (feedbackContainer) {
-          feedbackContainer.style.display = 'none';
-          const toggle = feedbackContainer.previousElementSibling;
-          if (toggle && toggle.classList.contains('inline-feedback-toggle')) {
+
+      // Close button event
+      if (closeButton) {
+        closeButton.addEventListener('click', function() {
+          if (feedbackContainer) {
+            feedbackContainer.style.display = 'none';
             toggle.setAttribute('aria-expanded', 'false');
           }
+        });
+      }
+    });
+
+    // Set up click events for feedback cards in the feedback section
+    document.querySelectorAll('.feedback-card.unread').forEach(card => {
+      // Ensure events are attached only once
+      if (card.dataset.eventsAttached === 'true') {
+        return;
+      }
+      card.dataset.eventsAttached = 'true';
+
+      card.addEventListener('click', function() {
+        const feedbackId = card.dataset.feedbackId;
+        if (feedbackId) {
+          markFeedbackAsRead(feedbackId, card);
         }
       });
     });
   }
 
   function loadRenewalFiles() {
-    // Show loading modal
-    const loadingModal = document.getElementById('loadingModal');
-    const loadingMessage = document.getElementById('loadingMessage');
-    loadingMessage.textContent = 'Loading files...';
-    loadingModal.style.display = 'flex';
-    
     // Get CSRF token from meta tag
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
                      document.querySelector('[name="csrf_token"]')?.value;
@@ -520,8 +550,6 @@ function setupButtonEvents() {
     })
       .then(response => response.json())
       .then(data => {
-        loadingModal.style.display = 'none';
-        
         if (data.success) {
           // First update the file cards with data
           updateFileCards(data.files);
@@ -552,7 +580,6 @@ function setupButtonEvents() {
         }
       })
       .catch(error => {
-        loadingModal.style.display = 'none';
         console.error('Error:', error);
         
         // Hide loading overlay in case of error
@@ -601,6 +628,74 @@ function setupButtonEvents() {
       });
   }
   
+  /**
+   * Marks a feedback as read and updates the UI
+   * @param {number} feedbackId - The ID of the feedback to mark as read
+   * @param {HTMLElement} feedbackCard - The feedback card element to update (can be null)
+   * @param {HTMLElement} feedbackToggle - The feedback toggle button to update (can be null)
+   */
+  function markFeedbackAsRead(feedbackId, feedbackCard, feedbackToggle) {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    // Prepare headers for fetch request
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    
+    // Call the API to mark feedback as read
+    fetch('/renewal/mark-feedback-read', {
+      method: 'POST',
+      headers: headers,
+      credentials: 'same-origin',
+      body: JSON.stringify({ feedback_id: feedbackId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update the feedback card if provided
+        if (feedbackCard) {
+          // Update the UI to show feedback as read
+          feedbackCard.classList.remove('unread');
+          // Remove the click event listener since it's now read
+          feedbackCard.replaceWith(feedbackCard.cloneNode(true));
+        }
+        
+        // Update the feedback toggle if provided
+        if (feedbackToggle) {
+          feedbackToggle.classList.remove('unread');
+        }
+        
+        // Also update any other elements with the same feedback ID
+        if (feedbackCard && !feedbackToggle) {
+          // Find and update any toggle buttons with the same feedback ID
+          const relatedToggles = document.querySelectorAll(`.inline-feedback-toggle[data-feedback-id="${feedbackId}"]`);
+          relatedToggles.forEach(toggle => toggle.classList.remove('unread'));
+        }
+        
+        if (feedbackToggle && !feedbackCard) {
+          // Find and update any feedback cards with the same feedback ID
+          const relatedCards = document.querySelectorAll(`.feedback-card[data-feedback-id="${feedbackId}"]`);
+          relatedCards.forEach(card => {
+            card.classList.remove('unread');
+            card.replaceWith(card.cloneNode(true));
+          });
+        }
+      } else {
+        console.error('Error marking feedback as read:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error marking feedback as read:', error);
+    });
+  }
+  
   // Function to load feedback for a specific file
   function loadFileFeedback(fileId, container) {
     // Get CSRF token from meta tag
@@ -635,6 +730,22 @@ function setupButtonEvents() {
             if (feedbackTitle) feedbackTitle.textContent = feedback.subject;
             if (feedbackDate) feedbackDate.textContent = feedback.date_sent;
             if (feedbackBody) feedbackBody.textContent = feedback.message;
+            
+            // Store the feedback ID on the toggle button for marking as read
+            const card = container.closest('.document-card');
+            if (card) {
+              const feedbackToggle = card.querySelector('.inline-feedback-toggle');
+              if (feedbackToggle) {
+                feedbackToggle.dataset.feedbackId = feedback.id;
+                
+                // Apply unread styling if feedback is not read
+                if (!feedback.is_read) {
+                  feedbackToggle.classList.add('unread');
+                } else {
+                  feedbackToggle.classList.remove('unread');
+                }
+              }
+            }
           } else {
             // No feedback for this file
             const feedbackBody = container.querySelector('.inline-feedback-body');
@@ -649,11 +760,233 @@ function setupButtonEvents() {
       });
   }
   
-  // Function to update file cards based on loaded files - FIXED VERSION
-function updateFileCards(files) {
-  // Get all document cards
-  const cards = document.querySelectorAll('.document-card');
-  
+  // Function to update file cards based on loaded files
+  function updateFileCards(files) {
+    // Get all document cards
+    const cards = document.querySelectorAll('.document-card');
+
+    // Get CSRF token from meta tag for feedback requests
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+      document.querySelector('[name="csrf_token"]')?.value;
+
+    // Prepare headers for fetch request
+    const headers = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+
+    // Fetch feedback data to check for file feedback
+    fetch('/renewal/get-renewal-feedback', {
+        headers: headers,
+        credentials: 'same-origin'
+      })
+      .then(response => response.json())
+      .then(feedbackData => {
+        // Create a map of latest feedback by file ID
+        const feedbackMap = new Map();
+
+        if (feedbackData.success) {
+          // Sort feedbacks by date (newest first) for each file
+          const sortedFeedbacks = [...feedbackData.feedbacks].sort((a, b) => {
+            return new Date(b.date_sent) - new Date(a.date_sent);
+          });
+
+          // Map the latest feedback to each file ID
+          sortedFeedbacks.forEach(feedback => {
+            if (feedback.file_id && !feedbackMap.has(feedback.file_id)) {
+              feedbackMap.set(feedback.file_id, feedback);
+            }
+          });
+        }
+
+        // Now update each card with file data and feedback
+        cards.forEach(card => {
+          // Get the file type from the card title
+          const fileType = card.querySelector('.small.fw-semibold')?.textContent?.trim();
+          if (!fileType) return;
+
+          // Find the matching file
+          const file = files.find(f => f.name === fileType);
+
+          // Get buttons for this card
+          const selectBtn = card.querySelector('button.select-btn, .btn:nth-of-type(2)');
+          const uploadBtn = card.querySelector('button.upload-btn, .btn:nth-of-type(3)');
+        const previewBtn = card.querySelector('button.preview-btn, .btn:nth-of-type(1)');
+        
+        // Get feedback elements
+        const feedbackToggle = card.querySelector('.inline-feedback-toggle');
+        const feedbackContainer = card.querySelector('.inline-feedback-container');
+        
+        // Reset feedback elements
+        if (feedbackToggle) {
+          feedbackToggle.style.display = 'none';
+          feedbackToggle.classList.remove('unread');
+          feedbackToggle.removeAttribute('data-feedback-id');
+        }
+        
+        if (feedbackContainer) {
+          feedbackContainer.style.display = 'none';
+          const feedbackTitle = feedbackContainer.querySelector('.inline-feedback-title');
+          const feedbackDate = feedbackContainer.querySelector('.inline-feedback-date');
+          const feedbackBody = feedbackContainer.querySelector('.inline-feedback-body');
+          
+          if (feedbackTitle) feedbackTitle.textContent = '';
+          if (feedbackDate) feedbackDate.textContent = '';
+          if (feedbackBody) feedbackBody.textContent = '';
+        }
+        
+        if (file) {
+          // Update the card with file information
+          card.dataset.fileId = file.id;
+          
+          // Update status badge
+          const statusBadge = card.querySelector('.status-badge');
+          if (statusBadge) {
+            statusBadge.dataset.fileId = file.id;
+            statusBadge.dataset.status = file.status; // Store status for counting
+          }
+          
+          updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
+          
+          // Update dropzone content
+          const dropzone = card.querySelector('.dropzone');
+          if (dropzone) {
+            dropzone.innerHTML = `
+              <i class="fas fa-file-alt mb-1"></i>
+              <div>File Uploaded</div>
+              <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
+              ${file.status === 'Verified' ? 
+                '<div class="small text-muted verified-message">File verified - cannot be changed</div>' : 
+                '<div class="small text-muted">Click to replace</div>'}
+            `;
+            
+            // Remove all status classes first
+            dropzone.classList.remove('selected', 'loading', 'status-verified', 'status-pending', 'status-needs-revision', 'status-rejected');
+            
+            // Add appropriate status class
+            if (FileStatus && typeof FileStatus.getStatusClass === 'function') {
+              dropzone.classList.add(FileStatus.getStatusClass(file.status));
+            } else {
+              // Fallback status class
+              dropzone.classList.add(`status-${file.status.toLowerCase().replace(' ', '-')}`);
+            }
+            
+            dropzone.classList.add('selected');
+          }
+          
+          // Set button states for uploaded files
+          if (file.status === 'Verified') {
+            // For verified files, only show preview button
+            if (selectBtn) selectBtn.style.display = 'none';
+            if (uploadBtn) uploadBtn.style.display = 'none';
+            if (previewBtn) {
+              previewBtn.style.display = 'block';
+              previewBtn.style.margin = '0 auto';
+              DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+            }
+          } else {
+            // For non-verified files, show all buttons with appropriate states
+            if (selectBtn) {
+              selectBtn.style.display = 'block';
+              DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+            }
+            if (uploadBtn) {
+              uploadBtn.style.display = 'block';
+              DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+            }
+            if (previewBtn) {
+              previewBtn.style.display = 'block';
+              DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+            }
+          }
+          
+          // Check if there's feedback for this file
+          const feedback = feedbackMap.get(file.id);
+          
+          // Show feedback toggle only for files with feedback and status 'Needs Revision' or 'Rejected'
+          if (feedback && (file.status === 'Needs Revision' || file.status === 'Rejected')) {
+            // Generate unique ID for this feedback container
+            const feedbackId = `feedback-container-${file.id}`;
+            feedbackContainer.id = feedbackId;
+            feedbackToggle.setAttribute('aria-controls', feedbackId);
+            feedbackToggle.dataset.feedbackId = feedback.id;
+            
+            // Update feedback content
+            const feedbackTitle = feedbackContainer.querySelector('.inline-feedback-title');
+            const feedbackDate = feedbackContainer.querySelector('.inline-feedback-date');
+            const feedbackBody = feedbackContainer.querySelector('.inline-feedback-body');
+            
+            if (feedbackTitle) feedbackTitle.textContent = feedback.subject || 'Feedback';
+            if (feedbackDate) feedbackDate.textContent = formatDateTime(feedback.date_sent);
+            if (feedbackBody) feedbackBody.textContent = feedback.message || 'No message provided.';
+            
+            // Show feedback toggle
+            feedbackToggle.style.display = 'flex';
+            
+            // Apply unread styling if feedback is not read
+            if (!feedback.is_read) {
+              feedbackToggle.classList.add('unread');
+            } else {
+              feedbackToggle.classList.remove('unread');
+            }
+          }
+        } else {
+          // No file uploaded for this type
+          card.dataset.fileId = '';
+          
+          // Update status badge
+          const statusBadge = card.querySelector('.status-badge');
+          if (statusBadge) {
+            statusBadge.dataset.fileId = '';
+            statusBadge.dataset.status = 'No File';
+            statusBadge.textContent = 'No File';
+            statusBadge.className = 'badge bg-secondary status-badge';
+            statusBadge.innerHTML = '<i class="fas fa-question-circle"></i> No File';
+          }
+          
+          // Update icon
+          const statusIcon = card.querySelector('.status-icon');
+          if (statusIcon) {
+            statusIcon.className = 'fas fa-upload status-icon';
+          }
+          
+          // Reset dropzone content
+          const dropzone = card.querySelector('.dropzone');
+          if (dropzone) {
+            dropzone.innerHTML = `
+              <i class="fas fa-cloud-upload-alt mb-1"></i>
+              <div class="text-center">Drag & Drop or Click to Upload<br>
+              PDF files only</div>
+            `;
+            dropzone.classList.remove('selected');
+          }
+          
+          // Set button states for files not uploaded
+          if (selectBtn) {
+            DOMUtils.setButtonState(selectBtn, DOMUtils.BUTTON_STATES.ENABLED.SELECT);
+          }
+          if (uploadBtn) {
+            DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+          }
+          if (previewBtn) {
+            DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.DISABLED.PREVIEW);
+          }
+        }
+      });
+    })
+    .catch(error => {
+      console.error('Error loading feedback data:', error);
+      
+      // Still update cards with file data even if feedback fetch fails
+      updateCardsWithoutFeedback(files, cards);
+    });
+}
+
+// Fallback function to update cards if feedback fetch fails
+function updateCardsWithoutFeedback(files, cards) {
   cards.forEach(card => {
     // Get the file type from the card title
     const fileType = card.querySelector('.small.fw-semibold')?.textContent?.trim();
@@ -675,6 +1008,7 @@ function updateFileCards(files) {
       const statusBadge = card.querySelector('.status-badge');
       if (statusBadge) {
         statusBadge.dataset.fileId = file.id;
+        statusBadge.dataset.status = file.status; // Store status for counting
       }
       
       updateCardStatus(card, file.status, getStatusClass(file.status), getStatusIcon(file.status));
@@ -686,8 +1020,22 @@ function updateFileCards(files) {
           <i class="fas fa-file-alt mb-1"></i>
           <div>File Uploaded</div>
           <div class="small text-muted">Submitted: ${file.submission_date ? formatDateTime(file.submission_date) : 'N/A'}</div>
-          <div class="small text-muted">Click to replace</div>
+          ${file.status === 'Verified' ? 
+            '<div class="small text-muted verified-message">File verified - cannot be changed</div>' : 
+            '<div class="small text-muted">Click to replace</div>'}
         `;
+        
+        // Remove all status classes first
+        dropzone.classList.remove('selected', 'loading', 'status-verified', 'status-pending', 'status-needs-revision', 'status-rejected');
+        
+        // Add appropriate status class
+        if (FileStatus && typeof FileStatus.getStatusClass === 'function') {
+          dropzone.classList.add(FileStatus.getStatusClass(file.status));
+        } else {
+          // Fallback status class
+          dropzone.classList.add(`status-${file.status.toLowerCase().replace(' ', '-')}`);
+        }
+        
         dropzone.classList.add('selected');
       }
       
@@ -1008,28 +1356,71 @@ function updateFileCards(files) {
   
   // Function to update feedback section
   function updateFeedbackSection(feedbacks) {
-    const feedbackContainer = document.querySelector('.feedback-container');
-    if (!feedbackContainer) return;
+    const receivedTabContent = document.getElementById('received-tab');
+    const receivedFeedbackCount = document.getElementById('received-feedback-count');
     
-    if (feedbacks.length === 0) {
-      feedbackContainer.innerHTML = '<p class="text-muted">No feedback available.</p>';
+    if (!receivedTabContent) {
+      console.error('Received tab content element not found');
       return;
     }
     
-    let feedbackHTML = '';
-    feedbacks.forEach(feedback => {
-      feedbackHTML += `
-        <div class="feedback-item mb-3 p-3 border rounded">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <h6 class="mb-0">${feedback.subject}</h6>
-            <small class="text-muted">${feedback.date_sent}</small>
-          </div>
-          <p class="mb-0">${feedback.message}</p>
+    // Update the feedback count
+    if (receivedFeedbackCount) {
+      receivedFeedbackCount.textContent = feedbacks.length;
+    }
+    
+    // Clear existing content
+    receivedTabContent.innerHTML = '';
+    
+    if (feedbacks.length === 0) {
+      // No feedback available
+      receivedTabContent.innerHTML = `
+        <div class="text-center p-4">
+          <p class="text-muted">No feedback available.</p>
         </div>
       `;
+      return;
+    }
+    
+    // Sort feedbacks by date (newest first)
+    const sortedFeedbacks = [...feedbacks].sort((a, b) => {
+      const dateA = new Date(a.date_sent);
+      const dateB = new Date(b.date_sent);
+      return dateB - dateA; // Descending order (newest first)
     });
     
-    feedbackContainer.innerHTML = feedbackHTML;
+    // Create feedback cards
+    sortedFeedbacks.forEach(feedback => {
+      const feedbackCard = document.createElement('div');
+      // Add 'unread' class if feedback is not read
+      feedbackCard.className = `feedback-card received ${feedback.is_read ? '' : 'unread'}`;
+      feedbackCard.dataset.feedbackId = feedback.id;
+      
+      feedbackCard.innerHTML = `
+        <div class="feedback-card-header">
+          <div class="feedback-card-title">${feedback.subject}</div>
+          <div class="feedback-card-date">${formatDateTime(feedback.date_sent)}</div>
+        </div>
+        <div class="feedback-card-body">
+          <p>${feedback.message}</p>
+        </div>
+        <div class="feedback-card-file">
+          <strong>File:</strong> ${feedback.file_name}
+        </div>
+      `;
+      
+      // Add click event to mark feedback as read when clicked
+      if (!feedback.is_read) {
+        feedbackCard.addEventListener('click', function() {
+          markFeedbackAsRead(feedback.id, feedbackCard);
+        });
+      }
+      
+      receivedTabContent.appendChild(feedbackCard);
+    });
+    
+    // Re-setup feedback events after updating the content
+    setupFeedbackEvents();
   }
 
   // Function to check if all required files are uploaded and update UI immediately

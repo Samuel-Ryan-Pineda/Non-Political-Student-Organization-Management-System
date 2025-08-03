@@ -87,6 +87,9 @@ class Organization(db.Model):
     description = db.Column(db.Text)
     type = db.Column(db.String(100))
     status = db.Column(db.String(100))  # active, inactive
+    activation_date = db.Column(db.DateTime)  # Date when organization became active
+    last_renewal_date = db.Column(db.DateTime)  # Date of last renewal
+    current_academic_year = db.Column(db.String(20))  # Current active academic year
     
     # Relationships
     affiliations = db.relationship('Affiliation', backref='organization', lazy=True)
@@ -155,6 +158,7 @@ class Plan(db.Model):
     accomplished_date = db.Column(db.Date)
     target_output = db.Column(db.Text)
     outcome = db.Column(db.Text)
+    # Note: academic_year is available through plan.application.academic_year relationship
 
 # ✅ Application File Model
 class ApplicationFile(db.Model):

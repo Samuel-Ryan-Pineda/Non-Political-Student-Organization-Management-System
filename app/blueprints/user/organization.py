@@ -1487,3 +1487,349 @@ def mark_feedback_read():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f"Error updating feedback: {str(e)}"})
+
+@user_organization_bp.route('/get-officer-details/<int:student_id>')
+@login_required
+def get_officer_details(student_id):
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to access officer details"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    from app.models import Student
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get the student details
+    student = Student.query.get(student_id)
+    if not student:
+        return jsonify({'success': False, 'message': "Student not found"})
+    
+    # Return the student details
+    return jsonify({
+        'success': True,
+        'officer': {
+            'student_id': student.student_id,
+            'first_name': student.first_name,
+            'middle_name': student.middle_name,
+            'last_name': student.last_name,
+            'student_number': student.student_number
+        }
+    })
+
+@user_organization_bp.route('/update-officer/<int:student_id>', methods=['POST'])
+@login_required
+def update_officer(student_id):
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to update officer details"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    from app.models import Student, Program
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get the student
+    student = Student.query.get(student_id)
+    if not student:
+        return jsonify({'success': False, 'message': "Student not found"})
+    
+    # Get the data from the request
+    data = request.get_json()
+    first_name = data.get('first_name', '').strip()
+    middle_name = data.get('middle_name', '').strip()
+    last_name = data.get('last_name', '').strip()
+    program_code = data.get('program_code', '').strip()
+    
+    # Validate required fields
+    if not first_name or not last_name:
+        return jsonify({'success': False, 'message': "First name and last name are required"})
+    
+    # Get the program by code
+    program = Program.query.filter_by(program_code=program_code).first()
+    if not program:
+        return jsonify({'success': False, 'message': "Invalid program code"})
+    
+    try:
+        # Update the student details
+        student.first_name = first_name
+        student.middle_name = middle_name if middle_name else None
+        student.last_name = last_name
+        student.program_id = program.program_id
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': "Officer updated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"Error updating officer: {str(e)}"})
+
+@user_organization_bp.route('/get-programs')
+@login_required
+def get_programs():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to access programs"})
+    
+    from app.models import Program
+    
+    # Get all programs
+    programs = Program.query.all()
+    
+    # Format the response
+    program_list = [{
+        'program_id': p.program_id,
+        'program_code': p.program_code,
+        'program_name': p.program_name
+    } for p in programs]
+    
+    return jsonify({'success': True, 'programs': program_list})
+
+@user_organization_bp.route('/get-member-details/<string:student_number>')
+@login_required
+def get_member_details(student_number):
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to access member details"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    from app.models import Student
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get the student details by student number
+    student = Student.query.filter_by(student_number=student_number).first()
+    if not student:
+        return jsonify({'success': False, 'message': "Student not found"})
+    
+    # Return the student details
+    return jsonify({
+        'success': True,
+        'member': {
+            'student_id': student.student_id,
+            'first_name': student.first_name,
+            'middle_name': student.middle_name,
+            'last_name': student.last_name,
+            'student_number': student.student_number
+        }
+    })
+
+@user_organization_bp.route('/update-member/<string:student_number>', methods=['POST'])
+@login_required
+def update_member(student_number):
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to update member details"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    from app.models import Student, Program
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get the student by student number
+    student = Student.query.filter_by(student_number=student_number).first()
+    if not student:
+        return jsonify({'success': False, 'message': "Student not found"})
+    
+    # Get the data from the request
+    data = request.get_json()
+    first_name = data.get('first_name', '').strip()
+    middle_name = data.get('middle_name', '').strip()
+    last_name = data.get('last_name', '').strip()
+    program_code = data.get('program_code', '').strip()
+    
+    # Validate required fields
+    if not first_name or not last_name:
+        return jsonify({'success': False, 'message': "First name and last name are required"})
+    
+    # Get the program by code
+    program = Program.query.filter_by(program_code=program_code).first()
+    if not program:
+        return jsonify({'success': False, 'message': "Invalid program code"})
+    
+    try:
+        # Update the student details
+        student.first_name = first_name
+        student.middle_name = middle_name if middle_name else None
+        student.last_name = last_name
+        student.program_id = program.program_id
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': "Member updated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"Error updating member: {str(e)}"})
+
+@user_organization_bp.route('/get-volunteer-details/<string:student_number>')
+@login_required
+def get_volunteer_details(student_number):
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to access volunteer details"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    from app.models import Student
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get the student details by student number
+    student = Student.query.filter_by(student_number=student_number).first()
+    if not student:
+        return jsonify({'success': False, 'message': "Student not found"})
+    
+    # Return the student details
+    return jsonify({
+        'success': True,
+        'volunteer': {
+            'student_id': student.student_id,
+            'first_name': student.first_name,
+            'middle_name': student.middle_name,
+            'last_name': student.last_name,
+            'student_number': student.student_number
+        }
+    })
+
+@user_organization_bp.route('/update-volunteer/<string:student_number>', methods=['POST'])
+@login_required
+def update_volunteer(student_number):
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to update volunteer details"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    from app.models import Student, Program
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get the student by student number
+    student = Student.query.filter_by(student_number=student_number).first()
+    if not student:
+        return jsonify({'success': False, 'message': "Student not found"})
+    
+    # Get the data from the request
+    data = request.get_json()
+    first_name = data.get('first_name', '').strip()
+    middle_name = data.get('middle_name', '').strip()
+    last_name = data.get('last_name', '').strip()
+    program_code = data.get('program_code', '').strip()
+    
+    # Validate required fields
+    if not first_name or not last_name:
+        return jsonify({'success': False, 'message': "First name and last name are required"})
+    
+    # Get the program by code
+    program = Program.query.filter_by(program_code=program_code).first()
+    if not program:
+        return jsonify({'success': False, 'message': "Invalid program code"})
+    
+    try:
+        # Update the student details
+        student.first_name = first_name
+        student.middle_name = middle_name if middle_name else None
+        student.last_name = last_name
+        student.program_id = program.program_id
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': "Volunteer updated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"Error updating volunteer: {str(e)}"})
+
+@user_organization_bp.route('/update-plan', methods=['POST'])
+@login_required
+def update_plan():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to update plan details"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    from app.models import Plan
+    from datetime import datetime
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Get the data from the request
+    data = request.get_json()
+    plan_id = data.get('plan_id')
+    title = data.get('title', '').strip()
+    objectives = data.get('objectives', '').strip()
+    proposed_date = data.get('proposed_date')
+    people_involved = data.get('people_involved', '').strip()
+    funding_source = data.get('funding_source', '').strip()
+    target_output = data.get('target_output', '').strip()
+    status = data.get('status', 'Pending').strip()
+    
+    # Validate required fields
+    if not title or not objectives or not proposed_date:
+        return jsonify({'success': False, 'message': "Title, objectives, and proposed date are required"})
+    
+    # Get the plan by ID and ensure it belongs to the user's organization
+    plan = Plan.query.filter_by(plan_id=plan_id).first()
+    if not plan:
+        return jsonify({'success': False, 'message': "Plan not found"})
+    
+    # Check if the plan belongs to the user's organization
+    if plan.application_id:
+        from app.models import Application
+        application = Application.query.get(plan.application_id)
+        if not application or application.organization_id != organization.organization_id:
+            return jsonify({'success': False, 'message': "You don't have permission to update this plan"})
+    
+    try:
+        # Parse the proposed date
+        if isinstance(proposed_date, str):
+            proposed_date = datetime.strptime(proposed_date, '%Y-%m-%d').date()
+        
+        # Update the plan details
+        plan.title = title
+        plan.objectives = objectives
+        plan.proposed_date = proposed_date
+        plan.people_involved = people_involved
+        plan.funding_source = funding_source
+        plan.target_output = target_output
+        plan.outcome = status
+        
+        # Set accomplished_date based on status
+        if status == 'Accomplished':
+            if not plan.accomplished_date:
+                plan.accomplished_date = datetime.now().date()
+        elif status == 'Failed to Accomplish':
+            if not plan.accomplished_date:
+                plan.accomplished_date = datetime.now().date()
+        else:  # Pending
+            plan.accomplished_date = None
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': "Plan updated successfully"})
+    except ValueError as e:
+        return jsonify({'success': False, 'message': "Invalid date format. Please use YYYY-MM-DD"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"Error updating plan: {str(e)}"})

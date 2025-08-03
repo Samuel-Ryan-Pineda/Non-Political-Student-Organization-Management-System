@@ -2,6 +2,11 @@
 
 {% block title %}Organization Renewals{% endblock %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/common/file-preview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin/organizationrenewals.js') }}" defer></script>
+{% endblock %}
+
 {% block head_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/orgfiles.css') }}?v={{ cache_version }}">
 {% endblock %}
@@ -38,99 +43,92 @@
             <th scope="col">Action</th>
           </tr>
         </thead>
-        <tbody>
-          {% if files %}          
-          {% for file in files %}
-          <tr>
-            <td class="fw-semibold" style="text-align: left;">{{ file.filename }}</td>
-            <td style="text-align: left;">{{ file.upload_date.strftime('%B %d, %Y, %I:%M %p') }}</td>
-
-            <td>
-              <span class="status-badge status-{{ file.status.lower() }}">{{ file.status }}</span>
-            </td>
-            <td>
-              <div class="action-buttons d-flex justify-content-center gap-2">
-                <button type="button" class="btn admin-preview-btn btn-sm" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')">
-                  <i class="fas fa-eye"></i> Preview
-                </button>
-                <button type="button" class="btn btn-update btn-sm" onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}', '{{ file.file_name }}', '{{ file.submission_date.strftime('%B %d, %Y, %I:%M %p') if file.submission_date else 'Not available' }}')">
-                  Update Status
-                </button>
-
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-          {% else %}
-          <tr>
-            <td colspan="4" class="text-center">No files found for this renewal application.</td>
-          </tr>
-          {% endif %}
-        </tbody>
+          <tbody>
+            {% if files %}          
+            {% for file in files %}
+            <tr>
+              <td class="fw-semibold" style="text-align: left;">{{ file.filename }}</td>
+              <td style="text-align: left;">{{ file.upload_date.strftime('%B %d, %Y, %I:%M %p') }}</td>
+              <td>
+                              {% set status_class = '' %}
+              {% if file.status == 'Verified' %}
+                {% set status_class = 'status-verified' %}
+              {% elif file.status == 'Pending' %}
+                {% set status_class = 'status-pending' %}
+              {% elif file.status == 'Needs Revision' %}
+                {% set status_class = 'status-needs-revision' %}
+              {% elif file.status == 'Rejected' %}
+                {% set status_class = 'status-rejected' %}
+              {% endif %}
+              <span class="status-badge {{ status_class }}">{{ file.status }}</span>
+              </td>
+              <td>
+                <div class="action-buttons d-flex justify-content-center gap-2">
+                  <!-- FIXED: Added onclick handler like in neworganizationfiles.html -->
+                  <button type="button" 
+                          class="btn admin-preview-btn btn-sm" 
+                          data-app-file-id="{{ file.app_file_id }}" 
+                          data-file-name="{{ file.filename }}"
+                          onclick="previewFile({{ file.app_file_id }}, '{{ file.filename }}')">
+                    <i class="fas fa-eye"></i> Preview
+                  </button>
+                  
+                  <button type="button" 
+                          class="btn btn-update btn-sm" 
+                          data-app-file-id="{{ file.app_file_id }}"
+                          data-current-status="{{ file.status }}"
+                          data-file-name="{{ file.filename }}"
+                          data-submission-date="{{ file.upload_date.strftime('%B %d, %Y, %I:%M %p') if file.upload_date else 'Not available' }}"
+                          onclick="openStatusModal({{ file.app_file_id }}, '{{ file.status }}', '{{ file.filename }}', '{{ file.upload_date.strftime('%B %d, %Y, %I:%M %p') if file.upload_date else 'Not available' }}')">
+                    Update Status
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center">No files found for this renewal application.</td>
+            </tr>
+            {% endif %}
+          </tbody>
       </table>
     </div>
   </section>
 
   <!-- Feedback History Section -->
   <section class="feedback-history-section" aria-label="Feedback History">
+    <h3 class="fw-semibold fs-6 mb-3" style="text-align: left;">FEEDBACK</h3>
     <div class="feedback-history-tabs">
-      <div class="feedback-tab active" onclick="showTab('sent')">Sent Feedback <span class="feedback-count">{{ sent_feedback|length if sent_feedback else 0 }}</span></div>
-      <div class="feedback-tab" onclick="showTab('received')">Received Feedback <span class="feedback-count">{{ received_feedback|length if received_feedback else 0 }}</span></div>
+      <div class="feedback-tab active">Sent Feedback <span class="feedback-count">{{ sent_feedbacks|length if sent_feedbacks else 0 }}</span></div>
     </div>
     
-    <!-- Sent Feedback Tab -->
-    <div class="feedback-tab-content active" id="sent-tab">
-      {% if sent_feedback %}
-        {% for feedback in sent_feedback %}
+    <!-- Feedback Content -->
+    <div class="feedback-tab-content active">
+      {% if sent_feedbacks %}
+        {% for feedback in sent_feedbacks %}
         <div class="feedback-card sent">
           <div class="feedback-card-header">
-            <div class="feedback-card-title">{{ feedback.title }}</div>
-            <div class="feedback-card-date">{{ feedback.created_date.strftime('%B %d, %Y, %I:%M %p') }}</div>
+            <div class="feedback-card-title">{{ feedback.subject }}</div>
+            <div class="feedback-card-date">{{ feedback.date_sent.strftime('%B %d, %Y, %I:%M %p') if feedback.date_sent else 'Not available' }}</div>
+          </div>
+          <div class="feedback-card-file mb-2">
+            <strong>File:</strong> {{ feedback.application_file.file_name if feedback.application_file else 'Unknown' }}
           </div>
           <div class="feedback-card-body">
             <p>{{ feedback.message }}</p>
           </div>
-          <div class="feedback-card-file">
-            <strong>File:</strong> {{ feedback.file_name }}
-          </div>
           <div class="d-flex justify-content-end mt-2">
-            <button class="btn btn-view-feedback" onclick="openFeedbackDetail('sent', {{ feedback.feedback_id }})">View Details</button>
+            <button class="btn btn-view-feedback" onclick="editFeedback({{ feedback.feedback_id }})">Edit Feedback</button>
           </div>
         </div>
         {% endfor %}
       {% else %}
-        <div class="feedback-card">
-          <div class="feedback-card-body text-center">
-            <p>No feedback sent yet.</p>
-          </div>
-        </div>
-      {% endif %}
-    </div>
-    
-    <!-- Received Feedback Tab -->
-    <div class="feedback-tab-content" id="received-tab">
-      {% if received_feedback %}
-        {% for feedback in received_feedback %}
-        <div class="feedback-card received">
-          <div class="feedback-card-header">
-            <div class="feedback-card-title">{{ feedback.title }}</div>
-            <div class="feedback-card-date">{{ feedback.created_date.strftime('%B %d, %Y, %I:%M %p') }}</div>
-          </div>
-          <div class="feedback-card-body">
-            <p>{{ feedback.message }}</p>
-          </div>
-          <div class="feedback-card-file">
-            <strong>File:</strong> {{ feedback.file_name }}
-          </div>
-          <div class="d-flex justify-content-end mt-2">
-            <button class="btn btn-view-feedback" onclick="openFeedbackDetail('received', {{ feedback.feedback_id }})">View Details</button>
-          </div>
-        </div>
-        {% endfor %}
-      {% else %}
-        <div class="feedback-card">
-          <div class="feedback-card-body text-center">
-            <p>No feedback received yet.</p>
+        <div class="text-center py-4">
+          <div class="text-muted">
+            <i class="fas fa-comment-slash fa-2x mb-2 text-secondary opacity-50"></i>
+            <h6 class="text-secondary mb-1">No Feedback Sent</h6>
+            <small class="text-muted">No feedback has been sent for this renewal application yet.</small>
           </div>
         </div>
       {% endif %}
@@ -221,210 +219,44 @@
       </div>
     </div>
   </div>
+  <!-- File Preview Modal -->
+  <div id="filePreviewModal" class="global-modal file-preview-modal" aria-labelledby="filePreviewModalTitle" aria-modal="true" role="dialog">
+    <div class="modal-container modal-lg">
+      <div class="modal-section">
+        <div class="file-preview-header d-flex justify-content-between align-items-center mb-3">
+          <h2 class="form-title mb-0" id="file-preview-title">File Preview</h2>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-download" id="modal-download-btn" onclick="downloadCurrentFile()"><i class="fas fa-download"></i> Download</button>
+            <button type="button" class="btn-close" onclick="closeFilePreviewModal()" aria-label="Close"></button>
+          </div>
+        </div>
+        
+        <div class="file-preview-content">
+          <div id="file-preview-container" class="file-preview-container">
+            <!-- File content will be loaded here -->
+            <div class="text-center p-5" id="file-loading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3">Loading file preview...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include 'admin/modal/statusUpdateModal.html' %}
+  {% include 'admin/modal/editFeedbackModal.html' %}
 </main>
 
-<script>
-  // Toggle between feedback history tabs
-  function showTab(tabId) {
-    // Hide all tab content
-    document.querySelectorAll('.feedback-tab-content').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Remove active class from all tabs
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      tab.classList.remove('active');
-    });
-    
-    // Show the selected tab content
-    document.getElementById(tabId + '-tab').classList.add('active');
-    
-    // Add active class to the clicked tab
-    document.querySelectorAll('.feedback-tab').forEach(function(tab) {
-      if (tab.textContent.toLowerCase().includes(tabId)) {
-        tab.classList.add('active');
-      }
-    });
-  }
-
-  // Feedback Modal Functions
-  function openFeedbackModal(fileName, formType, formStatus) {
-    // Set the modal content with the file information
-    document.getElementById('file-name').textContent = fileName;
-    document.getElementById('form-type').textContent = formType;
-    document.getElementById('form-status').textContent = formStatus;
-    
-    // Show the modal
-    document.getElementById('feedbackModal').classList.add('show');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-  }
-  
-  function closeFeedbackModal() {
-    document.getElementById('feedbackModal').classList.remove('show');
-    document.body.style.overflow = ''; // Restore scrolling
-  }
-  
-  // Feedback Detail Modal Functions
-  function openFeedbackDetail(type, id) {
-    // Sample feedback data - in a real app, this would be fetched from a database
-    const feedbackData = {
-      sent: [
-        {
-          id: 1,
-          title: "Updated Member Information Required",
-          date: "July 10, 2025, 3:45 PM",
-          file: "listofmembers.pdf",
-          formType: "Form 4 - LIST OF MEMBERS",
-          subject: "Updated Member Information Required",
-          message: "The membership list needs to be updated with the current academic year information. Please ensure all graduating members are marked accordingly and include new members who have joined since last term.\n\nAdditionally, please verify that all member contact information is current and accurate. We've noticed some outdated email addresses in previous submissions.\n\nFor renewal applications, it's important to highlight member retention and growth compared to the previous year.",
-          hasReply: true,
-          reply: {
-            subject: "Response to Member List Update Request",
-            message: "We have updated our membership list with current academic year information. All graduating members have been properly marked, and new members have been added with their complete information.\n\nWe've also verified and updated all contact information for existing members to ensure everything is current and accurate.\n\nOur revised submission includes a section highlighting our member retention rate (87%) and our growth metrics (23% increase from last year).",
-            date: "July 11, 2025, 10:15 AM"
-          }
-        }
-      ],
-      received: [
-        {
-          id: 1,
-          title: "Response to Member List Update Request",
-          date: "July 11, 2025, 10:15 AM",
-          file: "listofmembers.pdf",
-          formType: "Form 4 - LIST OF MEMBERS",
-          subject: "Response to Member List Update Request",
-          message: "We have updated our membership list with current academic year information. All graduating members have been properly marked, and new members have been added with their complete information.\n\nWe've also verified and updated all contact information for existing members to ensure everything is current and accurate.\n\nOur revised submission includes a section highlighting our member retention rate (87%) and our growth metrics (23% increase from last year).",
-          original: {
-            subject: "Updated Member Information Required",
-            message: "The membership list needs to be updated with the current academic year information. Please ensure all graduating members are marked accordingly and include new members who have joined since last term.\n\nAdditionally, please verify that all member contact information is current and accurate. We've noticed some outdated email addresses in previous submissions.\n\nFor renewal applications, it's important to highlight member retention and growth compared to the previous year.",
-            date: "July 10, 2025, 3:45 PM"
-          },
-          hasBeenRepliedTo: false
-        }
-      ]
-    };
-    
-    // Get the feedback data based on type and id
-    const feedback = feedbackData[type].find(item => item.id === id);
-    
-    if (feedback) {
-      // Set up modal title and badge
-      document.getElementById('feedback-detail-title').textContent = feedback.subject;
-      const badge = document.getElementById('feedback-detail-badge');
-      badge.textContent = type === 'sent' ? 'Sent' : 'Received';
-      badge.className = 'feedback-badge ' + type;
-      
-      // Set up metadata
-      document.getElementById('feedback-detail-date').textContent = feedback.date;
-      document.getElementById('feedback-detail-file').textContent = feedback.file;
-      document.getElementById('feedback-detail-form-type').textContent = feedback.formType;
-      
-      // Set up feedback content
-      document.getElementById('feedback-detail-subject').textContent = feedback.subject;
-      document.getElementById('feedback-detail-message').textContent = feedback.message;
-      
-      // Set up reply section if exists
-      const replySection = document.getElementById('feedback-reply-section');
-      const replyButton = document.getElementById('btn-reply-feedback');
-      
-      if (type === 'sent' && feedback.hasReply) {
-        // Show reply for sent feedback
-        replySection.style.display = 'block';
-        document.getElementById('feedback-reply-subject').textContent = feedback.reply.subject;
-        document.getElementById('feedback-reply-message').textContent = feedback.reply.message;
-        document.getElementById('feedback-reply-date').textContent = feedback.reply.date;
-        replyButton.style.display = 'none'; // Hide reply button for sent feedback
-      } else if (type === 'received') {
-        // Show original message for received feedback
-        replySection.style.display = 'block';
-        document.getElementById('feedback-reply-subject').textContent = feedback.original.subject;
-        document.getElementById('feedback-reply-message').textContent = feedback.original.message;
-        document.getElementById('feedback-reply-date').textContent = feedback.original.date;
-        
-        // Only show reply button for received feedback that hasn't been replied to
-        replyButton.style.display = feedback.hasBeenRepliedTo ? 'none' : 'block';
-      } else {
-        // No reply yet for sent feedback
-        replySection.style.display = 'none';
-        replyButton.style.display = 'none'; // Never show reply button for sent feedback
-      }
-      
-      // Show the modal
-      document.getElementById('feedbackDetailModal').classList.add('show');
-      document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-    }
-  }
-  
-  function closeFeedbackDetailModal() {
-    document.getElementById('feedbackDetailModal').classList.remove('show');
-    document.body.style.overflow = ''; // Restore scrolling
-  }
-
-  // Form submission handling
-  document.getElementById('feedback-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    
-    // Get form values
-    const subject = document.getElementById('subject').value;
-    const message = document.getElementById('message').value;
-    
-    // Validate form
-    if (!subject || !message) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-    
-    // In a real application, you would send this data to the server
-    console.log('Feedback submitted:', {
-      subject: subject,
-      message: message,
-      file: document.getElementById('file-name').textContent,
-      formType: document.getElementById('form-type').textContent
-    });
-    
-    // Show success message
-    alert('Feedback sent successfully!');
-    
-    // Reset form and close modal
-    this.reset();
-    closeFeedbackModal();
-    
-    // In a real application, you would refresh the feedback history here
-    // For now, we'll just reload the page after a short delay
-    setTimeout(function() {
-      location.reload();
-    }, 500);
-  });
-
-  // Reply button functionality
-  document.getElementById('btn-reply-feedback').addEventListener('click', function() {
-    // In a real application, this would open a reply form
-    // For now, we'll just redirect to the feedback modal
-    closeFeedbackDetailModal();
-    openFeedbackModal('listofmembers.pdf', 'Form 4 - LIST OF MEMBERS', 'For Revision');
-  });
-
-  // Close modals when clicking outside (optional)
-  window.addEventListener('click', function(event) {
-    const feedbackModal = document.getElementById('feedbackModal');
-    const feedbackDetailModal = document.getElementById('feedbackDetailModal');
-    
-    if (event.target === feedbackModal) {
-      closeFeedbackModal();
-    } else if (event.target === feedbackDetailModal) {
-      closeFeedbackDetailModal();
-    }
-  });
-
-  // Initialize tooltips and popovers if using Bootstrap
-  document.addEventListener('DOMContentLoaded', function() {
-    // If using Bootstrap tooltips
-    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-      });
-    }
-  });
-</script>
+{% block extra_js %}
+<!-- Load dependencies first without defer -->
+<script src="{{ url_for('static', filename='js/common/dom-utils.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-status.js') }}?v={{ cache_version }}"></script>
+<script src="{{ url_for('static', filename='js/common/file-preview.js') }}"></script>
+<!-- Then load the main script with defer -->
+<script src="{{ url_for('static', filename='js/admin/organizationrenewals.js') }}" defer></script>
 {% endblock %}
+
+{% endblock content %}

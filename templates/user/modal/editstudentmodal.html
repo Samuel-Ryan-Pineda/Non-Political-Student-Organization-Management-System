@@ -1,0 +1,473 @@
+<!-- Edit Student Modal (Officers, Members, Volunteers) -->
+<div id="editStudentModal" class="global-modal">
+    <div class="modal-container">
+        <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+            <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;" id="modal-title">Edit Student</h4>
+            <button class="btn-back" onclick="hideEditStudentModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="container-short"> 
+            <main>
+                <form id="editStudentForm">
+                    <!-- Hidden fields for tracking -->
+                    <input type="hidden" id="edit-student-id" name="student_id">
+                    <input type="hidden" id="edit-student-type" name="student_type">
+                    <input type="hidden" id="edit-affiliation-id" name="affiliation_id">
+                    
+                    <!-- Non-editable Position and Student ID -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-position" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Position</label>
+                            <input type="text" class="form-control" id="edit-position" readonly style="font-size: 0.75rem; background-color: #f8f9fa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit-student-no" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Student ID</label>
+                            <input type="text" class="form-control" id="edit-student-no" readonly style="font-size: 0.75rem; background-color: #f8f9fa;">
+                        </div>
+                    </div>
+                    
+                    <!-- Name fields in one row -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="edit-first-name" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">First Name</label>
+                            <input type="text" class="form-control" id="edit-first-name" name="first_name" required style="font-size: 0.75rem;">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit-middle-name" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Middle Name</label>
+                            <input type="text" class="form-control" id="edit-middle-name" name="middle_name" style="font-size: 0.75rem;">
+                            <div class="form-text" style="font-size: 0.7rem;">Optional</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit-last-name" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Last Name</label>
+                            <input type="text" class="form-control" id="edit-last-name" name="last_name" required style="font-size: 0.75rem;">
+                        </div>
+                    </div>
+                    
+                    <!-- Program Field -->
+                    <div class="mb-4">
+                        <label for="edit-program" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Program</label>
+                        <select class="form-select" id="edit-program" name="program_code" required style="font-size: 0.75rem;">
+                            <option value="">Select a program...</option>
+                            <!-- Programs will be populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-secondary" onclick="hideEditStudentModal()" style="font-size: 0.75rem; padding: 0.5rem 1rem;">
+                            Cancel
+                        </button>
+                        <button type="submit" id="save-changes-btn" class="btn btn-primary" disabled style="font-size: 0.75rem; padding: 0.5rem 1rem;">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </main> 
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let originalStudentData = {};
+let currentAffiliationId = null;
+let currentStudentId = null;
+let currentStudentNo = null;
+let currentStudentType = null; // 'officer', 'member', or 'volunteer'
+
+// Show edit student modal for officers
+function showEditOfficerModal(affiliationId, studentId, position, studentNo, program) {
+    showEditStudentModal(affiliationId, studentId, position, studentNo, program, 'officer');
+}
+
+// Show edit student modal for members
+function showEditMemberModal(affiliationId, studentId, studentNo, name, program) {
+    showEditStudentModal(affiliationId, studentId, 'Member', studentNo, program, 'member');
+}
+
+// Show edit student modal for volunteers
+function showEditVolunteerModal(affiliationId, studentId, studentNo, name, program) {
+    showEditStudentModal(affiliationId, studentId, 'Volunteer', studentNo, program, 'volunteer');
+}
+
+// Unified function to show edit student modal
+function showEditStudentModal(affiliationId, studentId, position, studentNo, program, studentType) {
+    const modal = document.getElementById('editStudentModal');
+    
+    // Store IDs and type for later use
+    currentAffiliationId = affiliationId;
+    currentStudentId = studentId;
+    currentStudentNo = studentNo;
+    currentStudentType = studentType;
+    
+    // Set modal title based on student type
+    const modalTitle = document.getElementById('modal-title');
+    switch(studentType) {
+        case 'officer':
+            modalTitle.textContent = 'Edit Board Officer';
+            break;
+        case 'member':
+            modalTitle.textContent = 'Edit Member';
+            break;
+        case 'volunteer':
+            modalTitle.textContent = 'Edit Volunteer';
+            break;
+        default:
+            modalTitle.textContent = 'Edit Student';
+    }
+    
+    // Set hidden fields
+    document.getElementById('edit-student-id').value = studentId;
+    document.getElementById('edit-student-type').value = studentType;
+    document.getElementById('edit-affiliation-id').value = affiliationId || '';
+    
+    // Set readonly fields
+    document.getElementById('edit-position').value = position;
+    document.getElementById('edit-student-no').value = studentNo;
+    
+    // Show loading state
+    document.getElementById('edit-first-name').value = 'Loading...';
+    document.getElementById('edit-middle-name').value = '';
+    document.getElementById('edit-last-name').value = '';
+    
+    // Reset save button state
+    document.getElementById('save-changes-btn').disabled = true;
+    
+    // Show modal
+    modal.style.display = 'flex';
+    
+    // Fetch student details based on type
+    let fetchUrl;
+    switch(studentType) {
+        case 'officer':
+            fetchUrl = `/organization/get-officer-details/${studentId}`;
+            break;
+        case 'member':
+            fetchUrl = `/organization/get-member-details/${studentNo}`;
+            break;
+        case 'volunteer':
+            fetchUrl = `/organization/get-volunteer-details/${studentNo}`;
+            break;
+    }
+    
+    fetch(fetchUrl, {
+        credentials: 'same-origin'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const student = data.officer || data.member || data.volunteer;
+                
+                // Store original data
+                originalStudentData = {
+                    first_name: student.first_name || '',
+                    middle_name: student.middle_name || '',
+                    last_name: student.last_name || '',
+                    program_code: program,
+                    position: position,
+                    student_no: studentNo
+                };
+                
+                // Populate form fields
+                document.getElementById('edit-first-name').value = student.first_name || '';
+                document.getElementById('edit-middle-name').value = student.middle_name || '';
+                document.getElementById('edit-last-name').value = student.last_name || '';
+                
+                // Load programs and set current program
+                loadProgramsForEdit();
+            } else {
+                showAlert(`Error loading ${studentType} details: ` + data.message, 'error');
+                hideEditStudentModal();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert(`Error loading ${studentType} details`, 'error');
+            hideEditStudentModal();
+        });
+}
+
+// Hide edit student modal
+function hideEditStudentModal() {
+    document.getElementById('editStudentModal').style.display = 'none';
+    const form = document.getElementById('editStudentForm');
+    if (form) {
+        form.reset();
+    }
+    // Reset save button state
+    const saveButton = document.getElementById('save-changes-btn');
+    if (saveButton) {
+        saveButton.disabled = true;
+    }
+    
+    // Reset global variables
+    currentAffiliationId = null;
+    currentStudentId = null;
+    currentStudentNo = null;
+    currentStudentType = null;
+    originalStudentData = {};
+}
+
+// Legacy function names for backward compatibility
+function hideEditOfficerModal() {
+    hideEditStudentModal();
+}
+
+function hideEditMemberModal() {
+    hideEditStudentModal();
+}
+
+function hideEditVolunteerModal() {
+    hideEditStudentModal();
+}
+
+// Load programs for the dropdown
+function loadProgramsForEdit() {
+    fetch('/organization/get-programs', {
+        credentials: 'same-origin'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('edit-program');
+                select.innerHTML = '<option value="">Select Program</option>';
+                
+                data.programs.forEach(program => {
+                    const option = document.createElement('option');
+                    option.value = program.program_code;
+                    option.textContent = `${program.program_code} - ${program.program_name}`;
+                    select.appendChild(option);
+                });
+                
+                // Set the current program value
+                select.value = originalStudentData.program_code;
+                
+                // Attach event listeners for change detection
+                attachChangeListeners();
+                
+                // Enable change detection after loading
+                checkForStudentChanges();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading programs:', error);
+        });
+}
+
+// Attach event listeners for change detection
+function attachChangeListeners() {
+    const fields = ['edit-first-name', 'edit-middle-name', 'edit-last-name', 'edit-program'];
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            // Remove existing listeners to avoid duplicates
+            field.removeEventListener('input', checkForStudentChanges);
+            field.removeEventListener('change', checkForStudentChanges);
+            
+            // Add new listeners
+            field.addEventListener('input', checkForStudentChanges);
+            field.addEventListener('change', checkForStudentChanges);
+        }
+    });
+}
+
+// Check for changes and enable/disable save button
+function checkForStudentChanges() {
+    const currentData = {
+        first_name: document.getElementById('edit-first-name').value.trim(),
+        middle_name: document.getElementById('edit-middle-name').value.trim(),
+        last_name: document.getElementById('edit-last-name').value.trim(),
+        program_code: document.getElementById('edit-program').value
+    };
+
+    const hasChanges = 
+        currentData.first_name !== originalStudentData.first_name ||
+        currentData.middle_name !== originalStudentData.middle_name ||
+        currentData.last_name !== originalStudentData.last_name ||
+        currentData.program_code !== originalStudentData.program_code;
+
+    const saveButton = document.getElementById('save-changes-btn');
+    if (saveButton) {
+        saveButton.disabled = !hasChanges;
+        saveButton.style.opacity = hasChanges ? '1' : '0.6';
+    }
+}
+
+// Save student changes
+function saveStudentChanges() {
+    // Get CSRF token from meta tag or input
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                     document.querySelector('[name="csrf_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        showAlert('Error: CSRF token not found', 'error');
+        return;
+    }
+    
+    const data = {
+        first_name: document.getElementById('edit-first-name').value.trim(),
+        middle_name: document.getElementById('edit-middle-name').value.trim(),
+        last_name: document.getElementById('edit-last-name').value.trim(),
+        program_code: document.getElementById('edit-program').value
+    };
+    
+    // Determine the update URL based on student type
+    let updateUrl;
+    switch(currentStudentType) {
+        case 'officer':
+            updateUrl = `/organization/update-officer/${currentStudentId}`;
+            break;
+        case 'member':
+            updateUrl = `/organization/update-member/${currentStudentNo}`;
+            break;
+        case 'volunteer':
+            updateUrl = `/organization/update-volunteer/${currentStudentNo}`;
+            break;
+    }
+    
+    // Send update request
+    fetch(updateUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify(data),
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the table row with new data
+            updateStudentTableRow(currentStudentId, currentStudentType, {
+                first_name: document.getElementById('edit-first-name').value.trim(),
+                middle_name: document.getElementById('edit-middle-name').value.trim(),
+                last_name: document.getElementById('edit-last-name').value.trim(),
+                program_code: document.getElementById('edit-program').value
+            });
+            
+            // Show success message
+            showAlert(`${currentStudentType.charAt(0).toUpperCase() + currentStudentType.slice(1)} updated successfully!`, 'success');
+            
+            // Hide modal
+            hideEditStudentModal();
+        } else {
+            showAlert(data.message || `Error updating ${currentStudentType}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error(`Error updating ${currentStudentType}:`, error);
+        showAlert(`Error updating ${currentStudentType}`, 'error');
+    });
+}
+
+// Legacy function names for backward compatibility
+function checkForOfficerChanges() {
+    checkForStudentChanges();
+}
+
+function saveOfficerChanges() {
+    saveStudentChanges();
+}
+
+// Add event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle save button click
+    const saveButton = document.getElementById('save-changes-btn');
+    if (saveButton) {
+        saveButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            saveStudentChanges();
+        });
+    }
+});
+
+// Function to update student table row dynamically
+function updateStudentTableRow(studentId, studentType, updatedData) {
+    // Determine which tab/table to update based on student type
+    let tableSelector;
+    
+    switch(studentType) {
+        case 'officer':
+            tableSelector = '#officers tbody tr';
+            break;
+        case 'member':
+            tableSelector = '#members tbody tr';
+            break;
+        case 'volunteer':
+            tableSelector = '#volunteers tbody tr';
+            break;
+        default:
+            return; // Unknown type
+    }
+    
+    // Find the table row that contains the student with the given ID
+    const studentRows = document.querySelectorAll(tableSelector);
+    
+    studentRows.forEach(row => {
+        const updateButton = row.querySelector('button[onclick*="showEdit"]');
+        if (updateButton && updateButton.getAttribute('onclick').includes(`'${studentId}'`)) {
+            // Update the table cells with new data
+            const cells = row.querySelectorAll('td');
+            
+            // Construct full name
+            const fullName = [updatedData.first_name, updatedData.middle_name, updatedData.last_name]
+                .filter(name => name && name.trim())
+                .join(' ');
+            
+            if (studentType === 'officer') {
+                // Officers table: Position | Student Number | Name | Program | Action
+                if (cells.length >= 5) {
+                    cells[2].textContent = fullName; // Name column (index 2)
+                    cells[3].textContent = updatedData.program_code; // Program column (index 3)
+                    
+                    // Update the onclick attribute for officers
+                    const currentOnclick = updateButton.getAttribute('onclick');
+                    const onclickMatch = currentOnclick.match(/showEditOfficerModal\('([^']+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']+)'\)/);
+                    
+                    if (onclickMatch) {
+                        const [, affiliationId, , position, studentNo] = onclickMatch;
+                        const newOnclick = `showEditOfficerModal('${affiliationId}', '${studentId}', '${position}', '${studentNo}', '${updatedData.program_code}')`;
+                        updateButton.setAttribute('onclick', newOnclick);
+                    }
+                }
+            } else {
+                // Members/Volunteers table: No. | Student Number | Name | Program | Action
+                if (cells.length >= 5) {
+                    cells[2].textContent = fullName; // Name column (index 2)
+                    cells[3].textContent = updatedData.program_code; // Program column (index 3)
+                    
+                    // Update the onclick attribute for members/volunteers
+                    const currentOnclick = updateButton.getAttribute('onclick');
+                    let onclickMatch, functionName;
+                    
+                    if (studentType === 'member') {
+                        functionName = 'showEditMemberModal';
+                        onclickMatch = currentOnclick.match(/showEditMemberModal\('([^']+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']*)',\s*'([^']+)'\)/);
+                    } else {
+                        functionName = 'showEditVolunteerModal';
+                        onclickMatch = currentOnclick.match(/showEditVolunteerModal\('([^']+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']*)',\s*'([^']+)'\)/);
+                    }
+                    
+                    if (onclickMatch) {
+                        const [, affiliationId, , studentNo] = onclickMatch;
+                        const newOnclick = `${functionName}('${affiliationId}', '${studentId}', '${studentNo}', '${fullName}', '${updatedData.program_code}')`;
+                        updateButton.setAttribute('onclick', newOnclick);
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Utility function to show alerts
+function showAlert(message, type) {
+    if (type === 'success') {
+        alert('✓ ' + message);
+    } else {
+        alert('✗ ' + message);
+    }
+}
+</script>

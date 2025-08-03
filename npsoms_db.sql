@@ -1,39 +1,18 @@
 -- MariaDB Database Schema Creation Script
--- Based on the provided ERD - Updated with snake_case naming conventions
+-- Updated to match current Flask models with academic year tracking
 
 -- Create database (optional)
--- CREATE DATABASE student_management;
--- USE student_management;
+-- CREATE DATABASE npsoms_db;
+-- USE npsoms_db;
 
--- 1. programs table
-CREATE TABLE programs (
-    program_id INT PRIMARY KEY AUTO_INCREMENT,
-    program_name VARCHAR(255) NOT NULL,
-    program_code VARCHAR(50) UNIQUE NOT NULL
-);
-
--- 2. addresses table
-CREATE TABLE addresses (
-    address_id INT PRIMARY KEY AUTO_INCREMENT,
-    city VARCHAR(100) NOT NULL,
-    province VARCHAR(100) NOT NULL
-);
-
--- 3. logos table
-CREATE TABLE logos (
-    logo_id INT PRIMARY KEY AUTO_INCREMENT,
-    logo LONGBLOB,
-    description TEXT
-);
-
--- 4. roles table
+-- 1. roles table
 CREATE TABLE roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(100) NOT NULL,
     role_description TEXT
 );
 
--- 5. users table
+-- 2. users table
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     role_id INT NOT NULL,
@@ -45,7 +24,36 @@ CREATE TABLE users (
     FOREIGN KEY (role_id) REFERENCES roles(role_id)
 );
 
--- 6. organizations table
+-- 3. entry_keys table (passwords)
+CREATE TABLE entry_keys (
+    entry_key_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    entry_key VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- 4. programs table
+CREATE TABLE programs (
+    program_id INT PRIMARY KEY AUTO_INCREMENT,
+    program_name VARCHAR(255) NOT NULL,
+    program_code VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- 5. addresses table
+CREATE TABLE addresses (
+    address_id INT PRIMARY KEY AUTO_INCREMENT,
+    city VARCHAR(100) NOT NULL,
+    province VARCHAR(100) NOT NULL
+);
+
+-- 6. logos table
+CREATE TABLE logos (
+    logo_id INT PRIMARY KEY AUTO_INCREMENT,
+    logo LONGBLOB,
+    description TEXT
+);
+
+-- 7. organizations table (updated with academic year tracking)
 CREATE TABLE organizations (
     organization_id INT PRIMARY KEY AUTO_INCREMENT,
     logo_id INT,
@@ -54,12 +62,15 @@ CREATE TABLE organizations (
     tagline TEXT,
     description TEXT,
     type VARCHAR(100),
-    status VARCHAR(100), -- ENUM('active', 'inactive') DEFAULT 'active',
+    status VARCHAR(100), -- 'active', 'inactive'
+    activation_date DATETIME, -- Date when organization became active
+    last_renewal_date DATETIME, -- Date of last renewal
+    current_academic_year VARCHAR(20), -- Current active academic year
     FOREIGN KEY (logo_id) REFERENCES logos(logo_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- 5. students table
+-- 8. students table
 CREATE TABLE students (
     student_id INT PRIMARY KEY AUTO_INCREMENT,
     program_id INT NOT NULL,
@@ -72,7 +83,7 @@ CREATE TABLE students (
     FOREIGN KEY (address_id) REFERENCES addresses(address_id)
 );
 
--- 6. affiliations table
+-- 9. affiliations table
 CREATE TABLE affiliations (
     affiliation_id INT PRIMARY KEY AUTO_INCREMENT,
     student_id INT NOT NULL,
@@ -83,7 +94,7 @@ CREATE TABLE affiliations (
     FOREIGN KEY (organization_id) REFERENCES organizations(organization_id)
 );
 
--- 7. social_media table
+-- 10. social_media table
 CREATE TABLE social_media (
     social_media_id INT PRIMARY KEY AUTO_INCREMENT,
     organization_id INT NOT NULL,
@@ -92,27 +103,12 @@ CREATE TABLE social_media (
     FOREIGN KEY (organization_id) REFERENCES organizations(organization_id)
 );
 
--- 8. roles table
-CREATE TABLE roles (
-    role_id INT PRIMARY KEY AUTO_INCREMENT,
-    role_name VARCHAR(100) NOT NULL,
-    role_description TEXT
-);
-
--- 7. entry_keys table
-CREATE TABLE entry_keys (
-    entry_key_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    entry_key VARCHAR(255) UNIQUE NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
-
--- 8. applications table
+-- 11. applications table
 CREATE TABLE applications (
     application_id INT PRIMARY KEY AUTO_INCREMENT,
     organization_id INT NOT NULL,
     type VARCHAR(100),
-    status VARCHAR(100), -- ENUM('pending', 'approved', 'rejected', 'under_review') DEFAULT 'pending',
+    status VARCHAR(100), -- 'pending', 'approved', 'rejected', 'under_review'
     academic_year VARCHAR(20),
     submission_date DATETIME,
     reviewed_by VARCHAR(255),
@@ -120,7 +116,7 @@ CREATE TABLE applications (
     FOREIGN KEY (organization_id) REFERENCES organizations(organization_id)
 );
 
--- 9. plans table
+-- 12. plans table (academic_year removed - accessed via application relationship)
 CREATE TABLE plans (
     plan_id INT PRIMARY KEY AUTO_INCREMENT,
     application_id INT,
@@ -135,18 +131,18 @@ CREATE TABLE plans (
     FOREIGN KEY (application_id) REFERENCES applications(application_id)
 );
 
--- 10. application_files table
+-- 13. application_files table
 CREATE TABLE application_files (
     app_file_id INT PRIMARY KEY AUTO_INCREMENT,
     application_id INT NOT NULL,
     file_name VARCHAR(255) NOT NULL,
     file LONGBLOB,
-    status VARCHAR(50),-- ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    status VARCHAR(50), -- 'pending', 'approved', 'rejected'
     submission_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (application_id) REFERENCES applications(application_id)
 );
 
--- 11. advisers table
+-- 14. advisers table
 CREATE TABLE advisers (
     adviser_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(100) NOT NULL,
@@ -154,18 +150,18 @@ CREATE TABLE advisers (
     last_name VARCHAR(100) NOT NULL
 );
 
--- 12. advisories table
+-- 15. advisories table
 CREATE TABLE advisories (
     advisory_id INT PRIMARY KEY AUTO_INCREMENT,
     adviser_id INT NOT NULL,
     organization_id INT NOT NULL,
     type VARCHAR(100),
-    status VARCHAR(100), -- ENUM('active', 'inactive') DEFAULT 'active',
+    status VARCHAR(100), -- 'active', 'inactive'
     FOREIGN KEY (adviser_id) REFERENCES advisers(adviser_id),
     FOREIGN KEY (organization_id) REFERENCES organizations(organization_id)
 );
 
--- 13. feedback table
+-- 16. feedback table
 CREATE TABLE feedback (
     feedback_id INT PRIMARY KEY AUTO_INCREMENT,
     app_file_id INT,
@@ -176,7 +172,7 @@ CREATE TABLE feedback (
     FOREIGN KEY (app_file_id) REFERENCES application_files(app_file_id)
 );
 
--- 14. announcements table
+-- 17. announcements table
 CREATE TABLE announcements (
     announcement_id INT PRIMARY KEY AUTO_INCREMENT,
     subject VARCHAR(255) NOT NULL,
@@ -184,7 +180,7 @@ CREATE TABLE announcements (
     date_sent DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 15. announcement_recipients table
+-- 18. announcement_recipients table
 CREATE TABLE announcement_recipients (
     announcement_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -199,7 +195,13 @@ CREATE INDEX idx_student_number ON students(student_number);
 CREATE INDEX idx_student_program ON students(program_id);
 CREATE INDEX idx_affiliation_student ON affiliations(student_id);
 CREATE INDEX idx_affiliation_org ON affiliations(organization_id);
+CREATE INDEX idx_affiliation_academic_year ON affiliations(academic_year);
 CREATE INDEX idx_application_org ON applications(organization_id);
 CREATE INDEX idx_application_status ON applications(status);
+CREATE INDEX idx_application_academic_year ON applications(academic_year);
 CREATE INDEX idx_user_email ON users(email);
 CREATE INDEX idx_announcement_date ON announcements(date_sent);
+CREATE INDEX idx_organization_status ON organizations(status);
+CREATE INDEX idx_organization_current_year ON organizations(current_academic_year);
+CREATE INDEX idx_plan_application ON plans(application_id);
+CREATE INDEX idx_plan_accomplished ON plans(accomplished_date);

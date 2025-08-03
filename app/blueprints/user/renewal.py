@@ -305,6 +305,65 @@ def get_renewal_feedback():
     
     return jsonify({'success': True, 'feedbacks': feedback_list})
 
+@user_renewal_bp.route('/mark-feedback-read', methods=['POST'])
+@login_required
+def mark_feedback_read():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to update feedback"})
+    
+    # Get feedback ID from request
+    feedback_id = request.json.get('feedback_id')
+    if not feedback_id:
+        return jsonify({'success': False, 'message': "Feedback ID is required"})
+    
+    # Import the Feedback model
+    from app.models import Feedback
+    
+    # Find the feedback
+    feedback = Feedback.query.get(feedback_id)
+    if not feedback:
+        return jsonify({'success': False, 'message': "Feedback not found"})
+    
+    # Check if user has permission to access this feedback
+    from app.organization_service import get_organization_by_user_id
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Generate academic year (e.g., "2025-2026")
+    current_year = datetime.now().year
+    academic_year = f"{current_year}-{current_year + 1}"
+    
+    # Find the renewal application for this academic year
+    renewal_application = Application.query.filter_by(
+        organization_id=organization.organization_id,
+        type='Renewal',
+        academic_year=academic_year
+    ).first()
+    
+    if not renewal_application:
+        return jsonify({'success': False, 'message': "No renewal application found for this organization"})
+    
+    # Check if the feedback belongs to a file in this application
+    application_files = ApplicationFile.query.filter_by(application_id=renewal_application.application_id).all()
+    file_ids = [file.app_file_id for file in application_files]
+    
+    if not feedback.app_file_id in file_ids:
+        return jsonify({'success': False, 'message': "You don't have permission to access this feedback"})
+    
+    # Mark feedback as read
+    feedback.is_read = True
+    
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': "Feedback marked as read"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"Error updating feedback: {str(e)}"})
+
 @user_renewal_bp.route('/get-renewal-file/<int:file_id>')
 @login_required
 def get_renewal_file(file_id):

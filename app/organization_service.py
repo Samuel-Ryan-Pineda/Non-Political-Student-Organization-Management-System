@@ -455,18 +455,30 @@ def delete_social_media(organization_id, platform):
             'message': f'Error deleting social media link: {str(e)}'
         }
 
-def get_affiliations_by_position_type(organization_id, position_type):
+def get_affiliations_by_position_type(organization_id, position_type, academic_year=None):
     """
     Get affiliations for an organization by position type
     
     Args:
         organization_id (int): ID of the organization
         position_type (str): Type of position (Officer, Member, Volunteer)
+        academic_year (str, optional): Academic year to filter by. If None, uses current academic year
         
     Returns:
         list: List of dictionaries containing affiliation information
     """
-    from app.models import Affiliation, Student, Program
+    from app.models import Affiliation, Student, Program, Organization
+    
+    # If no academic year specified, get the organization's current academic year
+    if academic_year is None:
+        organization = Organization.query.get(organization_id)
+        if organization and organization.current_academic_year:
+            academic_year = organization.current_academic_year
+        else:
+            # Fallback to current academic year
+            from datetime import datetime
+            current_year = datetime.now().year
+            academic_year = f"{current_year}-{current_year + 1}"
     
     # Define position categories
     officer_positions = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Auditor', 'P.I.O', 'Business Manager']
@@ -483,7 +495,7 @@ def get_affiliations_by_position_type(organization_id, position_type):
     else:
         return []
     
-    # Get all affiliations for the organization with the specified positions
+    # Get all affiliations for the organization with the specified positions and academic year
     affiliations = db.session.query(
         Affiliation, Student, Program
     ).join(
@@ -492,7 +504,8 @@ def get_affiliations_by_position_type(organization_id, position_type):
         Program, Student.program_id == Program.program_id
     ).filter(
         Affiliation.organization_id == organization_id,
-        Affiliation.position.in_(positions)
+        Affiliation.position.in_(positions),
+        Affiliation.academic_year == academic_year
     ).all()
     
     result = []
@@ -599,52 +612,67 @@ def get_pending_renewal_applications():
         print(f"Error fetching pending renewal applications: {str(e)}")
         return []
 
-def get_organization_statistics(organization_id):
+def get_organization_statistics(organization_id, academic_year=None):
     """
     Get statistics for an organization
     
     Args:
         organization_id (int): ID of the organization
+        academic_year (str, optional): Academic year to filter by. If None, uses current academic year
         
     Returns:
         dict: Dictionary containing organization statistics
     """
-    from app.models import Affiliation, Application, Plan
+    from app.models import Affiliation, Application, Plan, Organization
     
     try:
+        # If no academic year specified, get the organization's current academic year
+        if academic_year is None:
+            organization = Organization.query.get(organization_id)
+            if organization and organization.current_academic_year:
+                academic_year = organization.current_academic_year
+            else:
+                # Fallback to current academic year
+                from datetime import datetime
+                current_year = datetime.now().year
+                academic_year = f"{current_year}-{current_year + 1}"
+        
         # Get member count (officers + members, not including volunteers)
         officer_positions = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Auditor', 'P.I.O', 'Business Manager']
         member_positions = ['Member']
         
-        # Count officers
+        # Count officers for the specific academic year
         officer_count = db.session.query(Affiliation).filter(
             Affiliation.organization_id == organization_id,
-            Affiliation.position.in_(officer_positions)
+            Affiliation.position.in_(officer_positions),
+            Affiliation.academic_year == academic_year
         ).count()
         
-        # Count members
+        # Count members for the specific academic year
         member_count = db.session.query(Affiliation).filter(
             Affiliation.organization_id == organization_id,
-            Affiliation.position.in_(member_positions)
+            Affiliation.position.in_(member_positions),
+            Affiliation.academic_year == academic_year
         ).count()
         
         # Total members = officers + members (not including volunteers)
         total_members = officer_count + member_count
         
-        # Count volunteers
+        # Count volunteers for the specific academic year
         volunteer_count = db.session.query(Affiliation).filter(
             Affiliation.organization_id == organization_id,
-            Affiliation.position == 'Volunteer'
+            Affiliation.position == 'Volunteer',
+            Affiliation.academic_year == academic_year
         ).count()
         
-        # Count accomplished activities (plans with accomplished_date set)
-        application = Application.query.filter_by(organization_id=organization_id).first()
-        accomplished_activities = 0
-        if application:
-            accomplished_activities = db.session.query(Plan).filter(
-                Plan.application_id == application.application_id,
-                Plan.accomplished_date.isnot(None)
-            ).count()
+        # Count accomplished activities (plans with accomplished_date set) for the specific academic year
+        accomplished_activities = db.session.query(Plan).join(
+            Application, Plan.application_id == Application.application_id
+        ).filter(
+            Application.organization_id == organization_id,
+            Application.academic_year == academic_year,
+            Plan.accomplished_date.isnot(None)
+        ).count()
         
         # Get organization status
         organization = get_organization_by_id(organization_id)
@@ -666,27 +694,90 @@ def get_organization_statistics(organization_id):
             'organization_status': 'Unknown'
         }
 
-def get_plans_by_organization_id(organization_id):
+
+def get_available_academic_years(organization_id):
     """
-    Get plans for an organization
+    Get all academic years that have data for an organization
     
     Args:
         organization_id (int): ID of the organization
         
     Returns:
-        list: List of dictionaries containing plan information
+        list: List of academic years with data for this organization
     """
-    from app.models import Plan, Application
+    from app.models import Affiliation, Plan, Application, Organization
     
     try:
-        # Get the application for this organization
-        application = Application.query.filter_by(organization_id=organization_id).first()
+        # Get academic years from affiliations
+        affiliation_years = db.session.query(Affiliation.academic_year).filter(
+            Affiliation.organization_id == organization_id,
+            Affiliation.academic_year.isnot(None)
+        ).distinct().all()
         
-        if not application:
-            return []
+        # Get academic years from plans (through applications)
+        plan_years = db.session.query(Application.academic_year).join(
+            Plan, Application.application_id == Plan.application_id
+        ).filter(
+            Application.organization_id == organization_id,
+            Application.academic_year.isnot(None)
+        ).distinct().all()
         
-        # Get all plans for this application
-        plans = Plan.query.filter_by(application_id=application.application_id).all()
+        # Combine and deduplicate
+        all_years = set()
+        for year_tuple in affiliation_years:
+            if year_tuple[0]:
+                all_years.add(year_tuple[0])
+        
+        for year_tuple in plan_years:
+            if year_tuple[0]:
+                all_years.add(year_tuple[0])
+        
+        # Add current academic year if not present
+        organization = Organization.query.get(organization_id)
+        if organization and organization.current_academic_year:
+            all_years.add(organization.current_academic_year)
+        
+        # Sort years in descending order (most recent first)
+        sorted_years = sorted(list(all_years), reverse=True)
+        
+        return sorted_years
+        
+    except Exception as e:
+        print(f"Error getting available academic years: {str(e)}")
+        return []
+
+def get_plans_by_organization_id(organization_id, academic_year=None):
+    """
+    Get plans for an organization
+    
+    Args:
+        organization_id (int): ID of the organization
+        academic_year (str, optional): Academic year to filter by. If None, uses current academic year
+        
+    Returns:
+        list: List of dictionaries containing plan information
+    """
+    from app.models import Plan, Application, Organization
+    
+    try:
+        # If no academic year specified, get the organization's current academic year
+        if academic_year is None:
+            organization = Organization.query.get(organization_id)
+            if organization and organization.current_academic_year:
+                academic_year = organization.current_academic_year
+            else:
+                # Fallback to current academic year
+                from datetime import datetime
+                current_year = datetime.now().year
+                academic_year = f"{current_year}-{current_year + 1}"
+        
+        # Get plans for this organization and academic year
+        plans = db.session.query(Plan).join(
+            Application, Plan.application_id == Application.application_id
+        ).filter(
+            Application.organization_id == organization_id,
+            Application.academic_year == academic_year
+        ).all()
         
         result = []
         for plan in plans:
@@ -700,7 +791,8 @@ def get_plans_by_organization_id(organization_id):
                 'accomplished_date': plan.accomplished_date.strftime('%Y-%m-%d') if plan.accomplished_date else '',
                 'target_output': plan.target_output,
                 'outcome': plan.outcome,
-                'is_accomplished': plan.accomplished_date is not None
+                'is_accomplished': plan.accomplished_date is not None,
+                'academic_year': plan.application.academic_year if plan.application else None
             })
         
         return result
