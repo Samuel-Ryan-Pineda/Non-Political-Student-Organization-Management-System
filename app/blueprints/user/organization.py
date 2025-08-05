@@ -372,7 +372,7 @@ def import_excel():
         
         # Get the application for this organization
         from app.organization_service import get_application_by_organization_id
-        application = get_application_by_organization_id(organization.organization_id)
+        application = get_application_by_organization_id(organization.organization_id, 'New')
         if not application and upload_type == 'plans':
             return jsonify({
                 'success': False,
@@ -540,7 +540,7 @@ def application():
     # Get application associated with the organization
     application = None
     if organization:
-        application = get_application_by_organization_id(organization.organization_id)
+        application = get_application_by_organization_id(organization.organization_id, 'New')
         # Add debug logging
         print(f"DEBUG - Application data: ID={application.application_id if application else 'None'}, Status={application.status if application else 'None'}")
     
@@ -1077,7 +1077,7 @@ def upload_application_file():
         return jsonify({'success': False, 'message': "No organization found for this user"})
     
     # Get application associated with the organization
-    application = get_application_by_organization_id(organization.organization_id)
+    application = get_application_by_organization_id(organization.organization_id, 'New')
     if not application:
         return jsonify({'success': False, 'message': "No application found for this organization"})
     
@@ -1325,7 +1325,7 @@ def get_application_status():
         return jsonify({'success': False, 'message': "No organization found for this user"})
     
     # Get application associated with the organization
-    application = get_application_by_organization_id(organization.organization_id)
+    application = get_application_by_organization_id(organization.organization_id, 'New')
     if not application:
         return jsonify({'success': False, 'message': "No application found for this organization"})
     
@@ -1365,7 +1365,7 @@ def get_application_files():
         return jsonify({'success': False, 'message': "No organization found for this user"})
     
     # Get application associated with the organization
-    application = get_application_by_organization_id(organization.organization_id)
+    application = get_application_by_organization_id(organization.organization_id, 'New')
     if not application:
         return jsonify({'success': False, 'message': "No application found for this organization"})
     
@@ -1417,7 +1417,7 @@ def get_application_feedback():
         return jsonify({'success': False, 'message': "No organization found for this user"})
     
     # Get application associated with the organization
-    application = get_application_by_organization_id(organization.organization_id)
+    application = get_application_by_organization_id(organization.organization_id, 'New')
     if not application:
         return jsonify({'success': False, 'message': "No application found for this organization"})
     
@@ -1470,7 +1470,7 @@ def mark_feedback_read():
         return jsonify({'success': False, 'message': "No organization found for this user"})
     
     # Get application associated with the organization
-    application = get_application_by_organization_id(organization.organization_id)
+    application = get_application_by_organization_id(organization.organization_id, 'New')
     if not application:
         return jsonify({'success': False, 'message': "No application found for this organization"})
     

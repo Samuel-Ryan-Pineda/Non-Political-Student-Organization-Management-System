@@ -62,7 +62,7 @@
   .table th {
     vertical-align: middle;
     border-top: none;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: #0c3a47;
   }
   .table tbody tr:not(:last-child) {
@@ -77,36 +77,53 @@
     font-weight: 600;
     border-radius: 9999px;
     padding: 0.25rem 0.75rem;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     display: inline-block;
   }
   .btn-preview {
     border: 1px solid #0c3a47;
     color: #0c3a47;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     padding: 0.25rem 1rem;
     border-radius: 0.375rem;
     background-color: transparent;
     transition: background-color 0.15s ease-in-out;
+    text-decoration: none;
   }
   .btn-preview:hover,
   .btn-preview:focus {
     background-color: #f9fafb;
     color: #0c3a47;
+    text-decoration: none;
   }
   .btn-feedback {
     background-color: #3b63f5;
     color: white;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     padding: 0.25rem 1rem;
     border-radius: 0.375rem;
     border: none;
     transition: background-color 0.15s ease-in-out;
+    text-decoration: none;
   }
   .btn-feedback:hover,
   .btn-feedback:focus {
     background-color: #2a4edb;
     color: white;
+    text-decoration: none;
+  }
+  .badge {
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
   }
   @media (max-width: 575.98px) {
     body {
@@ -150,101 +167,98 @@
         <h2 class="org-header text-start">Document Compilation</h2>
         <hr class="divider">
     </header>
-    <form class="year-select-form mb-5">
+    <form class="year-select-form mb-5" method="GET">
         <label for="academic-year" class="form-label mb-0">Academic Year:</label>
         <div class="select-wrapper">
-          <select id="academic-year" name="academic-year" class="form-select">
-            <option>2022-2023</option>
+          <select id="academic-year" name="academic_year" class="form-select" onchange="this.form.submit()">
+            {% for year in available_years %}
+              <option value="{{ year }}" {% if year == selected_academic_year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
           </select>
           <i class="fas fa-chevron-down"></i>
         </div>
     </form>
   
     <div class="bg-white rounded-3 p-4 table-responsive">
-        <table class="table table-borderless align-middle mb-0" style="min-width: 900px;">
+        {% if application_files %}
+        <table class="table table-borderless align-middle mb-0" style="min-width: 700px;">
           <thead>
             <tr>
-              <th scope="col" style="min-width: 180px; background-color: #0c3a47; color: white;">File Name</th>
+              <th scope="col" style="min-width: 200px; background-color: #0c3a47; color: white;">File Name</th>
               <th scope="col" style="min-width: 180px; background-color: #0c3a47; color: white;">Submission Date</th>
-              <th scope="col" style="min-width: 220px; background-color: #0c3a47; color: white;">Form Type</th>
               <th scope="col" style="min-width: 120px; background-color: #0c3a47; color: white;">Status</th>
               <th scope="col" style="min-width: 140px; background-color: #0c3a47; color: white;">Action</th>
             </tr>
           </thead>
           <tbody class="text-start">
+            {% for file in application_files %}
             <tr>
-              <td>appforrecog.pdf</td>
-              <td>July 5, 2025, 1:00 PM</td>
-              <td><strong>Form 1A</strong> - APPLICATION FOR RECOGNITION</td>
-              <td class="text-center"><span class="badge-verified">Verified</span></td>
-              <td class="d-flex gap-2">
-                <button type="button" class="btn-preview">Preview</button>
-                <button type="button" class="btn-feedback">Download</button>
+              <td>{{ file.file_name }}</td>
+              <td>
+                {% if file.submission_date %}
+                  {{ file.submission_date.strftime('%B %d, %Y, %I:%M %p') }}
+                {% else %}
+                  Not available
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if file.status == 'Verified' %}
+                  <span class="badge-verified">Verified</span>
+                {% elif file.status == 'Pending' %}
+                  <span class="badge" style="background-color: #fef3c7; color: #92400e;">Pending</span>
+                {% elif file.status == 'Needs Revision' %}
+                  <span class="badge" style="background-color: #fee2e2; color: #dc2626;">Needs Revision</span>
+                {% elif file.status == 'Rejected' %}
+                  <span class="badge" style="background-color: #fecaca; color: #b91c1c;">Rejected</span>
+                {% else %}
+                  <span class="badge" style="background-color: #e5e7eb; color: #374151;">{{ file.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button type="button" class="btn-preview" onclick="previewFile({{ file.app_file_id }}, '{{ file.file_name }}')">Preview</button>
+                  <a href="{{ url_for('user_organization.get_application_file', file_id=file.app_file_id) }}?download=true" 
+                     class="btn-feedback">Download</a>
+                </div>
               </td>
             </tr>
-            <tr>
-              <td>lettofacceptance.pdf</td>
-              <td>July 5, 2025, 1:01 PM</td>
-              <td><strong>Form 2</strong> - LETTER OF ACCEPTANCE</td>
-              <td class="text-center"><span class="badge-verified">Verified</span></td>
-              <td class="d-flex gap-2">
-                <button type="button" class="btn-preview">Preview</button>
-                <button type="button" class="btn-feedback">Download</button>
-              </td>
-            </tr>
-            <tr>
-              <td>listofactivities.pdf</td>
-              <td>July 5, 2025, 1:01 PM</td>
-              <td><strong>Form 3</strong> - LIST OF PROGRAMS/PROJECTS/ACTIVITIES</td>
-              <td class="text-center"><span class="badge-verified">Verified</span></td>
-              <td class="d-flex gap-2">
-                <button type="button" class="btn-preview">Preview</button>
-                <button type="button" class="btn-feedback">Download</button>
-              </td>
-            </tr>
-            <tr>
-              <td>listofmembers.pdf</td>
-              <td>July 5, 2025, 1:02 PM</td>
-              <td><strong>Form 4</strong> - LIST OF MEMBERS</td>
-              <td class="text-center"><span class="badge-verified">Verified</span></td>
-              <td class="d-flex gap-2">
-                <button type="button" class="btn-preview">Preview</button>
-                <button type="button" class="btn-feedback">Download</button>
-              </td>
-            </tr>
-            <tr>
-              <td>boardofficer.pdf</td>
-              <td>July 5, 2025, 1:02 PM</td>
-              <td>BOARD OF OFFICERS</td>
-              <td class="text-center"><span class="badge-verified">Verified</span></td>
-              <td class="d-flex gap-2">
-                <button type="button" class="btn-preview">Preview</button>
-                <button type="button" class="btn-feedback">Download</button>
-              </td>
-            </tr>
-            <tr>
-              <td>constitution.pdf</td>
-              <td>July 5, 2025, 1:03 PM</td>
-              <td>CONSTITUTION AND BYLAWS</td>
-              <td class="text-center"><span class="badge-verified">Verified</span></td>
-              <td class="d-flex gap-2">
-                <button type="button" class="btn-preview">Preview</button>
-                <button type="button" class="btn-feedback">Download</button>
-              </td>
-            </tr>
-            <tr>
-              <td>logo_explanation.pdf</td>
-              <td>July 5, 2025, 1:03 PM</td>
-              <td>LOGO WITH EXPLANATION</td>
-              <td class="text-center"><span class="badge-verified text-center">Verified</span></td>
-              <td class="d-flex gap-2">
-                <button type="button" class="btn-preview">Preview</button>
-                <button type="button" class="btn-feedback">Download</button>
-              </td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
+        {% else %}
+        <div class="text-center py-5">
+          <p class="text-muted">No files found for the selected academic year.</p>
+        </div>
+        {% endif %}
       </div>
     </div>
 </div>
+
+<!-- Preview Modal -->
+<div class="global-modal" id="previewModal" aria-labelledby="previewModalTitle" aria-modal="true" role="dialog">
+  <div id="previewModalContent" class="preview-modal-content">
+    <!-- Content will be dynamically inserted here -->
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/common/file-preview.js') }}"></script>
+<script>
+function previewFile(fileId, fileName) {
+  console.log('previewFile called with:', { fileId, fileName });
+  
+  // Check if FilePreview module is available
+  if (window.FilePreview) {
+    console.log('Using FilePreview module');
+    FilePreview.previewFile(fileId, fileName, function(fileId) {
+      return `/organization/get-application-file/${fileId}`;
+    });
+  } else {
+    console.log('FilePreview module not available, opening in new tab');
+    // Fallback: open in new tab
+    window.open(`/organization/get-application-file/${fileId}`, '_blank');
+  }
+}
+</script>
 {% endblock %}

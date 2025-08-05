@@ -403,10 +403,21 @@ function openStatusModal(appFileId, currentStatus, fileName, submissionDate) {
   const currentStatusEl = document.getElementById('status-current-status');
   
   if (fileIdInput) fileIdInput.value = appFileId;
-  if (statusSelect) statusSelect.value = currentStatus;
+  // Default to 'Verified' status instead of current status for better UX
+  if (statusSelect) statusSelect.value = 'Verified';
   if (fileNameEl) fileNameEl.textContent = fileName;
   if (submissionDateEl) submissionDateEl.textContent = submissionDate;
   if (currentStatusEl) currentStatusEl.textContent = currentStatus;
+  
+  // Hide feedback field since 'Verified' is selected by default
+  const feedbackField = document.getElementById('feedback-field');
+  if (feedbackField) {
+    feedbackField.style.display = 'none';
+    const feedbackTextarea = document.getElementById('status-feedback') || document.getElementById('feedback-message');
+    if (feedbackTextarea) {
+      feedbackTextarea.removeAttribute('required');
+    }
+  }
   
   statusModal.classList.add('show');
   document.body.classList.add('modal-open');

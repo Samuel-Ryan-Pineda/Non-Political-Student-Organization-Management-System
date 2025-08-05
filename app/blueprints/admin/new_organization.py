@@ -46,10 +46,32 @@ def check_and_update_application_status(application_id):
         elif application.status.lower() == 'pending' and all_files_uploaded and all_files_verified:
             application.status = 'Verified'
             
-            # Also update organization status from Incomplete to Active when application is verified
+            # Also update organization status and populate missing data when application is verified
             organization = Organization.query.get(application.organization_id)
             if organization and organization.status and organization.status.lower() == 'incomplete':
                 organization.status = 'Active'
+                
+                # Set activation date to current date
+                now = datetime.now()
+                organization.activation_date = now
+                
+                # Note: last_renewal_date should remain NULL for new organizations
+                # It will only be set when they actually renew their recognition
+                
+                # Set current academic year
+                current_year = now.year
+                # If we're in the second half of the year (July onwards), it's the next academic year
+                if now.month >= 7:
+                    academic_year = f"{current_year}-{current_year + 1}"
+                else:
+                    academic_year = f"{current_year - 1}-{current_year}"
+                organization.current_academic_year = academic_year
+                
+                # Set default tagline and description if they are None
+                if organization.tagline is None:
+                    organization.tagline = ""
+                if organization.description is None:
+                    organization.description = ""
             
             db.session.commit()
     except Exception as e:

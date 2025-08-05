@@ -14,6 +14,41 @@ mail = Mail()
 csrf = CSRFProtect()
 migrate = Migrate()
 
+# Global function for checking organization expiry
+def check_organization_expiry():
+    """Check and update organization statuses that have been active for over a year"""
+    from datetime import datetime, timedelta
+    from app.models import Organization
+    from flask import current_app
+    from sqlalchemy import or_, and_
+    
+    with current_app.app_context():
+        one_year_ago = datetime.now() - timedelta(days=365)
+        
+        # Find organizations that should be expired:
+        # 1. Organizations that have never been renewed (last_renewal_date is NULL) 
+        #    and activation_date is more than 1 year ago
+        # 2. Organizations that have been renewed but last_renewal_date is more than 1 year ago
+        expired_orgs = Organization.query.filter(
+            Organization.status == 'Active',
+            or_(
+                # Case 1: Never renewed, check activation_date only
+                and_(
+                    Organization.last_renewal_date.is_(None),
+                    Organization.activation_date <= one_year_ago
+                ),
+                # Case 2: Has been renewed, check last_renewal_date
+                and_(
+                    Organization.last_renewal_date.isnot(None),
+                    Organization.last_renewal_date <= one_year_ago
+                )
+            )
+        ).all()
+        
+        for org in expired_orgs:
+            org.status = 'Inactive'
+            db.session.commit()
+
 def create_app():
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
     
@@ -22,25 +57,9 @@ def create_app():
     
     # Import scheduler for organization status checks
     from apscheduler.schedulers.background import BackgroundScheduler
-    from datetime import datetime, timedelta
-    from app.models import Organization
     
     # Initialize scheduler
     scheduler = BackgroundScheduler()
-    
-    def check_organization_expiry():
-        """Check and update organization statuses that have been active for over a year"""
-        with app.app_context():
-            one_year_ago = datetime.now() - timedelta(days=365)
-            expired_orgs = Organization.query.filter(
-                Organization.status == 'Active',
-                Organization.activation_date <= one_year_ago,
-                Organization.last_renewal_date <= one_year_ago
-            ).all()
-            
-            for org in expired_orgs:
-                org.status = 'Inactive'
-                db.session.commit()
     
     # Schedule the job to run daily at midnight
     scheduler.add_job(check_organization_expiry, 'cron', hour=0, minute=0)
@@ -50,6 +69,12 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI", 'mysql+pymysql://root:@localhost/npsoms_db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.secret_key = os.getenv("SECRET_KEY", 'secret_key')
+    
+    # Session configuration for better persistence
+    app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
     
     # Mail configuration
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'

@@ -144,17 +144,23 @@ def user_has_organization(user_id):
     return org is not None
 
 
-def get_application_by_organization_id(organization_id):
+def get_application_by_organization_id(organization_id, application_type=None):
     """
-    Get application by organization ID
+    Get the latest application by organization ID, optionally filtered by type
     
     Args:
         organization_id (int): ID of the organization
+        application_type (str, optional): Type of application ('New' or 'Renewal')
         
     Returns:
-        Application: Application object or None
+        Application: Latest application object or None
     """
-    return Application.query.filter_by(organization_id=organization_id).first()
+    query = Application.query.filter_by(organization_id=organization_id)
+    
+    if application_type:
+        query = query.filter_by(type=application_type)
+    
+    return query.order_by(Application.submission_date.desc()).first()
 
 
 def get_logo_by_id(logo_id):
@@ -722,6 +728,12 @@ def get_available_academic_years(organization_id):
             Application.academic_year.isnot(None)
         ).distinct().all()
         
+        # Get academic years directly from applications
+        application_years = db.session.query(Application.academic_year).filter(
+            Application.organization_id == organization_id,
+            Application.academic_year.isnot(None)
+        ).distinct().all()
+        
         # Combine and deduplicate
         all_years = set()
         for year_tuple in affiliation_years:
@@ -729,6 +741,10 @@ def get_available_academic_years(organization_id):
                 all_years.add(year_tuple[0])
         
         for year_tuple in plan_years:
+            if year_tuple[0]:
+                all_years.add(year_tuple[0])
+        
+        for year_tuple in application_years:
             if year_tuple[0]:
                 all_years.add(year_tuple[0])
         
@@ -800,3 +816,32 @@ def get_plans_by_organization_id(organization_id, academic_year=None):
     except Exception as e:
         print(f"Error fetching plans: {str(e)}")
         return []
+
+def get_application_by_organization_and_academic_year(organization_id, academic_year, application_type=None):
+    """
+    Get application by organization ID and academic year
+    
+    Args:
+        organization_id (int): ID of the organization
+        academic_year (str): Academic year to filter by
+        application_type (str, optional): Type of application ('New' or 'Renewal')
+        
+    Returns:
+        Application: Application object or None
+    """
+    from app.models import Application
+    
+    try:
+        query = Application.query.filter_by(
+            organization_id=organization_id,
+            academic_year=academic_year
+        )
+        
+        if application_type:
+            query = query.filter_by(type=application_type)
+        
+        return query.order_by(Application.submission_date.desc()).first()
+        
+    except Exception as e:
+        print(f"Error getting application by academic year: {str(e)}")
+        return None

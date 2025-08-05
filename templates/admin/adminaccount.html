@@ -1,127 +1,593 @@
 {% extends 'admin/adminbase.html' %}
 
-{% block title %}My Account{% endblock %}
+{% block title %}Admin Account{% endblock %}
+
+{% block extra_js %}
+<script>
+        // Show/Hide functions for Name section
+        function showEditNameForm() {
+            document.getElementById('nameDisplay').style.display = 'none';
+            document.getElementById('nameEditForm').style.display = 'block';
+            document.getElementById('editNameBtn').style.display = 'none';
+            
+            // Populate form with current values from disabled fields
+            document.getElementById('firstname').value = document.getElementById('display-first-name').value;
+            document.getElementById('middlename').value = document.getElementById('display-middle-name').value;
+            document.getElementById('lastname').value = document.getElementById('display-last-name').value;
+        }
+
+        function cancelNameEdit() {
+            document.getElementById('nameDisplay').style.display = 'block';
+            document.getElementById('nameEditForm').style.display = 'none';
+            document.getElementById('editNameBtn').style.display = 'block';
+        }
+
+        // Show/Hide functions for Email section
+        function showEditEmailForm() {
+            document.getElementById('emailDisplay').style.display = 'none';
+            document.getElementById('emailEditForm').style.display = 'block';
+            document.getElementById('editEmailBtn').style.display = 'none';
+            
+            // Populate form with current value from disabled field
+            document.getElementById('email').value = document.getElementById('display-email').value;
+        }
+
+        function cancelEmailEdit() {
+            document.getElementById('emailDisplay').style.display = 'block';
+            document.getElementById('emailEditForm').style.display = 'none';
+            document.getElementById('editEmailBtn').style.display = 'block';
+        }
+
+        // Show/Hide functions for Password section
+        function showEditPasswordForm() {
+            document.getElementById('passwordDisplay').style.display = 'none';
+            document.getElementById('passwordEditForm').style.display = 'block';
+            document.getElementById('changePasswordBtn').style.display = 'none';
+        }
+
+        function cancelPasswordEdit() {
+            document.getElementById('passwordDisplay').style.display = 'block';
+            document.getElementById('passwordEditForm').style.display = 'none';
+            document.getElementById('changePasswordBtn').style.display = 'block';
+            
+            // Clear password fields for security
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+        }
+
+        // Initialize display values on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial display values for name fields using real admin data
+            document.getElementById('display-first-name').value = '{{ user.first_name }}';
+            document.getElementById('display-middle-name').value = '{{ user.middle_name or "" }}';
+            document.getElementById('display-last-name').value = '{{ user.last_name }}';
+            
+            // Set initial display values for email
+            document.getElementById('display-email').value = '{{ user.email }}';
+        });
+
+        // Form submission handlers
+        document.getElementById('name-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstname').value;
+            const middleName = document.getElementById('middlename').value;
+            const lastName = document.getElementById('lastname').value;
+            
+            // Basic validation
+            if (!firstName.trim() || !lastName.trim()) {
+                alert('First name and last name are required.');
+                return;
+            }
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            // Make AJAX request to update name
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            
+            fetch('/admin/update-name', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    first_name: firstName,
+                    middle_name: middleName,
+                    last_name: lastName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update display fields with server response
+                    document.getElementById('display-first-name').value = data.data.first_name;
+                    document.getElementById('display-middle-name').value = data.data.middle_name;
+                    document.getElementById('display-last-name').value = data.data.last_name;
+                    
+                    // Hide edit form and show display
+                    cancelNameEdit();
+                    
+                    // Show success message
+                    alert(data.message);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating your name.');
+            });
+        });
+
+        document.getElementById('email-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const currentPassword = document.getElementById('current-password-email').value;
+            const saveBtn = document.querySelector('#email-form .btn-save');
+            
+            // Basic validation
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email address!');
+                return;
+            }
+            
+            if (!currentPassword.trim()) {
+                alert('Current password is required for security.');
+                return;
+            }
+            
+            // Show loading state
+            saveBtn.disabled = true;
+            saveBtn.classList.add('loading');
+            const originalText = saveBtn.textContent;
+            saveBtn.innerHTML = '<span class="loading-spinner"></span>Sending...';
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            // Make AJAX request to update email
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            
+            fetch('/admin/update-email', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    email: email,
+                    current_password: currentPassword
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide edit form and show display
+                    cancelEmailEdit();
+                    
+                    // Show success message
+                    alert(data.message);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating your email.');
+            })
+            .finally(() => {
+                // Hide loading state
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('loading');
+                saveBtn.innerHTML = originalText;
+            });
+        });
+        
+
+
+        document.getElementById('password-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            // Basic validation
+            if (!currentPassword.trim()) {
+                alert('Current password is required.');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                alert('New password must be at least 8 characters long.');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match.');
+                return;
+            }
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            // Make AJAX request to update password
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            
+            fetch('/admin/update-password', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                    confirm_password: confirmPassword
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide edit form and show display
+                    cancelPasswordEdit();
+                    
+                    // Show success message
+                    alert(data.message);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating your password.');
+            });
+        });
+</script>
+{% endblock %}
 
 {% block head_css %}
 <style>
-    .card {
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-      border: none;
+    /* Account sections styling similar to modal design */
+    .account-section {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #e5e7eb;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease-in-out;
     }
-    .nav-tabs .nav-link {
-      color: #6c757d;
-      border: none;
-      padding: 1rem;
-      font-weight: 500;
+    
+    .account-section:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .nav-tabs .nav-link.active {
-      color: #0d6efd;
-      border-bottom: 2px solid #0d6efd;
-      background: none;
+    
+    .section-header {
+        margin-bottom: 1rem;
     }
-    .tab-content {
-      padding-top: 1.5rem;
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0f3a40;
+        margin: 0 0 1rem 0;
+    }
+    
+    .form-control {
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #0f3a40;
+        margin-bottom: 0.25rem;
+        text-align: left !important;
+        display: block !important;
+    }
+    
+    /* Override Bootstrap column alignment */
+    .col-md-4, .col-md-6, .mb-3 {
+        text-align: left !important;
+    }
+    
+    .col-md-4 .form-label,
+    .col-md-6 .form-label,
+    .mb-3 .form-label,
+    label.form-label {
+        text-align: left !important;
+        display: block !important;
+    }
+
+    /* Field container styling */
+    .field-container {
+        width: 100%;
+        position: relative;
+    }
+
+    /* Button styling (matching modal style) */
+    .btn-save,
+    .btn-cancel {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        margin-right: 0.25rem;
+    }
+
+    .btn-save {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-save:hover:not(:disabled) {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+
+    .btn-save:disabled {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+        cursor: not-allowed;
+    }
+
+    .btn-save.loading {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .btn-cancel:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+    }
+
+    .loading-spinner {
+        width: 12px;
+        height: 12px;
+        border: 2px solid transparent;
+        border-top: 2px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .verification-section {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .verification-section h4 {
+        color: #495057;
+        margin-bottom: 10px;
+    }
+    
+    .verification-section p {
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .container-account {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f3a40;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <header class="mb-4">
-        <h2 class="org-header text-start">My Account</h2>
-        <hr class="divider">
-    </header>
-    <main class="flex-grow-1 py-5">
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
-              <div class="card">
-                <div class="card-body p-4 p-md-5">
-                  <ul class="nav nav-tabs border-0 mb-3" id="accountTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                      <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab" aria-controls="personal" aria-selected="true">Personal Information</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                      <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">Change Password</button>
-                    </li>
-                  </ul>
-                  
-                  <div class="tab-content" id="accountTabsContent">
-                    <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
-                      <!-- Personal Information Section -->
-                  <h2 class="card-title mb-4 fs-4 fw-semibold">Personal Information</h2>
-                  <form id="info-form" novalidate>
-                    <div class="mb-4 text-start" style="font-size: 0.800rem;">
-                      <label for="email" class="form-label">Email address</label>
-                      <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" value="john.doe@example.com" required>
-                      <div class="invalid-feedback" id="email-error">
-                        Please enter a valid email address.
-                      </div>
-                    </div>
-                    
-                    <div class="row mb-4">
-                      <div class="col-md-4 mb-3 mb-md-0 text-start" style="font-size: 0.800rem;">
-                        <label for="firstname" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="firstname" name="firstname" placeholder="John" value="John" required>
-                        <div class="invalid-feedback" id="firstname-error">
-                          First name is required.
-                        </div>
-                      </div>
-                      <div class="col-md-4 mb-3 mb-md-0 text-start" style="font-size: 0.800rem;">
-                        <label for="middlename" class="form-label">Middle Name</label>
-                        <input type="text" class="form-control" id="middlename" name="middlename" placeholder="Michael" value="Michael">
-                      </div>
-                      <div class="col-md-4 text-start" style="font-size: 0.800rem;">
-                        <label for="lastname" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Doe" value="Doe" required>
-                        <div class="invalid-feedback" id="lastname-error">
-                          Last name is required.
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Update Personal Info</button>
-                  </form>
-                    </div>
-                    <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
-                      <!-- Change Password Section -->
-                      <h2 class="card-title mb-4 fs-4 fw-semibold">Change Password</h2>
-                  <form id="password-form" novalidate>
-                    <div class="mb-3 text-start" style="font-size: 0.800rem;">
-                      <label for="old-password" class="form-label">Current Password</label>
-                      <input type="password" class="form-control" id="old-password" name="old-password" placeholder="Enter current password" required>
-                      <div class="invalid-feedback" id="old-password-error">
-                        Current password is required.
-                      </div>
-                    </div>
-                    
-                    <div class="row mb-4">
-                      <div class="col-md-6 text-start" style="font-size: 0.800rem;">
-                        <label for="password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter new password">
-                        <div class="invalid-feedback" id="password-error">
-                          Password must be at least 8 characters.
-                        </div>
-                      </div>
-                      
-                      <div class="col-md-6 text-start" style="font-size: 0.800rem;">
-                        <label for="confirm-password" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirm-password" name="confirm-password" placeholder="Confirm new password">
-                        <div class="invalid-feedback" id="confirm-password-error">
-                          Passwords do not match.
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Update Password</button>
-                  </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div class="container-account">
+        <div class="page-header">
+            <h1 class="page-title">Admin Account</h1>
+            <p class="page-subtitle">Manage your administrative account information and settings</p>
         </div>
-      </main>
+        
+        <main>
+            <!-- Full Name Section -->
+            <section class="account-section">
+                <div class="section-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="section-title">Full Name</h2>
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditNameForm()" id="editNameBtn">
+                            Edit
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Display Mode -->
+                <div id="nameDisplay">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="display-first-name" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">First Name</label>
+                            <input type="text" class="form-control" id="display-first-name" disabled style="font-size: 0.75rem;">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="display-middle-name" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Middle Name</label>
+                            <input type="text" class="form-control" id="display-middle-name" disabled style="font-size: 0.75rem;">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="display-last-name" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Last Name</label>
+                            <input type="text" class="form-control" id="display-last-name" disabled style="font-size: 0.75rem;">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Mode -->
+                <div id="nameEditForm" style="display: none;">
+                    <form id="name-form" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="firstname" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstname" name="firstname" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="middlename" class="form-label">Middle Name</label>
+                                <input type="text" class="form-control" id="middlename" name="middlename">
+                                <div class="form-text" style="font-size: 0.7rem;">Optional</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="lastname" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="lastname" name="lastname" required>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-cancel" onclick="cancelNameEdit()">Cancel</button>
+                            <button type="submit" class="btn btn-save">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            
+            <!-- Email Section -->
+            <section class="account-section">
+                <div class="section-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="section-title">Email</h2>
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditEmailForm()" id="editEmailBtn">
+                            Edit
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Display Mode -->
+                <div id="emailDisplay">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="display-email" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Email Address</label>
+                            <input type="email" class="form-control" id="display-email" disabled style="font-size: 0.75rem;">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Mode -->
+                <div id="emailEditForm" style="display: none;">
+                    <form id="email-form" novalidate>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">New Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" autocomplete="email" required>
+                            <div class="invalid-feedback">Please enter a valid email address.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="current-password-email" class="form-label">Current Password (Required for Security)</label>
+                            <input type="password" class="form-control" id="current-password-email" name="current_password" required placeholder="Enter your current password" autocomplete="current-password">
+                            <div class="invalid-feedback">Current password is required.</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-cancel" onclick="cancelEmailEdit()">Cancel</button>
+                            <button type="submit" class="btn btn-save">Send Verification Link</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            
+            <!-- Password Section -->
+            <section class="account-section">
+                <div class="section-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="section-title">Password</h2>
+                        <button type="button" class="text-primary" style="font-size: 0.75rem; background: none; border: none; padding: 0.25rem 0.5rem;" onclick="showEditPasswordForm()" id="changePasswordBtn">
+                            Change Password
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Display Mode -->
+                <div id="passwordDisplay">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="display-password" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Password</label>
+                            <div class="form-control" style="font-size: 0.75rem; background-color: #f8f9fa; border: 1px solid #dee2e6;">••••••••</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Mode -->
+                <div id="passwordEditForm" style="display: none;">
+                    <form id="password-form" novalidate>
+                        <!-- Hidden username field for accessibility -->
+                        <input type="text" name="username" value="admin@example.com" autocomplete="username" style="display: none;" readonly>
+                        
+                        <div class="mb-3">
+                            <label for="current-password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current-password" name="current-password" placeholder="Enter current password" autocomplete="current-password" required>
+                            <div class="invalid-feedback">Current password is required.</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="new-password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new-password" name="new-password" placeholder="Enter new password" autocomplete="new-password" required>
+                                <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirm-password" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm-password" name="confirm-password" placeholder="Confirm new password" autocomplete="new-password" required>
+                                <div class="invalid-feedback">Passwords do not match.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-cancel" onclick="cancelPasswordEdit()">Cancel</button>
+                            <button type="submit" class="btn btn-save">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
 </div>
 {% endblock %}

@@ -6,25 +6,24 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/member.css') }}?v={{ cache_version }}">
 {% endblock %}
 
-{% block content %}
-<div class="container">
-  <h2 class="org-header">Organizations</h2>
-  <hr class="divider">
-
-  <main class="d-flex flex-column align-items-center">
-    <h1 class="text-center mt-4">
+{% block additional_content %}
+<!-- Header Block -->
+<div class="header-block">
+  <div class="header-content">
+    <h1 class="header-title">
       Access Student Information and Memberships
     </h1>
-    <p class="text-center fs-5 mt-2 mb-4">
+    <p class="header-subtitle">
       Search for students to view their organization memberships and roles.
     </p>
-
-    <form class="mb-5 w-100 d-flex justify-content-center" role="search" aria-label="Search students">
+    <form class="search-form" role="search" aria-label="Search students" method="GET">
       <div class="search-wrapper">
         <input
           type="search"
           class="search-input"
-          placeholder="Search a student..."
+          name="search"
+          value="{{ request.args.get('search', '') }}"
+          placeholder="Search by student number, name, or program..."
           aria-label="Search a student"
         />
         <button type="submit" class="search-btn" aria-label="Search">
@@ -32,132 +31,161 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <main>
 
     <section class="table-container" aria-label="Student Memberships Table">
-      <table class="table mb-0">
-        <thead>
-          <tr>
-            <th scope="col">Student Number</th>
-            <th scope="col">Name</th>
-            <th scope="col">Program</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set students = [
-            {'id': 'SUM2022-00001', 'name': 'Maria Dela Cruz Sanchez', 'program': 'BSIT'},
-            {'id': 'SUM2022-00890', 'name': 'Mariana Yu Chen', 'program': 'BSIT'},
-            {'id': 'SUM2022-00392', 'name': 'Maria Santos Khan', 'program': 'BSIT'},
-            {'id': 'SUM2022-01030', 'name': 'Mario Jimenes Cruz', 'program': 'BSIT'},
-            {'id': 'SUM2022-03922', 'name': 'Marinell Calibuso Chan', 'program': 'BSIT'}
-          ] %}
-          
-          {% for student in students %}
-          <tr>
-            <td>{{ student.id }}</td>
-            <td>{{ student.name }}</td>
-            <td>{{ student.program }}</td>
-            <td>
-              <button type="button" class="btn btn-primary" onclick="openStudentModal('{{ student.id }}', '{{ student.name }}', '{{ student.program }}')">View Information</button>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      {% if students %}
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th scope="col">Student Number</th>
+              <th scope="col">Name</th>
+              <th scope="col">Program</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td>{{ student.student_number }}</td>
+              <td>{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }} {% endif %}{{ student.last_name }}</td>
+              <td>{{ student.program.program_code }}</td>
+              <td>
+                <button type="button" class="btn btn-primary" onclick="openStudentModal('{{ student.student_number }}', '{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }} {% endif %}{{ student.last_name }}', '{{ student.program.program_code }}', {{ student.student_id }})">View Information</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% elif request.args.get('search') %}
+        <div class="text-center py-5">
+          <i class="fas fa-search fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">No students found</h4>
+          <p class="text-muted">Try searching with different keywords</p>
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-users fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">Search for students</h4>
+          <p class="text-muted">Enter a student number, name, or program to get started</p>
+        </div>
+      {% endif %}
     </section>
   </main>
-</div>
+</div><!-- End of container-fluid -->
 
 <!-- Student Information Modal -->
 <div id="studentInfoModal" class="global-modal" aria-labelledby="studentInfoModalTitle" aria-modal="true" role="dialog">
   <div class="modal-container">
-    <button type="button" class="btn-back" onclick="closeStudentModal()" aria-label="Close">
-      <i class="fas fa-arrow-left"></i> Back
-    </button>
+    <!-- Modal Header -->
+    <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+      <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;">Student Information</h4>
+      <button class="btn-back" onclick="closeStudentModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <!-- Student Basic Information Section -->
+    <div class="form-info mb-4" style="background: #F0F0F0; border-radius: 1rem; padding: 1rem;">
+      <p style="font-size: 0.75rem; margin-bottom: 0.5rem;"><strong>Student Number:</strong> <span id="studentId">-</span></p>
+      <p style="font-size: 0.75rem; margin-bottom: 0.5rem;"><strong>Student Name:</strong> <span id="studentName">-</span></p>
+      <p style="font-size: 0.75rem; margin-bottom: 0;"><strong>Program:</strong> <span id="studentProgram">-</span></p>
+    </div>
 
-    <section class="modal-section mb-4">
-      <h2 id="studentInfoModalTitle">STUDENT INFORMATION</h2>
-      <p class="mb-1">
-        <strong>Student:</strong> <span id="studentName">Maria Dela Cruz Sanchez</span>
-      </p>
-      <p class="mb-1">
-        <strong>Student Number:</strong> <span id="studentId">SUM2022-00001</span>
-      </p>
-      <p>
-        <strong>Program:</strong> <span id="studentProgram">BSIT – Bachelor of Science in Information Technology</span>
-      </p>
-      <hr />
-    </section>
-
-    <section class="modal-section">
-      <h3>ORGANIZATION AFFILIATIONS</h3>
+    <!-- Organization Affiliations Section -->
+    <div class="form-info">
+      <h6 class="fw-semibold mb-3" style="font-size: 0.75rem;">Organization Affiliations</h6>
       <div class="table-responsive">
-        <table class="table modal-table mb-0">
-          <thead>
+        <table class="table table-sm" style="font-size: 0.75rem;">
+          <thead class="table-light">
             <tr>
-              <th scope="col">Organization</th>
-              <th scope="col">Position</th>
-              <th scope="col">Date Joined</th>
-              <th scope="col">Status</th>
+              <th scope="col" class="fw-semibold" style="white-space: nowrap;">Organization</th>
+              <th scope="col" class="fw-semibold" style="white-space: nowrap;">Position</th>
+              <th scope="col" class="fw-semibold" style="white-space: nowrap;">Academic Year</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="studentAffiliations">
             <tr>
-              <td>
-                Technological Advancement and Innovation Society of Future Engineers
-              </td>
-              <td>Member</td>
-              <td>March 12, 2023</td>
-              <td class="status-active" style="color: #7ed321;">Active</td>
-            </tr>
-            <tr>
-              <td>
-                Environmental Sustainability and Conservation Advocates of the University
-              </td>
-              <td>Vice President</td>
-              <td>August 27, 2022</td>
-              <td class="status-active" style="color: #7ed321;">Active</td>
-            </tr>
-            <tr>
-              <td>
-                Creative Arts and Multicultural Expression Circle of Student Visionaries
-              </td>
-              <td>Member</td>
-              <td>March 12, 2023</td>
-              <td class="status-active" style="color: #7ed321;">Active</td>
-            </tr>
-            <tr>
-              <td>
-                Scholarly Forum for Logical Reasoning, Public Discourse, and Debate Excellence
-              </td>
-              <td>Volunteer</td>
-              <td>January 5, 2024</td>
-              <td class="status-inactive" style="color: #ff0000;">Inactive</td>
+              <td colspan="3" class="text-center">Loading affiliations...</td>
             </tr>
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
   </div>
 </div>
 
 <script>
   // Function to open the student modal with specific student data
-  function openStudentModal(studentId, studentName, studentProgram) {
+  function openStudentModal(studentNumber, studentName, studentProgram, studentId) {
     // Update the modal contents with student information
     document.getElementById('studentName').textContent = studentName;
-    document.getElementById('studentId').textContent = studentId;
+    document.getElementById('studentId').textContent = studentNumber;
+    document.getElementById('studentProgram').textContent = studentProgram;
     
-    // Add "- Bachelor of Science in Information Technology" to the program if it's just an abbreviation
-    if (studentProgram === 'BSIT') {
-      document.getElementById('studentProgram').textContent = `${studentProgram} – Bachelor of Science in Information Technology`;
-    } else {
-      document.getElementById('studentProgram').textContent = studentProgram;
-    }
+    // Clear existing affiliations
+    const tbody = document.getElementById('studentAffiliations');
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
     
     // Show the modal
     document.getElementById('studentInfoModal').classList.add('show');
     document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    
+    // Fetch student affiliations
+    fetch(`/admin/student-affiliations/${studentId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          tbody.innerHTML = '';
+          if (data.affiliations && data.affiliations.length > 0) {
+            // Group affiliations by organization
+            const groupedAffiliations = {};
+            data.affiliations.forEach(affiliation => {
+              if (!groupedAffiliations[affiliation.organization_name]) {
+                groupedAffiliations[affiliation.organization_name] = [];
+              }
+              groupedAffiliations[affiliation.organization_name].push(affiliation);
+            });
+
+            // Create rows with rowspan for organizations
+            Object.keys(groupedAffiliations).forEach(orgName => {
+              const affiliations = groupedAffiliations[orgName];
+              affiliations.forEach((affiliation, index) => {
+                const row = document.createElement('tr');
+                if (index === 0) {
+                  // First row for this organization - include organization name with rowspan
+                  row.innerHTML = `
+                    <td rowspan="${affiliations.length}">${orgName}</td>
+                    <td>${affiliation.position}</td>
+                    <td>${affiliation.academic_year}</td>
+                  `;
+                } else {
+                  // Subsequent rows - only position and academic year
+                  row.innerHTML = `
+                    <td>${affiliation.position}</td>
+                    <td>${affiliation.academic_year}</td>
+                  `;
+                }
+                tbody.appendChild(row);
+              });
+            });
+          } else {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted small">No organization affiliations found</td></tr>';
+          }
+        } else {
+              tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No organization affiliations found</td></tr>';
+            }
+          })
+          .catch(error => {
+            console.error('Error loading student affiliations:', error);
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error loading affiliations</td></tr>';
+          });
   }
 
   // Function to close the student modal

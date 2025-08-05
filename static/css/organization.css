@@ -2,7 +2,7 @@
 /* Search and Categories Block Styles */
   .search-categories-block {
     background-color: #13454f;
-    padding: 3rem 6rem;
+    padding: 3rem 15rem 2rem;
     border-radius: 0 0 5rem 5rem;
     font-size: 0.75rem;
   }
@@ -16,7 +16,7 @@
     padding: 0.75rem 1.25rem;
     border: none;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    font-size: 0.75rem;
+    font-size: 0.875rem;
   }
 
   .category-pills {

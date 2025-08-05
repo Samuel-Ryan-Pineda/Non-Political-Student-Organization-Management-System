@@ -113,6 +113,7 @@ window.DOMUtils = window.DOMUtils || (function() {
     
     document.body.appendChild(loadingModal);
     loadingModal.classList.add('show');
+    document.body.classList.add('modal-open'); // Add this line
   }
 
   // Helper function to hide the loading modal
@@ -120,6 +121,7 @@ window.DOMUtils = window.DOMUtils || (function() {
     const loadingModal = document.getElementById('loadingModal');
     if (loadingModal) {
       loadingModal.classList.remove('show');
+      document.body.classList.remove('modal-open'); // Add this line
       setTimeout(() => {
         const modalElement = document.getElementById('loadingModal');
         if (modalElement) {

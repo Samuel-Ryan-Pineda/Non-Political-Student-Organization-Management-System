@@ -6,10 +6,12 @@
 
 function showAddPlanModal() {
     document.getElementById('addPlanModal').style.display = 'flex';
+    document.body.classList.add('modal-open'); // Add this line
 }
 
 function hideAddPlanModal() {
     document.getElementById('addPlanModal').style.display = 'none';
+    document.body.classList.remove('modal-open'); // Add this line
 }
 
 // Note: formatDateForInput is now defined in editplanmodal.html
@@ -20,6 +22,8 @@ function showSocialMediaModal() {
     if (socialMediaModal) {
         socialMediaModal.classList.add('show');
     }
+    
+    document.body.classList.add('modal-open'); // Add this line
 }
 
 // Adviser Modal Functions

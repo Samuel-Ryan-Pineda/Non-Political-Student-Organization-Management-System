@@ -86,15 +86,20 @@
     background-color: rgba(0, 0, 0, 0.5);
     display: none;
     justify-content: center;
-    align-items: flex-start; /* Keep this */
+    align-items: flex-start;
     z-index: 1050;
-    overflow-y: auto;
+    overflow-y: auto; /* Allow scrolling in the modal overlay */
     padding: 20px;
     font-size: 0.75rem;
 }
   
   .global-modal.show {
     display: flex;
+  }
+
+  .modal-header {
+    padding: 0 0 1rem 0;
+    border-bottom: 1px solid #cacaca;
   }
   
   .modal-container {
@@ -109,14 +114,12 @@
     min-height: 200px;
     overflow-y: auto; /* Enable vertical scrolling */
     text-align: left;
-    margin-top: 1vh; /* Add some margin from the top */
+    margin: 20px auto; /* Center the modal with proper margins */
   }
 
   /* Body lock CSS */
   body.modal-open {
       overflow: hidden;
-      position: fixed;
-      width: 100%;
   }
   
   .btn-back {
@@ -459,7 +462,7 @@
   color: var(--btn-preview-color);
   border: 1px solid var(--btn-preview-color);
   background-color: transparent;
-  font-size: 0.8em;
+  font-size: 0.75rem;
 }
 
 .btn-preview:hover {
@@ -651,10 +654,4 @@
 
 .notification-info i {
   color: var(--button-color);
-}
-
-/* Remove top, left, and right padding from modal headers and remove background color */
-.modal-header.d-flex {
-  padding: 0 0 1rem 0 !important;
-  background-color: transparent !important;
 }

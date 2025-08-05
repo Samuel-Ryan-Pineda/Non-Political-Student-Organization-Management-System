@@ -3,6 +3,8 @@ function showAdviserInfoModal() {
     if (adviserInfoModal) {
         adviserInfoModal.classList.add('show');
     }
+    
+    document.body.classList.add('modal-open'); // Add this line
 }
 
 function hideAdviserInfoModal() {
@@ -10,6 +12,8 @@ function hideAdviserInfoModal() {
     if (adviserInfoModal) {
         adviserInfoModal.classList.remove('show');
     }
+    
+    document.body.classList.remove('modal-open'); // Add this line
     
     // Reset any active edit forms
     if (document.getElementById('edit-adviser-name')?.style.display !== 'none') {

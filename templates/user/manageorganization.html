@@ -250,6 +250,42 @@
 
 {% block content %}
 <div class="container">
+    <!-- Academic Year Selector -->
+    <section class="academic-year-section" style="margin-bottom: 1rem;">
+        <div class="d-flex justify-content-end align-items-center gap-3" style="padding: 0.5rem 0;">
+            <label for="academicYearSelect" class="form-label mb-0" style="font-size: 0.875rem;">View data for:</label>
+            <select class="form-select" id="academicYearSelect" onchange="changeAcademicYear()" style="width: auto; font-size: 0.875rem;">
+                {% for year in available_years %}
+                <option value="{{ year }}" {% if year == selected_academic_year %}selected{% endif %}>
+                    {{ year }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </section>
+
+    {% if is_current_year and organization.status|lower == 'active' %}
+    <section class="import-section">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-12 col-sm-3">
+                        <h4 class="mb-0">Data Import</h4>
+                    </div>
+                    <div class="col-12 col-sm-6 my-2 my-sm-0">
+                        <p class="mb-0">Quickly upload officers, members, and volunteers in bulk using Excel import.</p>
+                    </div>
+                    <div class="col-12 col-sm-3 text-sm-end text-start">
+                        <button type="button" class="btn btn-success" style="background-color: #28a745; font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showExcelUploadModal()">
+                            Import Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <section class="stats-container">
         <div class="stat-card stat-members">
             <div>No. of Members</div>
@@ -275,42 +311,8 @@
         <div class="stat-card stat-status">
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 Organization Status
-                <span class="status-active">{{ statistics.organization_status }}</span>
+                <span class="{% if statistics.organization_status|lower == 'active' %}status-active{% else %}status-inactive{% endif %}">{{ statistics.organization_status }}</span>
             </div>
-        </div>
-    </section>
-
-    <section class="import-section">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-12 col-sm-3">
-                        <h4 class="mb-0">Data Import</h4>
-                    </div>
-                    <div class="col-12 col-sm-6 my-2 my-sm-0">
-                        <p class="mb-0">Quickly upload officers, members, and volunteers in bulk using Excel import.</p>
-                    </div>
-                    <div class="col-12 col-sm-3 text-sm-end text-start">
-                        <button type="button" class="btn btn-success" style="background-color: #28a745; font-size: 0.75rem; padding: 0.25rem 0.5rem;" onclick="showExcelUploadModal()">
-                            Import Excel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Academic Year Selector -->
-    <section class="academic-year-section" style="margin-bottom: 1rem;">
-        <div class="d-flex justify-content-end align-items-center gap-3" style="padding: 0.5rem 0;">
-            <label for="academicYearSelect" class="form-label mb-0" style="font-size: 0.875rem;">View data for:</label>
-            <select class="form-select" id="academicYearSelect" onchange="changeAcademicYear()" style="width: auto; font-size: 0.875rem;">
-                {% for year in available_years %}
-                <option value="{{ year }}" {% if year == selected_academic_year %}selected{% endif %}>
-                    {{ year }}
-                </option>
-                {% endfor %}
-            </select>
         </div>
     </section>
 
@@ -347,11 +349,13 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width:15%;">Position</th>
-                                    <th style="width:15%;">Student Number</th>
-                                    <th style="width:30%;">Name</th>
-                                    <th style="width:25%;">Program</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}15{% else %}20{% endif %}%;">Position</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}15{% else %}20{% endif %}%;">Student Number</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}30{% else %}35{% endif %}%;">Name</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}25{% else %}25{% endif %}%;">Program</th>
+                                    {% if is_current_year and organization.status|lower == 'active' %}
                                     <th style="width:15%;">Action</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -362,16 +366,18 @@
                                     <td>{{ officer.student_no }}</td>
                                     <td>{{ officer.name }}</td>
                                     <td>{{ officer.program }}</td>
+                                    {% if is_current_year and organization.status|lower == 'active' %}
                                     <td>
                                         <button type="button" class="btn btn-primary btn-sm" onclick="showEditOfficerModal('{{ officer.affiliation_id }}', '{{ officer.student_id }}', '{{ officer.position }}', '{{ officer.student_no }}', '{{ officer.program }}')">
                                             <i class="fas fa-edit"></i> Update
                                         </button>
                                     </td>
+                                    {% endif %}
                                 </tr>
                                 {% endfor %}
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-3">No officers added yet. Use the Excel upload feature to import officers.</td>
+                                    <td colspan="{% if is_current_year and organization.status|lower == 'active' %}5{% else %}4{% endif %}" class="text-center py-3">No officers added yet.{% if is_current_year and organization.status|lower == 'active' %} Use the Excel upload feature to import officers.{% endif %}</td>
                                 </tr>
                                 {% endif %}
                             </tbody>
@@ -388,10 +394,12 @@
                             <thead>
                                 <tr>
                                     <th style="width:8%;">No.</th>
-                                    <th style="width:20%;">Student Number</th>
-                                    <th style="width:37%;">Name</th>
-                                    <th style="width:20%;">Program</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}20{% else %}25{% endif %}%;">Student Number</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}37{% else %}42{% endif %}%;">Name</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}20{% else %}25{% endif %}%;">Program</th>
+                                    {% if is_current_year and organization.status|lower == 'active' %}
                                     <th style="width:15%;">Action</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -402,16 +410,18 @@
                                         <td>{{ member.student_no }}</td>
                                         <td>{{ member.name }}</td>
                                         <td>{{ member.program }}</td>
+                                        {% if is_current_year and organization.status|lower == 'active' %}
                                         <td>
                                             <button type="button" class="btn btn-primary btn-sm" onclick="showEditMemberModal('{{ member.affiliation_id }}', '{{ member.student_id }}', '{{ member.student_no }}', '{{ member.name }}', '{{ member.program }}')">
                                                 <i class="fas fa-edit"></i> Update
                                             </button>
                                         </td>
+                                        {% endif %}
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="text-center py-3">No members added yet. Use the Excel upload feature to import members.</td>
+                                        <td colspan="{% if is_current_year and organization.status|lower == 'active' %}5{% else %}4{% endif %}" class="text-center py-3">No members added yet.{% if is_current_year and organization.status|lower == 'active' %} Use the Excel upload feature to import members.{% endif %}</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
@@ -428,10 +438,12 @@
                             <thead>
                                 <tr>
                                     <th style="width:8%;">No.</th>
-                                    <th style="width:20%;">Student Number</th>
-                                    <th style="width:37%;">Name</th>
-                                    <th style="width:20%;">Program</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}20{% else %}25{% endif %}%;">Student Number</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}37{% else %}42{% endif %}%;">Name</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}20{% else %}25{% endif %}%;">Program</th>
+                                    {% if is_current_year and organization.status|lower == 'active' %}
                                     <th style="width:15%;">Action</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -442,16 +454,18 @@
                                         <td>{{ volunteer.student_no }}</td>
                                         <td>{{ volunteer.name }}</td>
                                         <td>{{ volunteer.program }}</td>
+                                        {% if is_current_year and organization.status|lower == 'active' %}
                                         <td>
                                             <button type="button" class="btn btn-primary btn-sm" onclick="showEditVolunteerModal('{{ volunteer.affiliation_id }}', '{{ volunteer.student_id }}', '{{ volunteer.student_no }}', '{{ volunteer.name }}', '{{ volunteer.program }}')">
                                                 <i class="fas fa-edit"></i> Update
                                             </button>
                                         </td>
+                                        {% endif %}
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="text-center py-3">No volunteers added yet. Use the Excel upload feature to import volunteers.</td>
+                                        <td colspan="{% if is_current_year and organization.status|lower == 'active' %}5{% else %}4{% endif %}" class="text-center py-3">No volunteers added yet.{% if is_current_year and organization.status|lower == 'active' %} Use the Excel upload feature to import volunteers.{% endif %}</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
@@ -468,14 +482,16 @@
                             <thead>
                                 <tr>
                                     <th style="width:4%;">No.</th>
-                                    <th style="width:18%;">Programs/Projects/Activities</th>
-                                    <th style="width:23%;">Objectives</th>
-                                    <th style="width:10%;">Proposed Date</th>
-                                    <th style="width:13%;">People Involved</th>
-                                    <th style="width:10%;">Source of Funds</th>
-                                    <th style="width:10%;">Target Output</th>
-                                    <th style="width:7%;">Status</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}18{% else %}19{% endif %}%;">Programs/Projects/Activities</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}23{% else %}24{% endif %}%;">Objectives</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}10{% else %}11{% endif %}%;">Proposed Date</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}13{% else %}14{% endif %}%;">People Involved</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}10{% else %}11{% endif %}%;">Source of Funds</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}10{% else %}11{% endif %}%;">Target Output</th>
+                                    <th style="width:{% if is_current_year and organization.status|lower == 'active' %}7{% else %}10{% endif %}%;">Status</th>
+                                    {% if is_current_year and organization.status|lower == 'active' %}
                                     <th style="width:5%;">Action</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -492,26 +508,32 @@
                                         <td class="outcome-{% if plan.outcome == 'Accomplished' %}accomplished{% elif plan.outcome == 'Failed to Accomplish' %}failed{% else %}pending{% endif %}">
                             {{ plan.outcome or 'Pending' }}
                         </td>
+                        {% if is_current_year %}
                         <td>
+                            {% if organization.status|lower == 'active' %}
                             <button type="button" class="btn btn-primary btn-sm" onclick="showEditPlanModal('{{ plan.plan_id }}', '{{ plan.title }}', '{{ plan.objectives }}', '{{ plan.proposed_date }}', '{{ plan.people_involved }}', '{{ plan.funding_source }}', '{{ plan.target_output }}', '{{ plan.outcome or "Pending" }}')">
                                 <i class="fas fa-edit"></i> Update
                             </button>
+                            {% endif %}
                         </td>
+                        {% endif %}
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="9" class="text-center py-3">No plans added yet. Click the "Add Plan" button to add organization plans.</td>
+                                        <td colspan="{% if is_current_year and organization.status|lower == 'active' %}8{% else %}7{% endif %}" class="text-center py-3">No plans added yet.{% if is_current_year and organization.status|lower == 'active' %} Click the 'Add Plan' button to add organization plans.{% endif %}</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
                         </table>
                     </div>
+                    {% if is_current_year and organization.status|lower == 'active' %}
                     <div class="d-flex justify-content-end mb-2 mt-3">
                         <button type="button" class="btn btn-primary" style="background-color: #0D3B44;" onclick="showAddPlanModal()">
                             <i class="fas fa-plus"></i> Add Plan
                         </button>
                     </div>
+                    {% endif %}
                 </section>
             </div>
         </div>

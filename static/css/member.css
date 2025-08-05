@@ -10,13 +10,46 @@
 
   h1 {
     font-weight: 800;
-    font-size: 2rem;
+    font-size: 1.5rem;
     line-height: 1.2;
     color: var(--primary-color);
   }
 
   p {
     color: var(--primary-color);
+    font-size: 0.9rem;
+  }
+
+  /* Header Block Styles */
+  .header-block {
+    background-color: #13454f;
+    padding: 3rem 6rem 2rem 6rem;
+    border-radius: 0 0 5rem 5rem;
+  }
+
+  .header-content {
+    text-align: center;
+  }
+
+  .header-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+  }
+
+  .header-subtitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+  }
+
+  .search-form {
+    display: flex;
+    justify-content: center;
+    width: 100%;
   }
 
   /* Search component styles */
@@ -28,11 +61,12 @@
 
   .search-input {
     border-radius: 50px;
-    border: 1.5px solid var(--primary-color);
+    border: none;
     padding: 0.75rem 3.5rem 0.75rem 1.25rem;
     color: #6b7280;
     width: 100%;
-    font-size: 1rem;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   .search-btn {
@@ -59,22 +93,31 @@
     background: var(--white);
     border-radius: 1rem;
     padding: 1.5rem;
-    margin-top: 1rem;
+    margin: 1rem auto 0 auto;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     max-width: 900px;
     width: 100%;
   }
 
+  /* Center content within table container */
+  .table-container .text-center {
+    text-align: center !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* Smaller font size for table */
   .table {
-    font-size: 0.800rem;
+    font-size: 0.75rem;
   }
 
   .table th {
     background-color: var(--primary-color);
     color: var(--white);
     font-weight: 600;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
   }
 
   .table th, 
@@ -82,6 +125,22 @@
     vertical-align: middle;
     padding: 0.625rem 0.75rem;
     border: none;
+  }
+
+  /* Left align first three columns (Student Number, Name, Program) */
+  .table th:nth-child(1),
+  .table th:nth-child(2),
+  .table th:nth-child(3),
+  .table td:nth-child(1),
+  .table td:nth-child(2),
+  .table td:nth-child(3) {
+    text-align: left;
+  }
+
+  /* Center align Action column */
+  .table th:nth-child(4),
+  .table td:nth-child(4) {
+    text-align: center;
   }
 
   .table tbody tr {
@@ -101,7 +160,7 @@
     background-color: #2f5963;
     color: #fff;
     font-weight: 600;
-    font-size: 0.800rem;
+    font-size: 0.75rem;
     text-align: left;
   }
 
@@ -113,7 +172,7 @@
 
   .modal-table tbody td {
     color: #2f5963;
-    font-size: 0.800rem;
+    font-size: 0.75rem;
     padding-top: 1rem;
     padding-bottom: 1rem;
     vertical-align: top;
@@ -130,9 +189,40 @@
   }
 
   /* Responsive styles */
+  @media (max-width: 768px) {
+    .header-block {
+      padding: 2rem 2rem 1.5rem 2rem;
+      border-radius: 0 0 3rem 3rem;
+    }
+
+    .header-title {
+      font-size: 1.25rem;
+    }
+
+    .header-subtitle {
+      font-size: 0.8rem;
+    }
+  }
+
   @media (max-width: 576px) {
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
+    }
+
+    .header-block {
+      padding: 1.5rem 1rem 1rem 1rem;
+      border-radius: 0 0 2rem 2rem;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      line-height: 1.2;
+    }
+
+    .header-subtitle {
+      font-size: 0.75rem;
+      margin-bottom: 1.25rem;
+      line-height: 1.3;
     }
     
     .table-container {
@@ -140,15 +230,15 @@
     }
     
     .table {
-      font-size: 0.8125rem;
+      font-size: 0.7rem;
     }
     
     .table th {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
 
     .modal-table thead th,
     .modal-table tbody td {
-      font-size: 0.800rem;
+      font-size: 0.7rem;
     }
   }

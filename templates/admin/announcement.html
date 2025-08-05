@@ -3,47 +3,90 @@
 {% block title %}Student Organization Announcement{% endblock %}
 
 {% block head_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/announcement.css') }}?v={{ cache_version }}">
+{% endblock %}
+
+{% block additional_content %}
+<!-- Header Block -->
+<div class="header-block">
+  <div class="header-content">
+    <h1 class="header-title">
+      Student Organization Announcement
+    </h1>
+    <p class="header-subtitle">
+      Create and send announcements to student organizations
+    </p>
+  </div>
+</div>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-  <h2 class="org-header">Send Announcement</h2>
-  <hr class="divider">
-  <main class="d-flex flex-column align-items-center">
-    <h1 class="text-center mt-4">
-      Student Organization Announcement
-    </h1>
-    <p class="text-center fs-5 mt-2 mb-4">
-      Create and send announcements to student organizations
-    </p>
-  </main>
 
-  <div class="container container-custom py-4">
+  <div class="container container-custom">
     <div class="d-flex mb-0">
       <button type="button" id="tab-create" class="tab-btn create-announcement active">Create Announcement</button>
       <button type="button" id="tab-history" class="tab-btn sent-history">Sent History</button>
     </div>
     
     <!-- Create Announcement Tab Content -->
-    <div class="card-custom" id="create-content">
-      <form id="announcement-form">
+    <div class="email-container" id="create-content">
+      <form id="announcement-form" class="px-3 pt-3 pb-4">
+        <!-- Organization Selection -->
         <div class="mb-3">
-          <label for="subject" class="form-label text-start d-block">Subject</label>
-          <input type="text" id="subject" class="form-control" />
+          <label for="organizations" class="form-label" style="font-size: 0.75rem;">Send to Organizations:</label>
+          <select id="organizations" class="organization-select" multiple>
+            <option value="all">All Organizations</option>
+            {% if organizations %}
+              {% for org in organizations %}
+                <option value="{{ org.organization_id }}">{{ org.organization_name }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+          <div class="mt-2">
+            <button type="button" id="view-recipients-btn" class="btn-view-recipients hidden" onclick="openRecipientsModal()">
+              View Recipients List
+            </button>
+            <p class="instruction-text mb-0 text-end" style="font-size: 0.65rem; color: #6b7280;">Hold Ctrl and click to select multiple organizations</p>
+          </div>
         </div>
+        
+        <!-- Subject Field -->
         <div class="mb-3">
-          <label for="message" class="form-label text-start d-block">Message Content</label>
-          <textarea id="message" rows="8" class="form-control"></textarea>
+          <label for="subject" class="form-label">Subject:</label>
+          <input type="text" id="subject" class="subject-input" placeholder="Enter subject" />
         </div>
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary">Send Announcement</button>
+        
+        <!-- Message Field -->
+        <div class="mb-3">
+          <label for="message" class="form-label">Message:</label>
+          <textarea id="message" class="email-body" placeholder="Enter your announcement message..." rows="6"></textarea>
+        </div>
+        <div class="toolbar">
+          <button type="button" aria-label="Attach file"><i class="fas fa-paperclip"></i></button>
+          <button type="button" aria-label="Bold"><b>B</b></button>
+          <button type="button" aria-label="Italic"><i>I</i></button>
+          <button type="button" aria-label="Insert link"><i class="fas fa-link"></i></button>
+          <button type="button" aria-label="Font size" class="font-size-btn d-flex align-items-center">
+            <span class="fw-semibold fs-7">T</span>
+            <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <button type="button" aria-label="Numbered list" class="d-flex align-items-center fw-semibold fs-7">
+            <span>1</span><span class="ms-1">.</span>
+          </button>
+          <button type="button" aria-label="More options"><i class="fas fa-ellipsis-h"></i></button>
+        </div>
+        <div class="footer-buttons">
+          <button type="submit" class="btn-send">Send Announcement</button>
         </div>
       </form>
     </div>
     
     <!-- Sent History Tab Content -->
-    <div class="card-custom hidden" id="history-content">
+    <div class="email-container hidden" id="history-content">
       <table class="table mb-0" style="min-width: 600px;">
         <thead>
           <tr>
@@ -121,12 +164,52 @@
   </div>
 </div>
 
+<!-- Recipients List Modal -->
+<div id="recipientsModal" class="global-modal" aria-labelledby="recipientsModalTitle" aria-modal="true" role="dialog">
+  <div class="modal-container">
+    <!-- Modal Header -->
+    <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+      <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;" id="recipientsModalTitle">Selected Recipients</h4>
+      <button class="btn-back" onclick="closeRecipientsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <!-- Recipients Information Section -->
+    <div class="form-info mb-4" style="background: #F0F0F0; border-radius: 1rem; padding: 1rem;">
+      <p style="font-size: 0.75rem; margin-bottom: 0.5rem;"><strong>Total Organizations Selected:</strong> <span id="totalSelected">0</span></p>
+      <p style="font-size: 0.75rem; margin-bottom: 0;"><strong>Announcement will be sent to all of the selected organizations</strong></p>
+    </div>
+
+    <!-- Selected Organizations Section -->
+    <div class="form-info">
+      <h6 class="fw-semibold mb-3" style="font-size: 0.75rem;">Selected Organizations</h6>
+      <div class="table-responsive">
+        <table class="table table-sm" style="font-size: 0.75rem;">
+          <thead style="background-color: #0f3a40;">
+            <tr>
+              <th scope="col" class="fw-semibold" style="color: white;">Organization Name</th>
+            </tr>
+          </thead>
+          <tbody id="recipientsList">
+            <tr>
+              <td class="text-center">No organizations selected</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const tabCreate = document.getElementById('tab-create');
     const tabHistory = document.getElementById('tab-history');
     const createContent = document.getElementById('create-content');
     const historyContent = document.getElementById('history-content');
+    const organizationSelect = document.getElementById('organizations');
+    const viewRecipientsBtn = document.getElementById('view-recipients-btn');
     
     tabCreate.addEventListener('click', function() {
       tabCreate.classList.add('active');
@@ -142,10 +225,78 @@
       createContent.classList.add('hidden');
     });
     
+    // Pre-select "All Organizations" by default
+    const allOrganizationsOption = organizationSelect.querySelector('option[value="all"]');
+    if (allOrganizationsOption) {
+      allOrganizationsOption.selected = true;
+    }
+    
+    // Handle organization selection changes
+    organizationSelect.addEventListener('change', function() {
+      updateViewRecipientsButton();
+    });
+    
+    function updateViewRecipientsButton() {
+      const selectedOptions = Array.from(organizationSelect.selectedOptions);
+      
+      // Show button if more than one organization is selected
+      if (selectedOptions.length > 1) {
+        viewRecipientsBtn.classList.remove('hidden');
+      } else {
+        viewRecipientsBtn.classList.add('hidden');
+      }
+    }
+    
+    // Form submission
     document.getElementById('announcement-form').addEventListener('submit', function(e) {
       e.preventDefault();
-      alert('Announcement sent successfully!');
+      
+      const subject = document.getElementById('subject').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const selectedOptions = Array.from(organizationSelect.selectedOptions);
+      
+      if (!subject) {
+        alert('Please enter a subject for the announcement.');
+        return;
+      }
+      
+      if (!message) {
+        alert('Please enter a message for the announcement.');
+        return;
+      }
+      
+      if (selectedOptions.length === 0) {
+        alert('Please select at least one organization.');
+        return;
+      }
+      
+      // Create confirmation message
+      let recipientText;
+      if (selectedOptions.length === 1) {
+        recipientText = selectedOptions[0].textContent;
+      } else {
+        recipientText = `${selectedOptions.length} organizations`;
+      }
+      
+      if (confirm(`Send announcement "${subject}" to: ${recipientText}?`)) {
+        alert('Announcement sent successfully!');
+        
+        // Reset form
+        this.reset();
+        
+        // Restore default "All Organizations" selection
+        const allOrganizationsOption = organizationSelect.querySelector('option[value="all"]');
+        if (allOrganizationsOption) {
+          allOrganizationsOption.selected = true;
+        }
+        
+        // Update button visibility
+        updateViewRecipientsButton();
+      }
     });
+    
+    // Initialize button state
+    updateViewRecipientsButton();
   });
   
   // Function to open the announcement modal with specific announcement data
@@ -166,10 +317,52 @@
     document.body.style.overflow = ''; // Restore scrolling
   }
 
+  // Function to open the recipients modal
+  function openRecipientsModal() {
+    const organizationSelect = document.getElementById('organizations');
+    const selectedOptions = Array.from(organizationSelect.selectedOptions);
+    const recipientsList = document.getElementById('recipientsList');
+    const totalSelected = document.getElementById('totalSelected');
+    
+    // Update total count
+    totalSelected.textContent = selectedOptions.length;
+    
+    // Clear existing table rows
+    recipientsList.innerHTML = '';
+    
+    // Add selected organizations to the table
+    if (selectedOptions.length > 0) {
+      selectedOptions.forEach(option => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${option.textContent}</td>`;
+        recipientsList.appendChild(row);
+      });
+    } else {
+      recipientsList.innerHTML = '<tr><td class="text-center text-muted">No organizations selected</td></tr>';
+    }
+    
+    // Show the modal
+    document.getElementById('recipientsModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Function to close the recipients modal
+  function closeRecipientsModal() {
+    document.getElementById('recipientsModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
   // Close modal when clicking outside the modal content
   document.getElementById('announcementDetailsModal').addEventListener('click', function(event) {
     if (event.target === this) {
       closeAnnouncementModal();
+    }
+  });
+
+  // Close recipients modal when clicking outside the modal content
+  document.getElementById('recipientsModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+      closeRecipientsModal();
     }
   });
 

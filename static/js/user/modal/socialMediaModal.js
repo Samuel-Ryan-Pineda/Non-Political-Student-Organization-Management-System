@@ -7,6 +7,8 @@ function showSocialMediaModal() {
         socialMediaModal.classList.add('show');
     }
     
+    document.body.classList.add('modal-open'); // Add this line
+    
     // Load existing social media links
     loadExistingSocialMediaLinks();
 }
@@ -85,6 +87,8 @@ function hideSocialMediaModal() {
     if (socialMediaModal) {
         socialMediaModal.classList.remove('show');
     }
+    
+    document.body.classList.remove('modal-open'); // Add this line
     
     // If there's an active edit form, cancel it first
     if (editingLinkId) {

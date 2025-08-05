@@ -53,7 +53,6 @@
                     <div class="mb-4">
                         <label for="editPlanOutcome" class="form-label fw-semibold" style="font-size: 0.75rem; color: #0f3a40;">Status</label>
                         <select class="form-select" id="editPlanOutcome" name="status" required style="font-size: 0.75rem;">
-                            <option value="">Select Status</option>
                             <option value="Pending">Pending</option>
                             <option value="Accomplished">Accomplished</option>
                             <option value="Failed to Accomplish">Failed to Accomplish</option>
@@ -113,6 +112,7 @@ function showEditPlanModal(planId, title, objectives, date, people, funds, venue
     
     // Show modal
     modal.style.display = 'flex';
+    document.body.classList.add('modal-open'); // Add this line
     
     // Attach event listeners for change detection
     attachPlanChangeListeners();
@@ -124,6 +124,7 @@ function showEditPlanModal(planId, title, objectives, date, people, funds, venue
 // Hide edit plan modal
 function hideEditPlanModal() {
     document.getElementById('editPlanModal').style.display = 'none';
+    document.body.classList.remove('modal-open'); // Add this line
     const form = document.getElementById('editPlanForm');
     if (form) {
         form.reset();

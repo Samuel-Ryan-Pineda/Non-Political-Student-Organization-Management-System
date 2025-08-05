@@ -136,6 +136,7 @@ function showEditStudentModal(affiliationId, studentId, position, studentNo, pro
     
     // Show modal
     modal.style.display = 'flex';
+    document.body.classList.add('modal-open'); // Add this line
     
     // Fetch student details based on type
     let fetchUrl;
@@ -191,6 +192,7 @@ function showEditStudentModal(affiliationId, studentId, position, studentNo, pro
 // Hide edit student modal
 function hideEditStudentModal() {
     document.getElementById('editStudentModal').style.display = 'none';
+    document.body.classList.remove('modal-open'); // Add this line
     const form = document.getElementById('editStudentForm');
     if (form) {
         form.reset();
