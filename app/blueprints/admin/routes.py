@@ -192,25 +192,7 @@ def organizationdetails(organization_id=None):
                           coadviser=coadviser,
                           social_media=social_media)
 
-@admin_routes_bp.route('/announcement')
-@login_required
-def analytics():
-    # Ensure user is OSOAD
-    if current_user.role_id != 1:
-        flash("You don't have permission to access this page", "error")
-        return redirect(url_for('main.dashboard'))
-    
-    # Import the service module here to avoid circular imports
-    from app.organization_service import get_all_active_organizations
-    
-    # Get all active organizations for the multi-select dropdown
-    active_organizations = get_all_active_organizations()
-    
-    # current_user is provided by Flask-Login
-    return render_template('admin/announcement.html', 
-                          user=current_user, 
-                          active_page='announcement',
-                          organizations=active_organizations)
+# Announcement route moved to dedicated announcement blueprint
 
 @admin_routes_bp.route('/reports')
 @login_required

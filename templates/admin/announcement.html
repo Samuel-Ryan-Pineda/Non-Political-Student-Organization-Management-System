@@ -32,7 +32,7 @@
     
     <!-- Create Announcement Tab Content -->
     <div class="email-container" id="create-content">
-      <form id="announcement-form" class="px-3 pt-3 pb-4">
+      <form id="announcement-form" class="px-3 pt-3 pb-4" action="{{ url_for('announcement.send_announcement') }}" method="POST">
         <!-- Organization Selection -->
         <div class="mb-3">
           <label for="organizations" class="form-label" style="font-size: 0.75rem;">Send to Organizations:</label>
@@ -61,23 +61,34 @@
         <!-- Message Field -->
         <div class="mb-3">
           <label for="message" class="form-label">Message:</label>
-          <textarea id="message" class="email-body" placeholder="Enter your announcement message..." rows="6"></textarea>
-        </div>
-        <div class="toolbar">
-          <button type="button" aria-label="Attach file"><i class="fas fa-paperclip"></i></button>
-          <button type="button" aria-label="Bold"><b>B</b></button>
-          <button type="button" aria-label="Italic"><i>I</i></button>
-          <button type="button" aria-label="Insert link"><i class="fas fa-link"></i></button>
-          <button type="button" aria-label="Font size" class="font-size-btn d-flex align-items-center">
-            <span class="fw-semibold fs-7">T</span>
-            <svg fill="none" height="12" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-          </button>
-          <button type="button" aria-label="Numbered list" class="d-flex align-items-center fw-semibold fs-7">
-            <span>1</span><span class="ms-1">.</span>
-          </button>
-          <button type="button" aria-label="More options"><i class="fas fa-ellipsis-h"></i></button>
+          <div class="toolbar">
+            <button type="button" id="bold-btn" aria-label="Bold" title="Bold"><b>B</b></button>
+            <button type="button" id="italic-btn" aria-label="Italic" title="Italic"><i>I</i></button>
+            <button type="button" id="underline-btn" aria-label="Underline" title="Underline"><u>U</u></button>
+            <div class="toolbar-separator"></div>
+            <button type="button" id="align-left-btn" aria-label="Align Left" title="Align Left" class="active">
+              <i class="fas fa-align-left"></i>
+            </button>
+            <button type="button" id="align-center-btn" aria-label="Align Center" title="Align Center">
+              <i class="fas fa-align-center"></i>
+            </button>
+            <button type="button" id="align-right-btn" aria-label="Align Right" title="Align Right">
+              <i class="fas fa-align-right"></i>
+            </button>
+            <button type="button" id="align-justify-btn" aria-label="Justify" title="Justify">
+              <i class="fas fa-align-justify"></i>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button type="button" id="bullet-list-btn" aria-label="Bullet list" title="Bullet List">
+              <i class="fas fa-list-ul"></i>
+            </button>
+            <button type="button" id="numbered-list-btn" aria-label="Numbered list" title="Numbered List" class="d-flex align-items-center fw-semibold fs-7">
+              <span>1</span><span class="ms-1">.</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button type="button" id="link-btn" aria-label="Insert link" title="Insert Link"><i class="fas fa-link"></i></button>
+          </div>
+          <div id="message" class="email-body rich-text-editor" contenteditable="true" data-placeholder="Enter your announcement message..." style="min-height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; outline: none;"></div>
         </div>
         <div class="footer-buttons">
           <button type="submit" class="btn-send">Send Announcement</button>
@@ -87,7 +98,13 @@
     
     <!-- Sent History Tab Content -->
     <div class="email-container hidden" id="history-content">
-      <table class="table mb-0" style="min-width: 600px;">
+      <div id="history-loading" class="text-center py-4" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading announcement history...</p>
+      </div>
+      <table class="table mb-0" style="min-width: 600px;" id="history-table">
         <thead>
           <tr>
             <th scope="col" class="py-2 px-2" style="background-color: #0f3a40; color: white;">Date Sent</th>
@@ -95,41 +112,9 @@
             <th scope="col" class="py-2 px-2" style="background-color: #0f3a40; color: white;">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="history-tbody">
           <tr>
-            <td class="py-2 px-2">May 15, 2023</td>
-            <td class="py-2 px-2">Summer Break Activities</td>
-            <td class="py-2 px-2">
-              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('May 15, 2023', 'Summer Break Activities', 'Dear Student Organization Leaders,\n\nWe hope this message finds you well as we approach the end of the academic year. We are excited to share information about the various activities planned for the summer break.\n\n1. Campus Facilities Access: The main campus buildings will be open from 8:00 AM to 5:00 PM on weekdays throughout the summer. The library will maintain special summer hours which can be found on the university website.\n\n2. Summer Workshops: We are hosting a series of leadership and skill development workshops during the summer. These workshops are designed to help you enhance your organization management skills and prepare for the upcoming academic year.\n\n3. Funding Applications: Summer is an excellent time to prepare your funding applications for the fall semester. The online portal will open on July 1st, and early submissions will be prioritized.\n\nPlease share this information with your organization members who might be staying on campus during the summer break.\n\nBest regards,\nOffice of Student Organizations')">View Details</button>
-            </td>
-          </tr>
-          <tr>
-            <td class="py-2 px-2">May 10, 2023</td>
-            <td class="py-2 px-2">End of Year Ceremony</td>
-            <td class="py-2 px-2">
-              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('May 10, 2023', 'End of Year Ceremony', 'Dear Student Organization Officers,\n\nWe are pleased to invite you to the End of Year Ceremony for all student organizations. This event will celebrate the achievements and contributions of your organizations throughout the academic year.\n\nEvent Details:\n- Date: May 30, 2023\n- Time: 3:00 PM - 5:00 PM\n- Location: University Grand Hall\n- Dress Code: Semi-formal\n\nEach organization is requested to send at least two representatives. Awards for Outstanding Organization, Community Service, and Innovation will be presented during the ceremony.\n\nPlease RSVP by May 20 through the student portal.\n\nWe look forward to celebrating with you!\n\nSincerely,\nDean of Student Affairs')">View Details</button>
-            </td>
-          </tr>
-          <tr>
-            <td class="py-2 px-2">May 1, 2023</td>
-            <td class="py-2 px-2">Renewal Opening</td>
-            <td class="py-2 px-2">
-              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('May 1, 2023', 'Renewal Opening', 'Dear Student Organization Leaders,\n\nThis announcement is to inform you that the annual organization renewal process for the upcoming academic year is now open. All registered student organizations must complete the renewal process to maintain active status.\n\nRenewal Process:\n1. Update your organization\'s constitution and bylaws if necessary\n2. Submit a list of officers for the upcoming year\n3. Provide a summary of activities from the current year\n4. Outline planned activities for the upcoming year\n5. Confirm faculty advisor commitment\n\nThe deadline for submission is June 15, 2023. Organizations that fail to complete the renewal process by this date will need to reapply as new organizations in the fall.\n\nIf you have any questions about the renewal process, please contact the Office of Student Organizations.\n\nBest regards,\nStudent Organizations Coordinator')">View Details</button>
-            </td>
-          </tr>
-          <tr>
-            <td class="py-2 px-2">Apr 20, 2023</td>
-            <td class="py-2 px-2">Campus Clean-up Day</td>
-            <td class="py-2 px-2">
-              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('Apr 20, 2023', 'Campus Clean-up Day', 'Dear Student Organization Representatives,\n\nThe University Environmental Committee is organizing a Campus Clean-up Day on April 30, 2023, from 9:00 AM to 12:00 PM. We invite all student organizations to participate in this important community service event.\n\nParticipating organizations will receive:\n- Community service hours for all members who attend\n- Recognition on the university\'s sustainability website\n- Entry into a drawing for additional funding for your organization\n\nPlease register your organization\'s participation by April 25 through the Environmental Committee\'s webpage. Indicate the number of members who will be attending so we can prepare sufficient supplies and refreshments.\n\nAll participants should meet at the Campus Center at 8:45 AM. Gloves, trash bags, and other cleaning supplies will be provided.\n\nThank you for your commitment to keeping our campus beautiful!\n\nEnvironmental Committee Chair')">View Details</button>
-            </td>
-          </tr>
-          <tr>
-            <td class="py-2 px-2">Apr 15, 2023</td>
-            <td class="py-2 px-2">Leadership Workshop</td>
-            <td class="py-2 px-2">
-              <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('Apr 15, 2023', 'Leadership Workshop', 'Dear Student Leaders,\n\nWe are excited to announce an upcoming Leadership Workshop designed specifically for student organization officers. This workshop will provide valuable insights and practical skills to enhance your leadership effectiveness.\n\nWorkshop Details:\n- Date: April 25, 2023\n- Time: 2:00 PM - 4:30 PM\n- Location: Student Center, Room 205\n\nTopics covered will include:\n- Effective communication strategies\n- Conflict resolution techniques\n- Event planning and management\n- Member recruitment and retention\n- Financial management for student organizations\n\nEach organization is encouraged to send at least two representatives, preferably current or incoming officers. Certificates of participation will be provided, which can be included in your organization\'s annual report.\n\nPlease register by April 22 using the form available on the Student Affairs website.\n\nWe look forward to seeing you there!\n\nOffice of Leadership Development')">View Details</button>
-            </td>
+            <td colspan="3" class="text-center py-4">Click "Sent History" tab to load announcements</td>
           </tr>
         </tbody>
       </table>
@@ -140,27 +125,78 @@
 <!-- Announcement Details Modal -->
 <div id="announcementDetailsModal" class="global-modal" aria-labelledby="announcementDetailsModalTitle" aria-modal="true" role="dialog">
   <div class="modal-container">
-    <button type="button" class="btn-back" onclick="closeAnnouncementModal()" aria-label="Close">
-      <i class="fas fa-arrow-left"></i> Back
-    </button>
+    <!-- Modal Header -->
+    <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+      <h4 class="modal-title fw-bold" style="font-size: 1rem; color: #0f3a40;" id="announcementDetailsModalTitle">Announcement Details</h4>
+      <button class="btn-back" onclick="closeAnnouncementModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <hr style="margin-bottom: 1rem;">
+    
+    <!-- Announcement Information -->
+    <div class="form-info mb-3" style="background: #F0F0F0; border-radius: 1rem; padding: 1rem;">
+      <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Date Sent:</strong> <span id="announcementDate">May 15, 2023</span></p>
+      <p style="font-size: 0.85rem; margin-bottom: 0;"><strong>Subject:</strong> <span id="announcementSubject">Summer Break Activities</span></p>
+    </div>
 
-    <section class="modal-section mb-4">
-      <h2 id="announcementDetailsModalTitle">ANNOUNCEMENT DETAILS</h2>
-      <div class="announcement-metadata">
-        <p><strong>Date Sent:</strong> <span id="announcementDate">May 15, 2023</span></p>
-        <p><strong>Subject:</strong> <span id="announcementSubject">Summer Break Activities</span></p>
-      </div>
-      <hr />
-    </section>
-
-    <section class="modal-section">
-      <h3>MESSAGE CONTENT</h3>
-      <div class="announcement-content">
-        <div id="announcementMessage" class="announcement-message">
+    <!-- Message Content Section -->
+    <div class="mb-4">
+      <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #0f3a40;">Message Content</label>
+      <div class="announcement-content" style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 1rem; min-height: 200px;">
+        <div id="announcementMessage" class="announcement-message" style="font-size: 0.85rem; line-height: 1.5;">
           <!-- Announcement message will be inserted here -->
         </div>
       </div>
-    </section>
+    </div>
+
+    <!-- Recipients Section -->
+    <div class="d-flex justify-content-end">
+      <button type="button" class="btn btn-outline-primary btn-sm" onclick="openEmailRecipientsModal()" style="font-size: 0.75rem;">
+        <i class="fas fa-users me-1"></i> View Email Recipients
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Email Recipients Modal (Small modal beside announcement details) -->
+<div id="emailRecipientsModal" class="global-modal" aria-labelledby="emailRecipientsModalTitle" aria-modal="true" role="dialog" style="display: none;">
+  <div class="modal-container-small" style="position: fixed; top: 50%; right: 5%; transform: translateY(-50%); width: 500px; max-height: 80vh; overflow-y: auto; background: white; border-radius: 0.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1060;">
+    <!-- Modal Header -->
+    <div class="modal-header d-flex justify-content-between align-items-center mb-3" style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+      <h5 class="modal-title fw-bold" style="font-size: 0.9rem; color: #0f3a40; margin: 0;" id="emailRecipientsModalTitle">Email Recipients</h5>
+      <button class="btn-back" onclick="closeEmailRecipientsModal()" style="background: none; border: none; font-size: 1rem; cursor: pointer; color: #6c757d;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <!-- Recipients Count -->
+    <div style="padding: 0 1rem;">
+      <div class="form-info mb-3" style="background: #F0F0F0; border-radius: 0.5rem; padding: 0.75rem;">
+        <p style="font-size: 0.75rem; margin-bottom: 0.25rem;"><strong>Total Recipients:</strong> <span id="emailRecipientsCount">0</span></p>
+        <p style="font-size: 0.7rem; margin-bottom: 0; color: #6c757d;">Users who received this announcement via email</p>
+      </div>
+
+      <!-- Recipients List -->
+      <div class="mb-3">
+        <div class="table-responsive">
+          <table class="table table-sm" style="font-size: 0.7rem; margin-bottom: 0;">
+            <thead style="background-color: #f8f9fa;">
+              <tr>
+                <th scope="col" class="fw-semibold" style="color: #495057; padding: 0.5rem 0.25rem;">Name</th>
+                <th scope="col" class="fw-semibold" style="color: #495057; padding: 0.5rem 0.25rem;">Email</th>
+                <th scope="col" class="fw-semibold" style="color: #495057; padding: 0.5rem 0.25rem;">Organization</th>
+              </tr>
+            </thead>
+            <tbody id="emailRecipientsList" style="max-height: 300px; overflow-y: auto; text-align: left;">
+              <tr>
+                <td colspan="3" class="text-center" style="padding: 1rem; color: #6c757d;">Loading recipients...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -223,6 +259,9 @@
       tabCreate.classList.remove('active');
       historyContent.classList.remove('hidden');
       createContent.classList.add('hidden');
+      
+      // Load announcement history
+      loadAnnouncementHistory();
     });
     
     // Pre-select "All Organizations" by default
@@ -230,6 +269,89 @@
     if (allOrganizationsOption) {
       allOrganizationsOption.selected = true;
     }
+    
+    // Rich text editor functionality
+    const messageEditor = document.getElementById('message');
+    
+    // Add placeholder functionality
+    function updatePlaceholder() {
+      if (messageEditor.textContent.trim() === '') {
+        messageEditor.classList.add('empty');
+      } else {
+        messageEditor.classList.remove('empty');
+      }
+    }
+    
+    messageEditor.addEventListener('input', updatePlaceholder);
+    messageEditor.addEventListener('focus', updatePlaceholder);
+    messageEditor.addEventListener('blur', updatePlaceholder);
+    
+    // Initialize placeholder
+    updatePlaceholder();
+    
+    // Styling button functionality
+    document.getElementById('bold-btn').addEventListener('click', function() {
+      document.execCommand('bold', false, null);
+      messageEditor.focus();
+    });
+    
+    document.getElementById('italic-btn').addEventListener('click', function() {
+      document.execCommand('italic', false, null);
+      messageEditor.focus();
+    });
+    
+    document.getElementById('underline-btn').addEventListener('click', function() {
+      document.execCommand('underline', false, null);
+      messageEditor.focus();
+    });
+    
+    document.getElementById('bullet-list-btn').addEventListener('click', function() {
+      document.execCommand('insertUnorderedList', false, null);
+      messageEditor.focus();
+    });
+    
+    document.getElementById('numbered-list-btn').addEventListener('click', function() {
+      document.execCommand('insertOrderedList', false, null);
+      messageEditor.focus();
+    });
+    
+    document.getElementById('link-btn').addEventListener('click', function() {
+      const url = prompt('Enter the URL:');
+      if (url) {
+        document.execCommand('createLink', false, url);
+        messageEditor.focus();
+      }
+    });
+    
+    // Alignment button functionality
+    const alignmentButtons = {
+      'align-left-btn': 'justifyLeft',
+      'align-center-btn': 'justifyCenter',
+      'align-right-btn': 'justifyRight',
+      'align-justify-btn': 'justifyFull'
+    };
+    
+    function updateAlignmentButtons(activeButton) {
+      // Remove active class from all alignment buttons
+      Object.keys(alignmentButtons).forEach(buttonId => {
+        document.getElementById(buttonId).classList.remove('active');
+      });
+      // Add active class to the clicked button
+      if (activeButton) {
+        activeButton.classList.add('active');
+      }
+    }
+    
+    Object.keys(alignmentButtons).forEach(buttonId => {
+      document.getElementById(buttonId).addEventListener('click', function() {
+        document.execCommand(alignmentButtons[buttonId], false, null);
+        updateAlignmentButtons(this);
+        messageEditor.focus();
+      });
+    });
+    
+    // Set default left alignment
+    messageEditor.style.textAlign = 'left';
     
     // Handle organization selection changes
     organizationSelect.addEventListener('change', function() {
@@ -252,7 +374,7 @@
       e.preventDefault();
       
       const subject = document.getElementById('subject').value.trim();
-      const message = document.getElementById('message').value.trim();
+      const message = document.getElementById('message').innerHTML.trim();
       const selectedOptions = Array.from(organizationSelect.selectedOptions);
       
       if (!subject) {
@@ -260,7 +382,7 @@
         return;
       }
       
-      if (!message) {
+      if (!message || message === '<br>' || message === '<div><br></div>') {
         alert('Please enter a message for the announcement.');
         return;
       }
@@ -279,19 +401,84 @@
       }
       
       if (confirm(`Send announcement "${subject}" to: ${recipientText}?`)) {
-        alert('Announcement sent successfully!');
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('subject', subject);
+        formData.append('message', message);
         
-        // Reset form
-        this.reset();
+        // Add selected organization IDs
+        selectedOptions.forEach(option => {
+          formData.append('organization_ids', option.value);
+        });
         
-        // Restore default "All Organizations" selection
-        const allOrganizationsOption = organizationSelect.querySelector('option[value="all"]');
-        if (allOrganizationsOption) {
-          allOrganizationsOption.selected = true;
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+        submitBtn.disabled = true;
+        
+        // Get CSRF token from meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        
+        // Prepare headers
+        const headers = {
+          'X-Requested-With': 'XMLHttpRequest'
+        };
+        
+        // Add CSRF token if available
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
         }
         
-        // Update button visibility
-        updateViewRecipientsButton();
+        // Send the announcement
+        fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: headers,
+          credentials: 'same-origin' // Include cookies for CSRF token
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Announcement sent successfully!');
+            
+            // Reset form
+            this.reset();
+            
+            // Clear the rich text editor
+            messageEditor.innerHTML = '';
+            messageEditor.style.textAlign = 'left';
+            updatePlaceholder();
+            
+            // Reset alignment buttons to default (left align)
+            updateAlignmentButtons(document.getElementById('align-left-btn'));
+            
+            // Restore default "All Organizations" selection
+            const allOrganizationsOption = organizationSelect.querySelector('option[value="all"]');
+            if (allOrganizationsOption) {
+              allOrganizationsOption.selected = true;
+            }
+            
+            // Update button visibility
+            updateViewRecipientsButton();
+            
+            // Refresh the sent history tab if it's active
+            if (tabHistory.classList.contains('active')) {
+              location.reload();
+            }
+          } else {
+            alert('Error sending announcement: ' + (data.message || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error sending announcement. Please try again.');
+        })
+        .finally(() => {
+          // Restore button state
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        });
       }
     });
     
@@ -299,16 +486,94 @@
     updateViewRecipientsButton();
   });
   
-  // Function to open the announcement modal with specific announcement data
-  function openAnnouncementModal(date, subject, message) {
-    // Update the modal contents with announcement information
-    document.getElementById('announcementDate').textContent = date;
-    document.getElementById('announcementSubject').textContent = subject;
-    document.getElementById('announcementMessage').textContent = message;
+  // Function to load announcement history
+  function loadAnnouncementHistory() {
+    const historyTbody = document.getElementById('history-tbody');
+    const historyLoading = document.getElementById('history-loading');
+    const historyTable = document.getElementById('history-table');
     
-    // Show the modal
-    document.getElementById('announcementDetailsModal').classList.add('show');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    // Show loading state
+    historyLoading.style.display = 'block';
+    historyTable.style.display = 'none';
+    
+    fetch('{{ url_for("announcement.get_announcements") }}')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          historyTbody.innerHTML = '';
+          
+          if (data.announcements.length === 0) {
+            historyTbody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No announcements sent yet</td></tr>';
+          } else {
+            data.announcements.forEach(announcement => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td class="py-2 px-2">${announcement.date_sent}</td>
+                <td class="py-2 px-2">${announcement.subject}</td>
+                <td class="py-2 px-2">
+                  <button type="button" class="btn btn-primary" onclick="openAnnouncementModal('${announcement.date_sent}', '${announcement.subject.replace(/'/g, "\\'")}', ${announcement.announcement_id})">View Details</button>
+                </td>
+              `;
+              historyTbody.appendChild(row);
+            });
+          }
+        } else {
+          historyTbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-danger">Error loading announcements</td></tr>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading announcements:', error);
+        historyTbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-danger">Error loading announcements</td></tr>';
+      })
+      .finally(() => {
+        // Hide loading state
+        historyLoading.style.display = 'none';
+        historyTable.style.display = 'table';
+      });
+  }
+  
+  // Function to open the announcement modal with specific announcement data
+  function openAnnouncementModal(date, subject, announcementIdOrMessage) {
+    const modal = document.getElementById('announcementDetailsModal');
+    
+    // Check if the third parameter is an ID (number) or message (string)
+    if (typeof announcementIdOrMessage === 'number') {
+      // Store the announcement ID in the modal's dataset
+      modal.dataset.announcementId = announcementIdOrMessage;
+      
+      // Load announcement details from backend
+      fetch(`{{ url_for("announcement.get_announcement_details", announcement_id=0) }}`.replace('0', announcementIdOrMessage))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById('announcementDate').textContent = date;
+            document.getElementById('announcementSubject').textContent = subject;
+            document.getElementById('announcementMessage').innerHTML = data.announcement.message;
+            
+            // Show the modal
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+          } else {
+            alert('Error loading announcement details');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error loading announcement details');
+        });
+    } else {
+      // Legacy support for static data (message passed directly)
+      // Clear announcement ID for legacy mode
+      delete modal.dataset.announcementId;
+      
+      document.getElementById('announcementDate').textContent = date;
+      document.getElementById('announcementSubject').textContent = subject;
+      document.getElementById('announcementMessage').textContent = announcementIdOrMessage;
+      
+      // Show the modal
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
   }
 
   // Function to close the announcement modal
@@ -366,10 +631,74 @@
     }
   });
 
+  // Function to open the email recipients modal
+  function openEmailRecipientsModal() {
+    // Get the current announcement ID from the modal (we'll need to store this when opening the announcement modal)
+    const announcementId = document.getElementById('announcementDetailsModal').dataset.announcementId;
+    
+    if (!announcementId) {
+      alert('Unable to load recipients. Please try again.');
+      return;
+    }
+    
+    // Show the modal first
+    document.getElementById('emailRecipientsModal').style.display = 'block';
+    
+    // Load recipients data
+    fetch(`{{ url_for("announcement.get_announcement_recipients", announcement_id=0) }}`.replace('0', announcementId))
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const recipientsList = document.getElementById('emailRecipientsList');
+          const recipientsCount = document.getElementById('emailRecipientsCount');
+          
+          // Update count
+          recipientsCount.textContent = data.recipients.length;
+          
+          // Clear existing rows
+          recipientsList.innerHTML = '';
+          
+          if (data.recipients.length === 0) {
+            recipientsList.innerHTML = '<tr><td colspan="3" class="text-center" style="padding: 1rem; color: #6c757d;">No recipients found</td></tr>';
+          } else {
+            // Add recipient rows
+            data.recipients.forEach(recipient => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td style="padding: 0.5rem 0.25rem; border-bottom: 1px solid #dee2e6; text-align: left;">${recipient.name}</td>
+                <td style="padding: 0.5rem 0.25rem; border-bottom: 1px solid #dee2e6; text-align: left;">${recipient.email}</td>
+                <td style="padding: 0.5rem 0.25rem; border-bottom: 1px solid #dee2e6; text-align: left;">${recipient.organization}</td>
+              `;
+              recipientsList.appendChild(row);
+            });
+          }
+        } else {
+          document.getElementById('emailRecipientsList').innerHTML = '<tr><td colspan="3" class="text-center text-danger" style="padding: 1rem;">Error loading recipients</td></tr>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading recipients:', error);
+        document.getElementById('emailRecipientsList').innerHTML = '<tr><td colspan="3" class="text-center text-danger" style="padding: 1rem;">Error loading recipients</td></tr>';
+      });
+  }
+
+  // Function to close the email recipients modal
+  function closeEmailRecipientsModal() {
+    document.getElementById('emailRecipientsModal').style.display = 'none';
+  }
+
+  // Close email recipients modal when clicking outside
+  document.getElementById('emailRecipientsModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+      closeEmailRecipientsModal();
+    }
+  });
+
   // Close modal when pressing Escape key
   document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
       closeAnnouncementModal();
+      closeEmailRecipientsModal();
     }
   });
 </script>

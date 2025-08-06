@@ -2,6 +2,7 @@ from flask import Blueprint
 from .new_organization import admin_new_organization_bp
 from .routes import admin_routes_bp
 from .organization_renewal import organization_renewal_bp
+from .announcement import announcement_bp
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -17,3 +18,6 @@ def init_admin_bp(app):
     
     # Register the organization renewal blueprint
     app.register_blueprint(organization_renewal_bp, url_prefix='/admin')
+    
+    # Register the announcement blueprint
+    app.register_blueprint(announcement_bp, url_prefix='/admin')

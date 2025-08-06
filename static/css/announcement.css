@@ -130,27 +130,124 @@ h1 {
     background-color: white;
   }
 
+  /* Rich Text Editor Styles */
+  .rich-text-editor {
+     width: 100%;
+     border: 1px solid #e5e7eb;
+     border-radius: 0 0 0.375rem 0.375rem;
+     border-top: none;
+     font-size: 0.875rem;
+     color: #374151;
+     padding: 0.75rem 1rem;
+     min-height: 120px;
+     background-color: white;
+     line-height: 1.5;
+     overflow-y: auto;
+   }
+
+  .rich-text-editor:focus {
+    outline: none;
+    border-color: #2563eb;
+    background-color: white;
+  }
+
+  .rich-text-editor.empty::before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .rich-text-editor b, .rich-text-editor strong {
+    font-weight: bold;
+  }
+
+  .rich-text-editor i, .rich-text-editor em {
+    font-style: italic;
+  }
+
+  .rich-text-editor u {
+    text-decoration: underline;
+  }
+
+  .rich-text-editor ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .rich-text-editor ol {
+    list-style-type: decimal;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .rich-text-editor li {
+    margin-bottom: 0.25rem;
+  }
+
+  .rich-text-editor a {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+
+  .rich-text-editor a:hover {
+    color: #1d4ed8;
+  }
+
   .toolbar {
     font-size: 0.75rem;
     color: #6b7280;
     display: flex;
     gap: 0.5rem;
-    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem 0.375rem 0 0;
+    border-bottom: none;
   }
 
   .toolbar button {
-    border: none;
-    background: transparent;
-    padding: 0.25rem 0.375rem;
+    border: 1px solid #e5e7eb;
+    background: white;
+    padding: 0.375rem 0.5rem;
     border-radius: 0.25rem;
-    color: #6b7280;
+    color: #374151;
     font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .toolbar button:hover {
-    background-color: #f3f4f6;
-    color: #374151;
+    background-color: #e5e7eb;
+    color: #1f2937;
+    border-color: #d1d5db;
   }
+
+  .toolbar button:active {
+     background-color: #2563eb;
+     color: white;
+     border-color: #2563eb;
+   }
+
+   .toolbar button.active {
+     background-color: #2563eb;
+     color: white;
+     border-color: #2563eb;
+   }
+
+   .toolbar-separator {
+     width: 1px;
+     height: 20px;
+     background-color: #d1d5db;
+     margin: 0 0.25rem;
+   }
 
   .toolbar .font-size-btn svg {
     width: 0.75rem;
@@ -218,6 +315,10 @@ h1 {
     margin: 0;
     font-size: 0.75rem;
   }
+  
+  .email-container {
+    padding: 1.5rem;
+  }
 
   .email-container .table thead {
     background-color: #1f2937;
@@ -226,7 +327,7 @@ h1 {
 
   .email-container .table th,
   .email-container .table td {
-    padding: 0.75rem;
+    padding: 1.25rem 1rem;
     border: none;
     border-bottom: 1px solid #e5e7eb;
   }
