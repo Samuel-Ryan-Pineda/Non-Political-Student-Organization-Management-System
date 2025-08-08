@@ -1372,6 +1372,27 @@ def get_application_files():
     # Get all files for this application
     files = ApplicationFile.query.filter_by(application_id=application.application_id).all()
     
+    # Define the expected file order for applications
+    file_order = [
+        'Form 1A -APPLICATION FOR RECOGNITION',
+        'Form 2 - LETTER OF ACCEPTANCE',
+        'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
+        'Form 4 - LIST OF MEMBERS',
+        'BOARD OF OFFICERS',
+        'CONSTITUTION AND BYLAWS',
+        'LOGO WITH EXPLANATION'
+    ]
+    
+    # Sort files according to the predefined order
+    def get_file_order_index(filename):
+        try:
+            return file_order.index(filename)
+        except ValueError:
+            # If file is not in the predefined order, put it at the end
+            return len(file_order)
+    
+    files.sort(key=lambda x: get_file_order_index(x.file_name))
+    
     # Format the response
     file_list = [{
         'id': f.app_file_id,

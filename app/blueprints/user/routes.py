@@ -111,6 +111,147 @@ def userreport():
     # current_user is provided by Flask-Login
     return render_template('user/userreport.html', user=current_user, organization=organization, application=application, active_page='userreport')
 
+@user_routes_bp.route('/notifications')
+@login_required
+def notifications():
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        flash("You don't have permission to access this page", "error")
+        if current_user.role_id == 1:
+            return redirect(url_for('admin_routes.admin_dashboard'))
+        else:
+            return redirect(url_for('auth.logout'))
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id, get_application_by_organization_id
+    from app.models import AnnouncementRecipient, Announcement, Feedback, ApplicationFile
+    from sqlalchemy import desc
+    from datetime import datetime
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    
+    # Get application associated with the organization
+    application = None
+    if organization:
+        application = get_application_by_organization_id(organization.organization_id, 'New')
+    
+    # Get announcements for this user
+    announcements_query = db.session.query(Announcement, AnnouncementRecipient)\
+        .join(AnnouncementRecipient, Announcement.announcement_id == AnnouncementRecipient.announcement_id)\
+        .filter(AnnouncementRecipient.user_id == current_user.user_id)\
+        .order_by(desc(Announcement.date_sent))
+    
+    # Get feedback for this user's application files
+    feedback_query = []
+    if organization and application:
+        # Get all application files for this organization's application
+        app_files = ApplicationFile.query.filter_by(application_id=application.application_id).all()
+        app_file_ids = [file.app_file_id for file in app_files]
+        
+        # Get feedback for these files
+        if app_file_ids:
+            feedback_query = Feedback.query\
+                .filter(Feedback.app_file_id.in_(app_file_ids))\
+                .order_by(desc(Feedback.date_sent))\
+                .all()
+    
+    # Combine announcements and feedback into a single notifications list
+    notifications = []
+    
+    # Process announcements and mark them as read
+    for announcement, recipient in announcements_query:
+        time_diff = datetime.utcnow() - announcement.date_sent
+        
+        if time_diff.days > 0:
+            if time_diff.days == 1:
+                time_str = "1 day ago"
+            else:
+                time_str = f"{time_diff.days} days ago"
+        elif time_diff.seconds >= 3600:
+            hours = time_diff.seconds // 3600
+            if hours == 1:
+                time_str = "1 hour ago"
+            else:
+                time_str = f"{hours} hours ago"
+        elif time_diff.seconds >= 60:
+            minutes = time_diff.seconds // 60
+            if minutes == 1:
+                time_str = "1 minute ago"
+            else:
+                time_str = f"{minutes} minutes ago"
+        else:
+            time_str = "Just now"
+        
+        notifications.append({
+            'type': 'announcement',
+            'subject': announcement.subject,
+            'message': announcement.message,
+            'time': time_str,
+            'date_sent': announcement.date_sent,
+            'is_read': recipient.is_read,
+            'id': recipient.user_id
+        })
+        
+        # Mark announcement as read if it's not already
+        if not recipient.is_read:
+            recipient.is_read = True
+            db.session.add(recipient)
+    
+    # Process feedback and mark them as read
+    for feedback in feedback_query:
+        time_diff = datetime.utcnow() - feedback.date_sent
+        
+        if time_diff.days > 0:
+            if time_diff.days == 1:
+                time_str = "1 day ago"
+            else:
+                time_str = f"{time_diff.days} days ago"
+        elif time_diff.seconds >= 3600:
+            hours = time_diff.seconds // 3600
+            if hours == 1:
+                time_str = "1 hour ago"
+            else:
+                time_str = f"{hours} hours ago"
+        elif time_diff.seconds >= 60:
+            minutes = time_diff.seconds // 60
+            if minutes == 1:
+                time_str = "1 minute ago"
+            else:
+                time_str = f"{minutes} minutes ago"
+        else:
+            time_str = "Just now"
+        
+        file_name = "Unknown File"
+        if feedback.application_file:
+            file_name = feedback.application_file.file_name
+        
+        notifications.append({
+            'type': 'feedback',
+            'subject': feedback.subject,
+            'message': feedback.message,
+            'time': time_str,
+            'date_sent': feedback.date_sent,
+            'is_read': feedback.is_read,
+            'file_name': file_name,
+            'id': feedback.feedback_id
+        })
+        
+        # Mark feedback as read if it's not already
+        if not feedback.is_read:
+            feedback.is_read = True
+            db.session.add(feedback)
+    
+    # Commit changes to database if any notifications were marked as read
+    if db.session.dirty:
+        db.session.commit()
+    
+    # Sort notifications by date_sent (newest first)
+    notifications.sort(key=lambda x: x['date_sent'], reverse=True)
+    
+    # current_user is provided by Flask-Login
+    return render_template('user/notifications.html', user=current_user, organization=organization, application=application, active_page='notifications', notifications=notifications)
+
 @user_routes_bp.route('/blockmanageaccess')
 @login_required
 def blockmanageaccess():
@@ -185,6 +326,44 @@ def documentcompilation():
         if application:
             # Get all files for this application
             application_files = ApplicationFile.query.filter_by(application_id=application.application_id).all()
+            
+            # Define the expected file order based on application type
+            if application.type == 'New':
+                file_order = [
+                    'Form 1A - APPLICATION FOR RECOGNITION',
+                    'Form 2 - LETTER OF ACCEPTANCE',
+                    'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
+                    'Form 4 - LIST OF MEMBERS',
+                    'BOARD OF OFFICERS',
+                    'CONSTITUTION AND BYLAWS',
+                    'LOGO WITH EXPLANATION'
+                ]
+            else:  # Renewal application
+                file_order = [
+                    'Form 1B - APPLICATION FOR RENEWAL OF RECOGNITION',
+                    'Form 2 - LETTER OF ACCEPTANCE',
+                    'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
+                    'Form 4 - LIST OF MEMBERS',
+                    'BOARD OF OFFICERS',
+                    'UPDATED CONSTITUTION AND BYLAWS',
+                    'ACCOMPLISHMENT REPORT AND DOCUMENTATION',
+                    'FINANCIAL STATEMENT OF THE PREVIOUS ACADEMIC YEAR',
+                    'LOGO WITH EXPLANATION'
+                ]
+            
+            # Sort files according to the predefined order
+            def get_file_order_index(filename):
+                try:
+                    # Check for partial matches in case filenames aren't exact
+                    for i, expected_file in enumerate(file_order):
+                        if expected_file.lower() in filename.lower():
+                            return i
+                    return len(file_order)  # Files not in the sequence go to the end
+                except ValueError:
+                    # If file is not in the predefined order, put it at the end
+                    return len(file_order)
+            
+            application_files.sort(key=lambda x: get_file_order_index(x.file_name))
     
     # If no application found for selected year, fall back to the main 'New' application for navigation purposes
     if not application:

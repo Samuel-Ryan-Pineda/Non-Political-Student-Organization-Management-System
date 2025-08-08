@@ -13,23 +13,37 @@
 
 {% block content %}
 <main class="container">
-  <h2 class="org-header">Organization Renewals</h2>
-  <hr class="divider">
   <section class="bg-white rounded-3 p-4" aria-label="Organization Renewal Application Details">
-    <div class="d-flex justify-content-between align-items-start mb-3">
-      <h2 class="highlight-title fs-6 fw-semibold mb-0">Organization Renewal Application</h2>
-      <a href="/renewal" type="button" class="btn btn-light btn-sm d-flex align-items-center gap-1 ">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="highlight-title fs-6 fw-semibold mb-0">
+        Organization Renewal Application
+      </h2>
+      <a href="{{ url_for('organization_renewal.renewal') }}" type="button" class="btn btn-light btn-sm d-flex align-items-center gap-1">
         <i class="fas fa-arrow-left"></i> Back
       </a>
     </div>
     
-    <div class="org-info">
-      <p class="mb-1">
-        <span class="fw-semibold">Organization:</span> {{ organization.organization_name }}
-      </p>
-      <p class="mb-4">
-        <span class="fw-semibold">Date Submitted:</span> {{ application.submission_date.strftime('%B %d, %Y') if application.submission_date else 'Not submitted' }}
-      </p>
+    <div class="org-info p-3 rounded-3 mb-3" style="background-color: #13454F; color: white; font-size: 0.875rem;">
+      <div class="d-flex align-items-center gap-4">
+        {% if organization and organization.logo_id %}
+        <img src="{{ url_for('user_organization.get_logo', logo_id=organization.logo_id) }}" alt="{{ organization.organization_name }} logo" title="{% if organization.logo and organization.logo.description %}{{ organization.logo.description }}{% else %}{{ organization.organization_name }} - {{ organization.type if organization.type else 'Organization' }} Logo{% endif %}" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;">
+        {% else %}
+        <img src="https://placehold.co/60x60/png/ffffff/000000?text=Logo" alt="Organization logo" title="Organization Logo" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #fff; cursor: pointer;">
+        {% endif %}
+        <div>
+          <p class="mb-1" style="color: white;">
+            <span class="fw-semibold" style="color: white;">Organization:</span> {{ organization.organization_name }}
+          </p>
+          {% if organization.type %}
+          <p class="mb-1" style="color: white;">
+            <span class="fw-semibold" style="color: white;">Type:</span> {{ organization.type }}
+          </p>
+          {% endif %}
+          <p class="mb-0" style="color: white;">
+            <span class="fw-semibold" style="color: white;">Date Submitted:</span> {{ application.submission_date.strftime('%B %d, %Y') if application.submission_date else 'Not submitted' }}
+          </p>
+        </div>
+      </div>
     </div>
 
     <div class="table-responsive">

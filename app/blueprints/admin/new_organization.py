@@ -125,28 +125,31 @@ def neworganizationfiles():
     
     organization = get_organization_by_id(application.organization_id)
     
-    # Get application files and order them according to the specified sequence
-    file_order = {
-        'form 1a': 1,
-        'form 2': 2,
-        'form 3': 3,
-        'form 4': 4,
-        'board of officers': 5,
-        'constitution and bylaws': 6,
-        'c&b': 6,  # Alternate name
-        'logo with explanation': 7,
-        'logo with exp': 7  # Alternate name
-    }
+    # Define the expected file order (same as renewal pages)
+    file_order = [
+        'Form 1A - APPLICATION FOR RECOGNITION',
+        'Form 2 - LETTER OF ACCEPTANCE',
+        'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
+        'Form 4 - LIST OF MEMBERS',
+        'BOARD OF OFFICERS',
+        'CONSTITUTION AND BYLAWS',
+        'LOGO WITH EXPLANATION'
+    ]
     
-    def get_file_order(file_name):
-        file_name_lower = file_name.lower()
-        for key, order in file_order.items():
-            if key in file_name_lower:
-                return order
-        return 999  # Files not in the sequence go to the end
+    # Sort files according to the predefined order
+    def get_file_order_index(filename):
+        try:
+            # Check for partial matches in case filenames aren't exact
+            for i, expected_file in enumerate(file_order):
+                if expected_file.lower() in filename.lower():
+                    return i
+            return len(file_order)  # Files not in the sequence go to the end
+        except ValueError:
+            # If file is not in the predefined order, put it at the end
+            return len(file_order)
     
     application_files = ApplicationFile.query.filter_by(application_id=application_id).all()
-    application_files.sort(key=lambda x: get_file_order(x.file_name))
+    application_files.sort(key=lambda x: get_file_order_index(x.file_name))
     
     # Get feedback data for this application
     from app.models import Feedback

@@ -52,6 +52,12 @@
                     <span class="custom-text">Document Compilation</span>
                 </a>
             </li>
+            <li class="{{ 'active' if active_page == 'notifications' }}">
+                <a href="{{ url_for('user_routes.notifications') }}">
+                    <i class="custom-icon ph-bold ph-bell"></i>
+                    <span class="custom-text">Notifications</span>
+                </a>
+            </li>
         </ul>
         </div>
         <div class="custom-menu">

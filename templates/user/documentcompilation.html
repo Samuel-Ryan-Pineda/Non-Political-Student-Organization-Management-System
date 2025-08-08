@@ -3,6 +3,7 @@
 {% block title %}Document Compilation{% endblock %}
 
 {% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/orgfiles.css') }}?v={{ cache_version }}">
 <style>
 .form-label {
     background: white;
@@ -167,7 +168,7 @@
         <h2 class="org-header text-start">Document Compilation</h2>
         <hr class="divider">
     </header>
-    <form class="year-select-form mb-5" method="GET">
+    <form class="year-select-form mb-4" method="GET">
         <label for="academic-year" class="form-label mb-0">Academic Year:</label>
         <div class="select-wrapper">
           <select id="academic-year" name="academic_year" class="form-select" onchange="this.form.submit()">
@@ -202,17 +203,17 @@
                 {% endif %}
               </td>
               <td class="text-center">
+                {% set status_class = '' %}
                 {% if file.status == 'Verified' %}
-                  <span class="badge-verified">Verified</span>
+                  {% set status_class = 'status-verified' %}
                 {% elif file.status == 'Pending' %}
-                  <span class="badge" style="background-color: #fef3c7; color: #92400e;">Pending</span>
+                  {% set status_class = 'status-pending' %}
                 {% elif file.status == 'Needs Revision' %}
-                  <span class="badge" style="background-color: #fee2e2; color: #dc2626;">Needs Revision</span>
+                  {% set status_class = 'status-needs-revision' %}
                 {% elif file.status == 'Rejected' %}
-                  <span class="badge" style="background-color: #fecaca; color: #b91c1c;">Rejected</span>
-                {% else %}
-                  <span class="badge" style="background-color: #e5e7eb; color: #374151;">{{ file.status }}</span>
+                  {% set status_class = 'status-rejected' %}
                 {% endif %}
+                <span class="status-badge {{ status_class }}">{{ file.status }}</span>
               </td>
               <td>
                 <div class="action-buttons">

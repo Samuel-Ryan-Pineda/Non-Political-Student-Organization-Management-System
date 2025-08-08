@@ -1,10 +1,11 @@
-.highlight-title {
-    background-color: var(--highlight-bg);
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
+ .highlight-title {
+    display: inline-flex; /* or flex if full width */
+    align-items: center;  /* vertical centering */
     color: var(--text-color);
     border-radius: var(--border-radius-sm);
-  }
+    height: 100%; /* or a specific height like 40px */
+}
+
 
   /* Table Styles */
   .table thead {

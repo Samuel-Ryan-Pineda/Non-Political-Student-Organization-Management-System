@@ -9,6 +9,146 @@ import os
 # Create the blueprint with the correct name
 user_renewal_bp = Blueprint('user_renewal', __name__)
 
+@user_renewal_bp.route('/carry-forward-logo', methods=['POST'])
+@login_required
+def carry_forward_logo():
+    """Carry forward the logo file from the previous year's application"""
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to carry forward files"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Generate academic years
+    current_year = datetime.now().year
+    current_academic_year = f"{current_year}-{current_year + 1}"
+    previous_academic_year = f"{current_year - 1}-{current_year}"
+    
+    # Find the current renewal application
+    current_renewal_application = Application.query.filter_by(
+        organization_id=organization.organization_id,
+        type='Renewal',
+        academic_year=current_academic_year
+    ).first()
+    
+    if not current_renewal_application:
+        return jsonify({'success': False, 'message': "No current renewal application found"})
+    
+    # Find the previous year's application (could be renewal or initial)
+    previous_application = Application.query.filter_by(
+        organization_id=organization.organization_id,
+        academic_year=previous_academic_year
+    ).first()
+    
+    if not previous_application:
+        return jsonify({'success': False, 'message': "No previous year's application found"})
+    
+    # Find the logo file from the previous application
+    previous_logo = ApplicationFile.query.filter_by(
+        application_id=previous_application.application_id,
+        file_name='LOGO WITH EXPLANATION'
+    ).first()
+    
+    if not previous_logo:
+        return jsonify({'success': False, 'message': "No logo file found in previous year's application"})
+    
+    try:
+        # Check if logo already exists in current application
+        existing_logo = ApplicationFile.query.filter_by(
+            application_id=current_renewal_application.application_id,
+            file_name='LOGO WITH EXPLANATION'
+        ).first()
+        
+        if existing_logo:
+            # Update existing logo with previous year's data
+            existing_logo.file = previous_logo.file
+            existing_logo.status = "Pending"
+            existing_logo.submission_date = datetime.utcnow()
+            db.session.commit()
+            
+            file_id = existing_logo.app_file_id
+        else:
+            # Create new logo file with previous year's data
+            new_logo = ApplicationFile(
+                application_id=current_renewal_application.application_id,
+                file_name='LOGO WITH EXPLANATION',
+                file=previous_logo.file,
+                status="Pending"
+            )
+            db.session.add(new_logo)
+            db.session.commit()
+            
+            file_id = new_logo.app_file_id
+        
+        # Check if all required files are uploaded and update application status if needed
+        check_and_update_renewal_status(current_renewal_application.application_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Logo carried forward successfully from previous year',
+            'filename': 'logo_carried_forward.pdf',
+            'fileType': 'LOGO WITH EXPLANATION',
+            'status': 'Pending',
+            'file_id': file_id,
+            'submission_date': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f"An error occurred: {str(e)}"})
+
+@user_renewal_bp.route('/check-previous-logo', methods=['GET'])
+@login_required
+def check_previous_logo():
+    """Check if a logo file exists in the previous year's application"""
+    # Ensure user is Organization President or Applicant
+    if current_user.role_id not in [2, 3]:
+        return jsonify({'success': False, 'message': "You don't have permission to check files"})
+    
+    # Import the service module here to avoid circular imports
+    from app.organization_service import get_organization_by_user_id
+    
+    # Get user's organization
+    organization = get_organization_by_user_id(current_user.user_id)
+    if not organization:
+        return jsonify({'success': False, 'message': "No organization found for this user"})
+    
+    # Generate academic years
+    current_year = datetime.now().year
+    previous_academic_year = f"{current_year - 1}-{current_year}"
+    
+    # Find the previous year's application (could be renewal or initial)
+    previous_application = Application.query.filter_by(
+        organization_id=organization.organization_id,
+        academic_year=previous_academic_year
+    ).first()
+    
+    if not previous_application:
+        return jsonify({'success': False, 'has_previous_logo': False, 'message': "No previous year's application found"})
+    
+    # Find the logo file from the previous application
+    previous_logo = ApplicationFile.query.filter_by(
+        application_id=previous_application.application_id,
+        file_name='LOGO WITH EXPLANATION'
+    ).first()
+    
+    if not previous_logo:
+        return jsonify({'success': True, 'has_previous_logo': False, 'message': "No logo file found in previous year's application"})
+    
+    return jsonify({
+        'success': True,
+        'has_previous_logo': True,
+        'message': "Previous year's logo file is available for carry-forward",
+        'previous_status': previous_logo.status,
+        'previous_submission_date': previous_logo.submission_date.strftime('%Y-%m-%d %H:%M:%S') if previous_logo.submission_date else None
+    })
+
 def allowed_file(filename, allowed_extensions):
     """Check if the file has an allowed extension"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
@@ -244,6 +384,29 @@ def get_renewal_files():
     
     # Get all files for this application
     files = ApplicationFile.query.filter_by(application_id=renewal_application.application_id).all()
+    
+    # Define the expected file order (same as admin renewal page)
+    file_order = [
+        'Form 1B - APPLICATION FOR RENEWAL OF RECOGNITION',
+        'Form 2 - LETTER OF ACCEPTANCE',
+        'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
+        'Form 4 - LIST OF MEMBERS',
+        'BOARD OF OFFICERS',
+        'UPDATED CONSTITUTION AND BYLAWS',
+        'ACCOMPLISHMENT REPORT AND DOCUMENTATION',
+        'FINANCIAL STATEMENT OF THE PREVIOUS ACADEMIC YEAR',
+        'LOGO WITH EXPLANATION'
+    ]
+    
+    # Sort files according to the predefined order
+    def get_file_order_index(filename):
+        try:
+            return file_order.index(filename)
+        except ValueError:
+            # If file is not in the predefined order, put it at the end
+            return len(file_order)
+    
+    files.sort(key=lambda x: get_file_order_index(x.file_name))
     
     # Format the response
     file_list = [{

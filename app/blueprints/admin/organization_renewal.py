@@ -105,6 +105,19 @@ def organizationrenewals(application_id):
         .group_by(ApplicationFile.app_file_id) \
         .all()
     
+    # Define the expected file order (same as user renewal page)
+    file_order = [
+        'Form 1B - APPLICATION FOR RENEWAL OF RECOGNITION',
+        'Form 2 - LETTER OF ACCEPTANCE',
+        'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
+        'Form 4 - LIST OF MEMBERS',
+        'BOARD OF OFFICERS',
+        'UPDATED CONSTITUTION AND BYLAWS',
+        'ACCOMPLISHMENT REPORT AND DOCUMENTATION',
+        'FINANCIAL STATEMENT OF THE PREVIOUS ACADEMIC YEAR',
+        'LOGO WITH EXPLANATION'
+    ]
+    
     # Format application files for template
     files = []
     for file, feedback_count in application_files:
@@ -116,6 +129,16 @@ def organizationrenewals(application_id):
             "status": file.status,
             "feedback_count": feedback_count
         })
+    
+    # Sort files according to the predefined order
+    def get_file_order_index(filename):
+        try:
+            return file_order.index(filename)
+        except ValueError:
+            # If file is not in the predefined order, put it at the end
+            return len(file_order)
+    
+    files.sort(key=lambda x: get_file_order_index(x['filename']))
     
     # Get feedback data for this application
     file_ids = [file.app_file_id for file in ApplicationFile.query.filter_by(application_id=application_id).all()]

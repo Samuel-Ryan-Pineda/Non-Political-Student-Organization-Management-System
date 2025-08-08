@@ -226,8 +226,46 @@ def register():
             session['last_code_sent_time'] = current_time
 
             # Send Email
-            msg = Message("Your Verification Code", recipients=[user_data['email']])
-            msg.body = f"Your verification code is: {verification_code}"
+            msg = Message("Email Verification Required - NPSOMS Registration", recipients=[user_data['email']])
+            msg.html = f'''
+            <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff;">
+                    <h2 style="color: #2c3e50; margin-bottom: 20px;">Email Verification Required</h2>
+                    
+                    <p>Dear {user_data['first_name']} {user_data['last_name']},</p>
+                    
+                    <p>Thank you for registering with the Non-Political Student Organization Management System (NPSOMS). To complete your registration and activate your account, please verify your email address.</p>
+                    
+                    <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center; border: 2px dashed #007bff;">
+                        <h3 style="color: #007bff; margin-bottom: 10px;">Your Verification Code</h3>
+                        <div style="font-size: 32px; font-weight: bold; color: #2c3e50; letter-spacing: 3px; font-family: 'Courier New', monospace;">
+                            {verification_code}
+                        </div>
+                        <p style="font-size: 12px; color: #666; margin-top: 10px;">This code will expire in 15 minutes</p>
+                    </div>
+                    
+                    <p><strong>Instructions:</strong></p>
+                    <ol style="padding-left: 20px;">
+                        <li>Return to the registration page</li>
+                        <li>Enter the 6-digit verification code above</li>
+                        <li>Click "Verify Email" to complete your registration</li>
+                    </ol>
+                    
+                    <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 14px;"><strong>Security Notice:</strong> If you did not request this registration, please ignore this email. Your email address will not be registered without completing the verification process.</p>
+                    </div>
+                    
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                    
+                    <p style="font-size: 12px; color: #666;">
+                        <em>This is an automated message. Please do not reply to this email.</em><br>
+                        Generated on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p')} UTC
+                    </p>
+                </div>
+            </body>
+            </html>
+            '''
             mail.send(msg)
 
             # Record the time when the verification code was sent
@@ -282,8 +320,47 @@ def resend_verification():
     
     # Send new email
     try:
-        msg = Message("Your New Verification Code", recipients=[session['pending_user']['email']])
-        msg.body = f"Your new verification code is: {verification_code}"
+        pending_user = session['pending_user']
+        msg = Message("New Verification Code - NPSOMS Registration", recipients=[pending_user['email']])
+        msg.html = f'''
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">New Verification Code Requested</h2>
+                
+                <p>Dear {pending_user['first_name']} {pending_user['last_name']},</p>
+                
+                <p>You have requested a new verification code for your NPSOMS registration. Please use the code below to complete your email verification.</p>
+                
+                <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center; border: 2px dashed #28a745;">
+                    <h3 style="color: #28a745; margin-bottom: 10px;">Your New Verification Code</h3>
+                    <div style="font-size: 32px; font-weight: bold; color: #2c3e50; letter-spacing: 3px; font-family: 'Courier New', monospace;">
+                        {verification_code}
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">This code will expire in 15 minutes</p>
+                </div>
+                
+                <p><strong>Instructions:</strong></p>
+                <ol style="padding-left: 20px;">
+                    <li>Return to the verification page</li>
+                    <li>Enter the 6-digit verification code above</li>
+                    <li>Click "Verify Email" to complete your registration</li>
+                </ol>
+                
+                <div style="background-color: #d1ecf1; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8; margin: 20px 0;">
+                    <p style="margin: 0; font-size: 14px;"><strong>Note:</strong> This is a new verification code. Any previous codes sent to this email address are now invalid.</p>
+                </div>
+                
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                 
+                 <p style="font-size: 12px; color: #666;">
+                     <em>This is an automated message. Please do not reply to this email.</em><br>
+                     Generated on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p')} UTC
+                 </p>
+            </div>
+        </body>
+        </html>
+        '''
         mail.send(msg)
         
         return create_success_response('New verification code sent.')

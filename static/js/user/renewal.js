@@ -414,6 +414,174 @@ function setupButtonEvents() {
       }, { once: false, passive: false });
     }
   });
+  
+  // Set up carry-forward button for logo
+  setupCarryForwardButton();
+}
+
+// Function to set up carry-forward button functionality
+function setupCarryForwardButton() {
+  const carryForwardBtn = document.getElementById('carryForwardLogoBtn');
+  if (!carryForwardBtn) return;
+  
+  // Check if previous logo exists
+  checkPreviousLogo();
+  
+  // Check if event listener is already attached to prevent duplicates
+  if (carryForwardBtn.dataset.eventsAttached === 'true') {
+    return;
+  }
+  
+  // Mark that events are attached
+  carryForwardBtn.dataset.eventsAttached = 'true';
+  
+  // Set up click event for carry-forward button
+  carryForwardBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (confirm('Are you sure you want to use the logo from your previous year\'s application?')) {
+      carryForwardLogo();
+    }
+  });
+}
+
+// Function to check if previous logo exists
+function checkPreviousLogo() {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                   document.querySelector('[name="csrf_token"]')?.value;
+  
+  const headers = {
+    'X-Requested-With': 'XMLHttpRequest'
+  };
+  
+  if (csrfToken) {
+    headers['X-CSRFToken'] = csrfToken;
+  }
+  
+  fetch('/renewal/check-previous-logo', {
+    headers: headers,
+    credentials: 'same-origin'
+  })
+  .then(response => response.json())
+  .then(data => {
+    const carryForwardBtn = document.getElementById('carryForwardLogoBtn');
+    if (data.success && data.has_previous_logo && carryForwardBtn) {
+      // Show the carry-forward button only if there's no current logo AND it's not verified
+      const logoCard = carryForwardBtn.closest('.document-card');
+      const hasCurrentLogo = logoCard && logoCard.dataset.fileId;
+      
+      // Check if the logo is already verified
+      const statusBadge = logoCard ? logoCard.querySelector('.status-badge') : null;
+      const isVerified = statusBadge && statusBadge.dataset.status === 'Verified';
+      
+      if (!hasCurrentLogo && !isVerified) {
+        carryForwardBtn.style.display = 'block';
+      } else {
+        carryForwardBtn.style.display = 'none';
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Error checking previous logo:', error);
+  });
+}
+
+// Function to carry forward the logo
+function carryForwardLogo() {
+  const loadingModal = document.getElementById('loadingModal');
+  const loadingMessage = document.getElementById('loadingMessage');
+  const carryForwardBtn = document.getElementById('carryForwardLogoBtn');
+  
+  // Show loading modal
+  if (loadingModal && loadingMessage) {
+    loadingMessage.textContent = 'Copying logo from previous year...';
+    loadingModal.style.display = 'flex';
+  }
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                   document.querySelector('[name="csrf_token"]')?.value;
+  
+  const headers = {
+    'X-Requested-With': 'XMLHttpRequest'
+  };
+  
+  if (csrfToken) {
+    headers['X-CSRFToken'] = csrfToken;
+  }
+  
+  fetch('/renewal/carry-forward-logo', {
+    method: 'POST',
+    headers: headers,
+    credentials: 'same-origin'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (loadingModal) {
+      loadingModal.style.display = 'none';
+    }
+    
+    if (data.success) {
+      // Hide the carry-forward button
+      if (carryForwardBtn) {
+        carryForwardBtn.style.display = 'none';
+      }
+      
+      // Find the logo card and update it
+      const logoCard = carryForwardBtn ? carryForwardBtn.closest('.document-card') : null;
+      if (logoCard && data.file_id) {
+        // Set the file ID on the card
+        logoCard.dataset.fileId = data.file_id;
+        
+        // Update status badge
+        const statusBadge = logoCard.querySelector('.status-badge');
+        if (statusBadge) {
+          statusBadge.dataset.fileId = data.file_id;
+        }
+        
+        // Update the card status
+        updateCardStatus(logoCard, 'Pending', 'bg-primary', 'fa-clock');
+        
+        // Update dropzone to show carried forward state
+        const dropzone = logoCard.querySelector('.dropzone');
+        if (dropzone) {
+          dropzone.innerHTML = `
+            <i class="fas fa-file-alt mb-1"></i>
+            <div>Logo Carried Forward</div>
+            <div class="small text-muted">From previous year</div>
+            <div class="small text-muted">Click to replace</div>
+          `;
+          dropzone.classList.add('selected');
+        }
+        
+        // Enable preview button
+        const previewBtn = logoCard.querySelector('.preview-btn');
+        if (previewBtn) {
+          DOMUtils.setButtonState(previewBtn, DOMUtils.BUTTON_STATES.ENABLED.PREVIEW);
+        }
+        
+        // Disable upload button initially
+        const uploadBtn = logoCard.querySelector('.upload-btn');
+        if (uploadBtn) {
+          DOMUtils.setButtonState(uploadBtn, DOMUtils.BUTTON_STATES.DISABLED.UPLOAD);
+        }
+      }
+      
+      // Reload files to update progress
+      loadRenewalFiles();
+      
+      alert('Logo successfully carried forward from previous year!');
+    } else {
+      alert(data.message || 'Error carrying forward logo');
+    }
+  })
+  .catch(error => {
+    if (loadingModal) {
+      loadingModal.style.display = 'none';
+    }
+    console.error('Error:', error);
+    alert('An error occurred while carrying forward the logo');
+  });
 }
   
   // Helper function to reset event listeners
@@ -432,6 +600,12 @@ function setupButtonEvents() {
     document.querySelectorAll('.dropzone').forEach(dropzone => {
       delete dropzone.dataset.eventsAttached;
     });
+    
+    // Reset carry-forward button event listeners
+    const carryForwardBtn = document.getElementById('carryForwardLogoBtn');
+    if (carryForwardBtn) {
+      delete carryForwardBtn.dataset.eventsAttached;
+    }
   }
   
   // Function to preview a file
@@ -574,6 +748,9 @@ function setupButtonEvents() {
             
             // Check if all files are uploaded after UI is updated
             checkIfAllFilesUploaded();
+            
+            // Check for previous logo availability
+            checkPreviousLogo();
           }, 500); // Small delay to ensure all UI updates are complete
         } else {
           console.error('Error loading files:', data.message);
@@ -982,6 +1159,10 @@ function setupButtonEvents() {
       
       // Still update cards with file data even if feedback fetch fails
       updateCardsWithoutFeedback(files, cards);
+    })
+    .finally(() => {
+      // Check previous logo availability after all cards are updated
+      checkPreviousLogo();
     });
 }
 
@@ -1092,6 +1273,9 @@ function updateCardsWithoutFeedback(files, cards) {
       }
     }
   });
+  
+  // Check previous logo availability after all cards are updated
+  checkPreviousLogo();
 }
   
   // Function to update card status
