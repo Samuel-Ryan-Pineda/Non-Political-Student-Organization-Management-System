@@ -18,22 +18,21 @@
       border-radius: 0;
       color: var(--white);
       position: relative;
-      margin: 0 -15px 0px -15px; /* Negative margin to expand beyond container */
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 3% 6% 2% 6%;
+      padding: 2% 6% 2% 6%;
       z-index: 10;
-      width: calc(100% + 30px); /* Expand width to account for negative margins */
     }
     
     /* Sticky header that appears when scrolling */
     .sticky-org-header {
       position: fixed;
       top: 0;
-      left: 240px; /* Match the sidebar width */
-      width: calc(100% - 240px); /* Match the content width */
+      left: 0; /* Match the sidebar width */
+      width: 100%; 
+
       background-color: var(--primary-color);
       color: var(--white);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

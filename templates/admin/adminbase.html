@@ -7,6 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}?v={{ cache_version }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loading-overlay.css') }}?v={{ cache_version }}">
     <title>{% block title %}Your App{% endblock %}</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,13 +19,50 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v={{ cache_version }}">
 </head>
 <body>
-    <div class="custom-sidebar-container">
-        {% include 'admin/adminsidebar.html' %}
-        <div class="additional-content">
-            {% block additional_content %}{% endblock %}
+    <!-- Fixed header with burger menu -->
+    <header class="fixed-header">
+        <button class="header-menu-btn" id="headerMenuBtn">
+            <i class="ph-bold ph-list"></i>
+        </button>
+        <div class="header-title">
+            {% if active_page == 'adminaccount' %}
+                My Account
+            {% elif active_page == 'organization' %}
+                Organizations
+            {% elif active_page == 'member' %}
+                Search Student
+            {% elif active_page == 'neworganization' %}
+                New Organization
+            {% elif active_page == 'reports' %}
+                Reports
+            {% elif active_page == 'renewal' %}
+                Renewals
+            {% elif active_page == 'announcement' %}
+                Announcements
+            {% else %}
+                Admin Dashboard
+            {% endif %}
         </div>
-        <div class="custom-content" id="content">
-            {% block content %}{% endblock %}
+    </header>
+    <div class="layout-container">
+        <div class="sidebar-wrapper">
+            {% include 'admin/adminsidebar.html' %}
+        </div>
+        <div class="content-wrapper">
+            <div class="additional-content">
+                {% block additional_content %}{% endblock %}
+            </div>
+            <!-- Loading Overlay for content area only - only show on specific pages -->
+            {% if active_page in ['neworganization', 'renewal', 'organizationdetails'] %}
+            <div class="loading-overlay hidden" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading...</div>
+            </div>
+            {% endif %}
+            
+            <div class="custom-content" id="content">
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </div>
 
@@ -33,6 +71,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     <!-- Your custom sidebar JS -->
     <script src="{{ url_for('static', filename='js/sidebar.js') }}?v={{ cache_version }}" defer></script>
+    
+    <!-- Hide loading overlay by default on admin pages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

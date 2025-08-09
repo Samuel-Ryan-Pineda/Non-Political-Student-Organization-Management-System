@@ -121,19 +121,7 @@
   }
   
   .feedback-card:hover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .feedback-card.unread {
-    border-left: 4px solid #1d4ed8;
-    background-color: rgba(29, 78, 216, 0.05);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .feedback-card.unread .feedback-card-header {
-    font-weight: bold;
-  }
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    /* Removed hover effect */
   }
   
   .feedback-card.unread {
@@ -170,9 +158,6 @@
   .feedback-card-file {
     font-size: 0.75rem;
     color: #6b7280;
-    background-color: #f3f4f6;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
   }
   
   .feedback-tab-content {
@@ -248,9 +233,6 @@
 
 {% block content %}
 <div class="container">
-  <h2 class="org-header">Organization Renewal</h2>
-  <hr class="divider">
-  
   <!-- Changed class from "row" to "row info-progress-row" -->
   <div class="row info-progress-row g-3">
     <div class="col-md-4">

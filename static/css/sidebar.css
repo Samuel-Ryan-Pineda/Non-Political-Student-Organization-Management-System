@@ -1,25 +1,112 @@
 @import url(https://fonts.googleapis.com/css?family=Inter:100,200,300,regular,500,600,700,800,900);
 /* Namespaced sidebar CSS to prevent conflicts with Bootstrap */
-.custom-sidebar-container * {
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
 }
 
+/* Remove default padding from lists */
+.custom-sidebar ul, .custom-sidebar ol {
+  padding-left: 0;
+  margin-left: 0;
+  list-style-type: none;
+}
+
 body {
   overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
-.custom-sidebar-container {
+/* Fixed header styles */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 240px; /* Position beside the sidebar */
+  width: calc(100% - 240px); /* Full width minus sidebar width */
+  height: 60px;
+  background-color: #0d3b44;
+  color: white;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 1030; /* Same as sidebar */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: left 0.3s ease, width 0.3s ease;
+}
+
+/* Adjust header when sidebar is collapsed */
+body.sidebar-collapsed .fixed-header,
+.content-wrapper.expanded .fixed-header {
+  left: 0;
+  width: 100%;
+}
+
+.header-menu-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.header-menu-btn i {
+  font-size: 24px;
+  color: white;
+  transition: transform 0.3s ease;
+}
+
+.header-menu-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.header-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Main layout container using flexbox */
+.layout-container {
+  display: flex;
   width: 100%;
   min-height: 100vh;
-  position: relative; /* Create positioning context */
+  padding-top: 0; /* No padding needed as header is beside sidebar */
   background-color: #d3e0eb;
 }
 
+/* Sidebar wrapper */
+.sidebar-wrapper {
+  flex: 0 0 240px; /* Fixed width, doesn't grow or shrink */
+  position: relative;
+  transition: flex-basis 0.3s ease, width 0.3s ease;
+}
+
+/* Collapse sidebar wrapper when sidebar is collapsed */
+body.sidebar-collapsed .sidebar-wrapper {
+  flex: 0 0 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Content wrapper */
+.content-wrapper {
+  flex: 1; /* Takes remaining space */
+  display: flex;
+  flex-direction: column;
+  background-color: #d3e0eb;
+  padding-top: 60px; /* Add padding for fixed header */
+}
+
+/* Sidebar styles */
 .custom-sidebar {
   position: fixed; /* Fixed position so it doesn't scroll */
   top: 0;
@@ -35,26 +122,22 @@ body {
   z-index: 1030; /* Above Bootstrap's default z-index */
 }
 
+/* Content areas */
 .additional-content {
-  margin-left: 240px; /* Match sidebar width */
   color: #919191;
   background-color: #d3e0eb;
   text-align: center;
-  overflow-y: auto; /* Make only the content scrollable */
-  transition: margin-left 0.3s; /* Smooth transition when sidebar collapses */
-  width: calc(100% - 240px); /* Full width minus sidebar */
+  width: 100%;
 }
 
 .custom-content {
-  margin-left: 240px; /* Match sidebar width */
-  padding: 1.5% 3% 3% 3%;
+  padding: 2rem;
   color: #919191;
   background-color: #d3e0eb;
   text-align: center;
   min-height: calc(100vh - 240px); /* Adjust height to fill remaining space */
   overflow-y: auto; /* Make only the content scrollable */
-  transition: margin-left 0.3s; /* Smooth transition when sidebar collapses */
-  width: calc(100% - 240px); /* Full width minus sidebar */
+  width: 100%;
 }
 
 .custom-sidebar .custom-head {
@@ -151,15 +234,15 @@ body {
 
 .custom-menu .custom-sub-menu {
   display: block; /* Always display submenus */
-  margin-left: 20px;
-  padding-left: 20px;
+  margin-left: 10px;
+  padding-left: 10px;
   padding-top: 5px;
   border-left: 1px solid #f6f6f6;
-  max-width: calc(100% - 40px); /* Ensure submenu doesn't extend beyond sidebar */
+  max-width: calc(100% - 20px); /* Ensure submenu doesn't extend beyond sidebar */
 }
 
 .custom-menu .custom-sub-menu li a {
-  padding: 10px 8px;
+  padding: 10px 8px 10px 15px;
   font-size: 12px;
 }
 
@@ -195,19 +278,27 @@ body {
   transition: all 0.3s;
 }
 
-/* Default sidebar active state (non-mobile) */
-/* Desktop active state styles removed to prevent sidebar collapse in desktop mode */
-/* These styles will only apply to mobile view now */
-
-/* Remove all active state styles for desktop */
-.custom-sidebar.active {
-  /* No width change in desktop mode */
-  width: 240px;
+.rotate-icon {
+  transform: rotate(180deg);
 }
 
-.custom-sidebar.active ~ .custom-content {
-  /* No margin change in desktop mode */
-  margin-left: 240px;
+/* Collapsible sidebar styles for all screen sizes */
+.custom-sidebar {
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+}
+
+.custom-sidebar.sidebar-collapsed {
+  transform: translateX(-240px);
+}
+
+/* Content wrapper styles when sidebar is collapsed */
+.content-wrapper {
+  transition: padding-left 0.3s ease, width 0.3s ease;
+}
+
+.content-wrapper.expanded {
+  padding-left: 0;
 }
 
 .custom-sidebar.loading {
@@ -296,55 +387,66 @@ body {
 
 /* Mobile view media queries */
 @media screen and (max-width: 768px) {
+  /* Change layout to column for mobile */
+  .layout-container {
+    flex-direction: column;
+  }
+  
+  /* Adjust fixed header for mobile */
+  .fixed-header {
+    left: 0;
+    width: 100%;
+    padding: 0 15px;
+  }
+  
+  .header-title {
+    font-size: 16px;
+  }
+  
+  /* Adjust sidebar wrapper for mobile */
+  .sidebar-wrapper {
+    flex: 0 0 auto;
+    height: auto;
+    z-index: 1030;
+  }
+  
+  /* Adjust sidebar for mobile */
   .custom-sidebar {
     position: fixed;
     left: 0;
-    z-index: 1050;
+    top: 60px; /* Position below fixed header */
+    height: calc(100vh - 60px); /* Adjust height for header */
+    z-index: 1030;
+    transform: translateX(0); /* Show by default */
     transition: transform 0.3s ease;
-    transform: translateX(0);
   }
   
-  .custom-sidebar.mobile-active {
-    transform: translateX(-100%);
+  /* Hide entire sidebar when collapsed in mobile */
+  .custom-sidebar.sidebar-collapsed {
+    transform: translateX(-100%); /* Move completely off-screen */
   }
   
-  .custom-content, .additional-content {
-    margin-left: 0;
+  /* Content takes full width on mobile */
+  .content-wrapper {
     width: 100%;
     z-index: 1;
-    transition: margin-left 0.3s ease;
   }
   
-  .custom-sidebar:not(.mobile-active) ~ .custom-content,
-  .custom-sidebar:not(.mobile-active) ~ .additional-content {
-    margin-left: 240px;
-  }
-  
+  /* Hide sidebar menu button on mobile since we have the header menu button */
   .custom-menu-btn {
-    display: flex;
-    width: 40px;
-    height: 40px;
-    right: -18px;
-    border-radius: 10px;
-    background-color: #0d3b44;
-    color: white;
-    z-index: 1051;
-    box-shadow: 0px 151px 42px 0px rgba(0, 0, 0, 0.00), 0px 97px 39px 0px rgba(0, 0, 0, 0.01), 0px 54px 33px 0px rgba(0, 0, 0, 0.05), 0px 24px 24px 0px rgba(0, 0, 0, 0.09), 0px 6px 13px 0px rgba(0, 0, 0, 0.10);
+    display: none;
   }
   
-  .custom-sidebar.mobile-active .custom-menu-btn {
-    right: -56px;
-    background-color: #0d3b44;
+  /* Reset sidebar wrapper for mobile to not interfere */
+  body.sidebar-collapsed .sidebar-wrapper {
+    flex: 0 0 auto;
+    width: auto;
+    overflow: visible;
   }
   
-  .custom-sidebar.mobile-active .custom-menu-btn i {
-    transform: rotate(180deg);
-  }
-  
-  .custom-sidebar.mobile-active .custom-head,
-  .custom-sidebar.mobile-active .custom-nav,
-  .custom-sidebar.mobile-active .custom-menu:not(.custom-menu-btn) {
-    opacity: 0;
-    visibility: hidden;
+  /* Adjust loading overlay for mobile */
+  .loading-overlay {
+    left: 0;
+    width: 100%;
   }
 }

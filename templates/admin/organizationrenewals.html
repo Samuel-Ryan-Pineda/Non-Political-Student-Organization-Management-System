@@ -40,7 +40,8 @@
           </p>
           {% endif %}
           <p class="mb-0" style="color: white;">
-            <span class="fw-semibold" style="color: white;">Date Submitted:</span> {{ application.submission_date.strftime('%B %d, %Y') if application.submission_date else 'Not submitted' }}
+            <span class="fw-semibold" style="color: white;">Date Submitted:</span> 
+            <span class="status-badge status-verified" style="margin-left: 5px;">{{ application.submission_date.strftime('%B %d, %Y') if application.submission_date else 'Not submitted' }}</span>
           </p>
         </div>
       </div>

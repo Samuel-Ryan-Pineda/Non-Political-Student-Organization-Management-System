@@ -8,10 +8,6 @@
 
 {% block content %}
 <div class="container">
-  <h2 class="org-header">New Organizations</h2>
-  <hr class="divider">
-  <p class="mb-4 fs-5 text-start" style="color: var(--text-color);">Pending new organization applications</p>
-  
   <div class="row g-4">
     {% if pending_applications %}
       {% for app in pending_applications %}

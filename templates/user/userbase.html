@@ -19,19 +19,48 @@
 </head>
 <body>
     {% block body_start %}{% endblock %}
-    <div class="custom-sidebar-container">
-        {% include 'user/usersidebar.html' %}
-        <div class="additional-content">
-            {% block additional_content %}{% endblock %}
+    <!-- Fixed header with burger menu -->
+    <header class="fixed-header">
+        <button class="header-menu-btn" id="headerMenuBtn">
+            <i class="ph-bold ph-list"></i>
+        </button>
+        <div class="header-title">
+            {% if active_page == 'useraccount' %}
+                My Account
+            {% elif active_page == 'application' %}
+                Application
+            {% elif active_page == 'userrenewal' %}
+                Renewal
+            {% elif active_page == 'userreport' %}
+                Reports
+            {% elif active_page == 'manageorganization' %}
+                Manage Organization
+            {% elif active_page == 'documentcompilation' %}
+                Document Compilation
+            {% else %}
+                Organization Management System
+            {% endif %}
         </div>
-        <!-- Loading Overlay for content area only -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Loading files...</div>
+    </header>
+    <div class="layout-container">
+        <div class="sidebar-wrapper">
+            {% include 'user/usersidebar.html' %}
         </div>
-        
-        <div class="custom-content" id="content">
-            {% block content %}{% endblock %}
+        <div class="content-wrapper">
+            <div class="additional-content">
+                {% block additional_content %}{% endblock %}
+            </div>
+            <!-- Loading Overlay for content area only -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                {% if active_page in ['application', 'userrenewal', 'userreport'] %}
+                <div class="loading-text">Loading files...</div>
+                {% endif %}
+            </div>
+            
+            <div class="custom-content" id="content">
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </div>
 

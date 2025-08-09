@@ -1,13 +1,24 @@
 $(document).ready(function() {
-  // No longer checking for saved sidebar state on desktop
-  // Desktop sidebar will always be expanded
+  // Check for saved sidebar state for all screen sizes
+  const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+  if (sidebarCollapsed) {
+    $(".custom-sidebar").addClass("sidebar-collapsed");
+    $(".content-wrapper").addClass("expanded");
+    $("body").addClass("sidebar-collapsed");
+  }
   
-  // Only apply collapsed state on mobile
-  if ($(window).width() <= 768) {
-    const mobileCollapsed = localStorage.getItem('mobileSidebarCollapsed') === 'true';
-    if (mobileCollapsed) {
-      $(".custom-sidebar").addClass("mobile-active");
-    }
+  // Handle header menu button click for all screen sizes
+  $("#headerMenuBtn").on("click", function() {
+    $(".custom-sidebar").toggleClass("sidebar-collapsed");
+    $(".content-wrapper").toggleClass("expanded");
+    $("body").toggleClass("sidebar-collapsed");
+    $(this).find("i").toggleClass("rotate-icon");
+    localStorage.setItem('sidebarCollapsed', $(".custom-sidebar").hasClass("sidebar-collapsed"));
+  });
+  
+  // Initialize header menu button icon state
+  if ($(".custom-sidebar").hasClass("sidebar-collapsed")) {
+    $("#headerMenuBtn i").addClass("rotate-icon");
   }
 
   // Get current page URL path
@@ -77,27 +88,13 @@ $(document).ready(function() {
   $(".custom-menu-btn").click(function() {
     // Only allow toggling in mobile view
     if ($(window).width() <= 768) {
-      // In mobile: toggle mobile-active class
-      $(".custom-sidebar").toggleClass("mobile-active");
+      // In mobile: toggle sidebar-collapsed class (same as desktop for consistency)
+      $(".custom-sidebar").toggleClass("sidebar-collapsed");
+      $("body").toggleClass("sidebar-collapsed");
       
       // Save mobile state to localStorage
-      localStorage.setItem('mobileSidebarCollapsed', $(".custom-sidebar").hasClass("mobile-active"));
-      
-      // When sidebar is closed (mobile-active added)
-      if ($(".custom-sidebar").hasClass("mobile-active")) {
-        setTimeout(function() {
-          $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
-            "opacity": "0",
-            "visibility": "hidden"
-          });
-        }, 1);
-      } else {
-        // When sidebar is opened
-        $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
-          "opacity": "1",
-          "visibility": "visible"
-        });
-      }
+      const isMobileCollapsed = $(".custom-sidebar").hasClass("sidebar-collapsed");
+      localStorage.setItem('mobileSidebarCollapsed', isMobileCollapsed);
     }
     // No action in desktop mode - sidebar always stays expanded
   });
@@ -117,36 +114,19 @@ $(document).ready(function() {
       const mobileCollapsed = localStorage.getItem('mobileSidebarCollapsed') === 'true';
       
       if (mobileCollapsed) {
-        // Apply mobile-active class if it was collapsed
-        $(".custom-sidebar").addClass("mobile-active");
-        
-        // Hide sidebar content
-        $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
-          "opacity": "0",
-          "visibility": "hidden"
-        });
+        // Apply sidebar-collapsed class if it was collapsed
+        $(".custom-sidebar").addClass("sidebar-collapsed");
+        $("body").addClass("sidebar-collapsed");
       } else {
-        // Remove mobile-active if it wasn't collapsed
-        $(".custom-sidebar").removeClass("mobile-active");
-        
-        // Show sidebar content
-        $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
-          "opacity": "1",
-          "visibility": "visible"
-        });
+        // Remove sidebar-collapsed if it wasn't collapsed
+        $(".custom-sidebar").removeClass("sidebar-collapsed");
+        $("body").removeClass("sidebar-collapsed");
       }
-      
-      // Remove desktop active class if present
-      $(".custom-sidebar").removeClass("active");
     } else {
-      // On desktop, always show expanded sidebar
-      $(".custom-sidebar").removeClass("mobile-active");
-      $(".custom-sidebar").removeClass("active"); // Never collapsed in desktop
-      
-      $(".custom-sidebar .custom-head, .custom-sidebar .custom-nav, .custom-sidebar .custom-menu:not(.custom-menu-btn)").css({
-        "opacity": "",
-        "visibility": ""
-      });
+      // On desktop, check the main sidebar state (not mobile state)
+      // Don't interfere with desktop sidebar state
+      // Remove any mobile-specific classes
+      localStorage.removeItem('mobileSidebarCollapsed');
     }
   }
   

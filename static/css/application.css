@@ -422,8 +422,6 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  border: 2px solid transparent;
-  transition: border-color 0.3s ease;
 }
 
 .info-progress-row .card-body {
@@ -432,22 +430,8 @@
   flex-direction: column;
 }
 
-/* Application progress card status-based border colors */
-.info-progress-row .card.status-pending {
-  border-color: var(--bs-primary);
-}
-
-.info-progress-row .card.status-approved {
-  border-color: var(--bs-success);
-}
-
-.info-progress-row .card.status-rejected {
-  border-color: var(--bs-danger);
-}
-
-.info-progress-row .card.status-incomplete {
-  border-color: var(--bs-secondary);
-}
+/* Application progress card status-based border colors - REMOVED */
+/* Border colors removed as requested */
 
 /* Preview Modal Styles moved to global.css */
 

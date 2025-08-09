@@ -12,7 +12,7 @@ h1 {
   /* Header Block Styles */
   .header-block {
     background-color: #13454f;
-    padding: 3rem 6rem 2rem 6rem;
+    padding: 2rem 2rem;
     border-radius: 0 0 5rem 5rem;
   }
 
@@ -20,8 +20,8 @@ h1 {
     text-align: center;
   }
 
-  .header-title {
-    font-size: 1.5rem;
+  .header-block .header-title {
+    font-size: 1.25rem;
     font-weight: bold;
     color: white;
     margin-bottom: 0.25rem;
@@ -447,8 +447,8 @@ h1 {
       border-radius: 0 0 3rem 3rem;
     }
 
-    .header-title {
-      font-size: 1.25rem;
+    .header-block .header-title {
+      font-size: 1.1rem;
     }
 
     .header-subtitle {
@@ -485,7 +485,7 @@ h1 {
       border-radius: 0 0 2rem 2rem;
     }
 
-    .header-title {
+    .header-block .header-title {
       font-size: 1.1rem;
       line-height: 1.2;
     }

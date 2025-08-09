@@ -12,7 +12,7 @@
 
   // Required files for a complete application
   const REQUIRED_FILES = [
-    'Form 1A -APPLICATION FOR RECOGNITION',
+    'Form 1A - APPLICATION FOR RECOGNITION',
     'Form 2 - LETTER OF ACCEPTANCE',
     'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
     'Form 4 - LIST OF MEMBERS',

@@ -16,7 +16,7 @@ def check_and_update_application_status(application_id):
         
         # Define the required files for a complete application
         required_files = [
-            'Form 1A -APPLICATION FOR RECOGNITION',
+            'Form 1A - APPLICATION FOR RECOGNITION',
             'Form 2 - LETTER OF ACCEPTANCE',
             'Form 3 - LIST OF PROGRAMS/PROJECTS/ ACTIVITIES',
             'Form 4 - LIST OF MEMBERS',
