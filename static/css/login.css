@@ -37,7 +37,7 @@ body {
 
 .column:first-child {
     background-color: #fff;
-    border-radius: 20px 0 0 20px;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -87,7 +87,7 @@ body {
 .column:last-child {
     background-color: #0d3b44;
     color: white;
-    border-radius: 0 20px 20px 0;
+    border-radius: 20px;
 }
 
 .login-container {
@@ -182,7 +182,7 @@ body {
     margin-top: 15px;
 }
 
-.error-message {
+.error-message, #error-container {
     color: #ff5252;
     background-color: rgba(255, 82, 82, 0.1);
     border-left: 3px solid #ff5252;
@@ -197,6 +197,17 @@ body {
     color: #ffab40;
     background-color: rgba(255, 171, 64, 0.1);
     border-left: 3px solid #ffab40;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    border-radius: 3px;
+    display: none;
+}
+
+.success-message, #success-container {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 3px solid #28a745;
     padding: 8px 12px;
     margin: 10px 0;
     font-size: 13px;
@@ -257,7 +268,7 @@ body {
     }
 
     .column:first-child {
-        border-radius: 20px 20px 0 0;
+        border-radius: 20px;
         padding: 30px 15px;
         flex-direction: column;
         align-items: center;
@@ -302,7 +313,7 @@ body {
     }
 
     .column:last-child {
-        border-radius: 0 0 20px 20px;
+        border-radius: 20px;
         padding: 30px 15px;
     }
 }

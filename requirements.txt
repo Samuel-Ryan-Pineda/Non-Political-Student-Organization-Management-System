@@ -5,6 +5,7 @@ flask-mail
 flask-migrate
 flask-wtf
 flask-bcrypt
+bcrypt
 python-dotenv
 pymysql
 cryptography
@@ -12,3 +13,4 @@ waitress
 pandas
 openpyxl
 APScheduler
+itsdangerous

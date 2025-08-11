@@ -4,10 +4,12 @@ from app.models import User, EntryKey, Role
 from app.utils import validate_name, validate_email, validate_password, sanitize_input, validate_name_length
 from app import db, mail
 from flask_mail import Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import random
 import time
 import functools
 import hmac
+import bcrypt
 from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
@@ -570,3 +572,201 @@ def unauthorized_handler(error):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': False, 'message': 'Please log in to access this page.', 'category': 'error'}), 401
     return redirect(url_for('auth.login'))
+
+# Initialize token serializer
+def get_serializer():
+    from flask import current_app
+    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+
+# ✅ Forgot Password Route
+@auth_bp.route('/forgot_password', methods=['GET', 'POST'])
+@rate_limited(max_calls=3, timeout_duration=300, count_successful=False)  # 5 minutes timeout
+def forgot_password():
+    print("=== FORGOT PASSWORD ROUTE HIT ===")
+    if current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
+        
+    if request.method == 'POST':
+        print("=== POST REQUEST RECEIVED ===")
+        try:
+            print("DEBUG: Starting forgot password POST request")
+            email = sanitize_input(request.form.get('email', '')).strip()
+            print(f"DEBUG: Email received: {email}")
+            
+            # Basic input validation
+            if not email:
+                return create_error_response("Email cannot be empty.", 400)
+            
+            if not validate_email(email):
+                return create_error_response("Invalid email address.", 400)
+            
+            print("DEBUG: Email validation passed")
+            
+            # Rate limiting for password reset requests
+            reset_attempts_key = f"reset_attempts_{email}"
+            if reset_attempts_key not in session:
+                session[reset_attempts_key] = {
+                    'count': 0,
+                    'first_attempt_time': time.time(),
+                    'blocked_until': None
+                }
+                
+            reset_attempts = session[reset_attempts_key]
+            current_time = time.time()
+            
+            # Check if user is blocked from reset attempts
+            if reset_attempts.get('blocked_until') and current_time < reset_attempts['blocked_until']:
+                remaining_time = int(reset_attempts['blocked_until'] - current_time)
+                return create_error_response(
+                    f"Too many password reset requests. Please wait {remaining_time} seconds before trying again.",
+                    429
+                )
+                
+            # Reset attempts counter if timeout has passed
+            if current_time - reset_attempts['first_attempt_time'] > 900:  # 15 minutes
+                reset_attempts['count'] = 0
+                reset_attempts['first_attempt_time'] = current_time
+                reset_attempts['blocked_until'] = None
+
+            # Increment attempts
+            reset_attempts['count'] += 1
+            
+            # Block after 3 attempts
+            if reset_attempts['count'] >= 3:
+                reset_attempts['blocked_until'] = current_time + 900  # 15 minutes
+                
+            session[reset_attempts_key] = reset_attempts
+            print("DEBUG: Rate limiting checks completed")
+            
+            # Always show success message for security (don't reveal if email exists)
+            # But only send email if user exists
+            print("DEBUG: Querying database for user")
+            user = User.query.filter_by(email=email).first()
+            print(f"DEBUG: User found: {user is not None}")
+            if user and user.is_active:
+                print("DEBUG: User is active, generating token")
+                # Generate password reset token (expires in 1 hour)
+                serializer = get_serializer()
+                token = serializer.dumps(email, salt='password-reset-salt')
+                print("DEBUG: Token generated successfully")
+                
+                # Create reset URL
+                reset_url = url_for('auth.reset_password', token=token, _external=True)
+                print("DEBUG: Reset URL created")
+                
+                # Send password reset email
+                print("DEBUG: Creating email message")
+                msg = Message("Password Reset Request - NPSOMS", recipients=[email])
+                msg.html = f'''
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                        <h2 style="color: #2c3e50; margin-bottom: 20px;">Password Reset Request</h2>
+                        
+                        <p>Dear {user.first_name} {user.last_name},</p>
+                        
+                        <p>We received a request to reset your password for your NPSOMS account. If you made this request, please click the button below to reset your password.</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{reset_url}" style="background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+                        </div>
+                        
+                        <p>Or copy and paste this link into your browser:</p>
+                        <p style="word-break: break-all; background-color: #f1f1f1; padding: 10px; border-radius: 3px; font-family: monospace;">{reset_url}</p>
+                        
+                        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0;">
+                            <p style="margin: 0; font-size: 14px;"><strong>Security Notice:</strong></p>
+                            <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
+                                <li>This link will expire in 1 hour for security reasons</li>
+                                <li>If you did not request this password reset, please ignore this email</li>
+                                <li>Your password will not be changed unless you click the link above</li>
+                            </ul>
+                        </div>
+                        
+                        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                        
+                        <p style="font-size: 12px; color: #666;">
+                            <em>This is an automated message. Please do not reply to this email.</em><br>
+                            Generated on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p')} UTC
+                        </p>
+                    </div>
+                </body>
+                </html>
+                '''
+                print("DEBUG: Attempting to send email")
+                mail.send(msg)
+                print("DEBUG: Email sent successfully")
+            
+            # Always return success message for security
+            print("DEBUG: Returning success response")
+            return create_success_response('If an account with that email exists, a password reset link has been sent.')
+            
+        except Exception as e:
+            print(f"Forgot password error: {str(e)}")
+            return create_error_response("An error occurred while processing your request.", 500)
+    
+    return render_template('forgot_password.html')
+
+# ✅ Reset Password Route
+@auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+@rate_limited(max_calls=5, timeout_duration=300, count_successful=False)  # 5 minutes timeout
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        # Verify token (expires in 1 hour = 3600 seconds)
+        serializer = get_serializer()
+        email = serializer.loads(token, salt='password-reset-salt', max_age=3600)
+    except SignatureExpired:
+        flash("The password reset link has expired. Please request a new one.", "error")
+        return redirect(url_for('auth.forgot_password'))
+    except BadSignature:
+        flash("Invalid password reset link. Please request a new one.", "error")
+        return redirect(url_for('auth.forgot_password'))
+    
+    # Find user by email
+    user = User.query.filter_by(email=email).first()
+    if not user or not user.is_active:
+        flash("Invalid password reset link. Please request a new one.", "error")
+        return redirect(url_for('auth.forgot_password'))
+    
+    if request.method == 'POST':
+        try:
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            # Basic input validation
+            if not new_password:
+                return create_error_response("New password cannot be empty.", 400)
+            
+            if not confirm_password:
+                return create_error_response("Please confirm your password.", 400)
+            
+            if new_password != confirm_password:
+                return create_error_response("Passwords do not match.", 400)
+            
+            # Password strength validation
+            if len(new_password) < 8:
+                return create_error_response("Password must be at least 8 characters long.", 400)
+            
+            # Update password
+            entrykey_record = EntryKey.query.filter_by(user_id=user.user_id).first()
+            if entrykey_record:
+                # Hash the new password
+                entrykey_record.entry_key = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                db.session.commit()
+                
+                # Clear any existing login attempts for this user
+                login_attempts_key = f"login_attempts_{email}"
+                session.pop(login_attempts_key, None)
+                
+                return create_success_response('Your password has been successfully reset. You can now log in with your new password.')
+            else:
+                return create_error_response("An error occurred while resetting your password.", 500)
+                
+        except Exception as e:
+            print(f"Reset password error: {str(e)}")
+            return create_error_response("An error occurred while resetting your password.", 500)
+    
+    return render_template('reset_password.html', token=token, email=email)
